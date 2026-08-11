@@ -1,0 +1,61 @@
+import { NextResponse } from "next/server";
+import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { eq } from "drizzle-orm";
+import { auth } from "@/auth";
+import { db } from "@/db";
+import { jobs } from "@/db/schema";
+
+// Client-side upload flow: the browser asks this route for a short-lived
+// upload token, then PUTs the file straight to Vercel Blob. Keeps large
+// photo uploads (site photos from a phone camera) off the serverless
+// function's request body entirely.
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const [job] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  if (!job) {
+    return NextResponse.json({ error: "Job not found" }, { status: 404 });
+  }
+
+  const isOwner = job.assignedTo === session.user.id;
+  const isAdmin = ["boss", "admin", "supervisor"].includes(session.user.role);
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const body = (await request.json()) as HandleUploadBody;
+
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (pathname) => {
+        if (!pathname.startsWith(`jobs/${id}/`)) {
+          throw new Error("Invalid upload path");
+        }
+        return {
+          allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/heic"],
+          maximumSizeInBytes: 15 * 1024 * 1024,
+          addRandomSuffix: true,
+        };
+      },
+      onUploadCompleted: async () => {
+        // No DB write here — the client calls /api/jobs/[id]/photos afterward
+        // to append the confirmed blob URL to the job's photo list.
+      },
+    });
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Upload failed" },
+      { status: 400 },
+    );
+  }
+}

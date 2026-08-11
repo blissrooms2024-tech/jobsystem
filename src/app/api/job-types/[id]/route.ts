@@ -1,0 +1,37 @@
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import { jobTypes } from "@/db/schema";
+import { requireRole } from "@/lib/api-auth";
+
+const bodySchema = z.object({
+  active: z.boolean().optional(),
+  pay: z.coerce.number().nonnegative().optional(),
+});
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRole("boss", "admin");
+  if ("error" in auth) return auth.error;
+
+  const { id } = await params;
+  const parsed = bodySchema.safeParse(await request.json());
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const [updated] = await db
+    .update(jobTypes)
+    .set({
+      ...(parsed.data.active !== undefined ? { active: parsed.data.active } : {}),
+      ...(parsed.data.pay !== undefined ? { pay: parsed.data.pay.toFixed(2) } : {}),
+    })
+    .where(eq(jobTypes.id, id))
+    .returning();
+
+  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ jobType: updated });
+}

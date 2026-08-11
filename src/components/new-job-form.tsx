@@ -1,0 +1,133 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+
+type Option = { id: string; label: string };
+
+export function NewJobForm({
+  units,
+  jobTypes,
+  employees,
+}: {
+  units: Option[];
+  jobTypes: (Option & { pay: string })[];
+  employees: Option[];
+}) {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  return (
+    <form
+      className="max-w-lg space-y-4"
+      action={(formData: FormData) => {
+        setError(null);
+        startTransition(async () => {
+          const payload = {
+            title: String(formData.get("title") || ""),
+            description: String(formData.get("description") || "") || undefined,
+            unitId: String(formData.get("unitId") || "") || undefined,
+            assignedTo: String(formData.get("assignedTo") || ""),
+            schedDate: String(formData.get("schedDate") || ""),
+            startTime: String(formData.get("startTime") || "") || undefined,
+            endTime: String(formData.get("endTime") || "") || undefined,
+            jobTypeId: String(formData.get("jobTypeId") || "") || undefined,
+            notes: String(formData.get("notes") || "") || undefined,
+          };
+          const res = await fetch("/api/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!res.ok) {
+            setError("创建失败 Failed to create job");
+            return;
+          }
+          const { job } = await res.json();
+          router.push(`/jobs/${job.id}`);
+        });
+      }}
+    >
+      <Field label="标题 Title">
+        <input name="title" required className="input" />
+      </Field>
+      <Field label="说明 Description">
+        <textarea name="description" className="input" rows={3} />
+      </Field>
+      <Field label="工种 Job type">
+        <select name="jobTypeId" className="input">
+          <option value="">-- 选择 select --</option>
+          {jobTypes.map((jt) => (
+            <option key={jt.id} value={jt.id}>
+              {jt.label} (RM {jt.pay})
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="单位 Unit">
+        <select name="unitId" className="input">
+          <option value="">-- 选择 select --</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="负责人 Assign to">
+        <select name="assignedTo" required className="input">
+          <option value="">-- 选择 select --</option>
+          {employees.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="日期 Date">
+          <input type="date" name="schedDate" required className="input" />
+        </Field>
+        <Field label="开始时间 Start">
+          <input type="time" name="startTime" className="input" />
+        </Field>
+      </div>
+      <Field label="结束时间 End">
+        <input type="time" name="endTime" className="input" />
+      </Field>
+      <Field label="备注 Notes">
+        <textarea name="notes" className="input" rows={2} />
+      </Field>
+
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+      >
+        {isPending ? "创建中... Creating..." : "创建任务 Create job"}
+      </button>
+
+      <style jsx>{`
+        .input {
+          width: 100%;
+          border: 1px solid #d4d4d4;
+          border-radius: 6px;
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+      `}</style>
+    </form>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-sm font-medium">{label}</label>
+      {children}
+    </div>
+  );
+}
