@@ -87,12 +87,11 @@ export async function emailPayslip(payrollId: string) {
 
   await sendMail({
     to: result.employee.email,
-    subject: `工资单 Payslip ${result.payroll.payrollCode} (${result.payroll.periodStart} ~ ${result.payroll.periodEnd})`,
+    subject: `Payslip ${result.payroll.payrollCode} (${result.payroll.periodStart} ~ ${result.payroll.periodEnd})`,
     html: `
       <p>Hi ${result.employee.name},</p>
-      <p>你 ${result.payroll.periodStart} 至 ${result.payroll.periodEnd} 的工资单已发放，净额 RM ${net.toFixed(2)}，详情见附件。</p>
       <p>Your payslip for ${result.payroll.periodStart} to ${result.payroll.periodEnd} has been paid — net RM ${net.toFixed(2)}. See the attached PDF for details.</p>
-      ${viewLink ? `<p><a href="${viewLink}">查看工资单 View payslip</a></p>` : ""}
+      ${viewLink ? `<p><a href="${viewLink}">View payslip</a></p>` : ""}
     `,
     attachments: [
       { filename: `${result.payroll.payrollCode}.pdf`, content: result.pdfBuffer, contentType: "application/pdf" },
