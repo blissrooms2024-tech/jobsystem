@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, units, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
-import { parsePhotos, PHOTO_KINDS } from "@/lib/photos";
+import { parsePhotos, requiredPhotoCount, PHOTO_KINDS } from "@/lib/photos";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
@@ -44,7 +44,8 @@ export default async function JobDetailPage({
 
   const photos = parsePhotos(job.photos);
   const needCheckin = assignee?.needCheckin ?? true;
-  const requiredPhotos = assignee?.donePhotos ?? 0;
+  const requiredPhotos = requiredPhotoCount(assignee?.donePhotos);
+  const hasCompletionPhoto = photos.some((p) => p.kind === "photo");
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -85,6 +86,15 @@ export default async function JobDetailPage({
       )}
 
       {isOwner ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          ⚠️ 管理员会检查这个任务是否跟着 SOP 完成——跟着 SOP 才会算已完成并计算工资，没跟着 SOP 不会算完成。
+          <br />
+          Admin will check whether this job was completed following SOP — only work that follows SOP counts as
+          completed and gets paid; work that doesn&apos;t follow SOP will not count as completed.
+        </div>
+      ) : null}
+
+      {isOwner ? (
         <JobCheckinActions
           jobId={job.id}
           needCheckin={needCheckin}
@@ -99,28 +109,37 @@ export default async function JobDetailPage({
           <p className="text-sm font-medium">照片 Photos</p>
           {isOwner ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {PHOTO_KINDS.map((kind) => (
-                <PhotoUploader
-                  key={kind}
-                  jobId={job.id}
-                  kind={kind}
-                  context={{ staffName: assignee?.name ?? "", unitName: unit?.unitName, jobTitle: job.title }}
-                />
-              ))}
+              {PHOTO_KINDS.map((kind) =>
+                kind === "photo" && hasCompletionPhoto ? (
+                  <p key={kind} className="text-xs text-neutral-500">
+                    完成照片已上传，不能重新上传 Completion photo already uploaded — can&apos;t be re-uploaded
+                  </p>
+                ) : (
+                  <PhotoUploader
+                    key={kind}
+                    jobId={job.id}
+                    kind={kind}
+                    context={{ staffName: assignee?.name ?? "", unitName: unit?.unitName, jobTitle: job.title }}
+                  />
+                ),
+              )}
             </div>
           ) : null}
           {photos.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {photos.map((p, i) => (
-                <a key={i} href={p.url} target="_blank" rel="noreferrer">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- remote Blob URLs, not worth Image optimization config here */}
-                  <img
-                    src={p.url}
-                    alt={`${p.kind} ${p.idx + 1}`}
-                    className="aspect-square w-full rounded-md object-cover"
-                  />
-                </a>
-              ))}
+              {photos.map((p, i) => {
+                const proxied = `/api/jobs/${job.id}/photo?url=${encodeURIComponent(p.url)}`;
+                return (
+                  <a key={i} href={proxied} target="_blank" rel="noreferrer">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy, not worth Image optimization config here */}
+                    <img
+                      src={proxied}
+                      alt={`${p.kind} ${p.idx + 1}`}
+                      className="aspect-square w-full rounded-md object-cover"
+                    />
+                  </a>
+                );
+              })}
             </div>
           ) : (
             <p className="text-sm text-neutral-400">暂无照片 No photos yet</p>

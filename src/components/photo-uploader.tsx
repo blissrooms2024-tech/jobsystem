@@ -40,7 +40,7 @@ export function PhotoUploader({
         const watermarked = await watermarkImage(file, lines);
 
         const blob = await upload(`jobs/${jobId}/${kind}-${Date.now()}-${file.name}`, watermarked, {
-          access: "public",
+          access: "private",
           contentType: "image/jpeg",
           handleUploadUrl: `/api/jobs/${jobId}/photo-upload`,
         });

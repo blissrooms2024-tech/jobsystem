@@ -84,7 +84,7 @@ export default async function JobsCalendarPage({
         </div>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 p-3">
+      <div className="max-w-md rounded-lg border border-neutral-200 p-3">
         <div className="grid grid-cols-7 gap-1 text-center text-xs text-neutral-500">
           {WEEKDAYS.map((d) => (
             <div key={d} className="py-1">

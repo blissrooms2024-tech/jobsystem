@@ -17,3 +17,13 @@ export function parsePhotos(value: unknown): PhotoEntry[] {
   const result = photosArraySchema.safeParse(value);
   return result.success ? result.data : [];
 }
+
+/**
+ * Every no-checkin employee now needs exactly one completion photo, not a
+ * per-employee configurable count — donePhotos on the user profile is kept
+ * as a simple "does this employee need one at all" flag (any positive value
+ * means yes), rather than the literal number required.
+ */
+export function requiredPhotoCount(donePhotos: number | null | undefined): number {
+  return (donePhotos ?? 0) > 0 ? 1 : 0;
+}
