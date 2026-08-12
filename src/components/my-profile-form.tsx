@@ -2,25 +2,18 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 
 type Props = {
-  userId: string;
-  name: string;
   phone: string | null;
-  staffType: string | null;
   icPassport: string | null;
   address: string | null;
   email: string | null;
   emergencyContact: string | null;
   bankName: string | null;
   bankAccount: string | null;
-  payRate: string | null;
-  needCheckin: boolean;
-  donePhotos: number;
 };
 
-export function UserProfileForm(props: Props) {
+export function MyProfileForm(props: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -34,20 +27,15 @@ export function UserProfileForm(props: Props) {
         setSaved(false);
         startTransition(async () => {
           const payload = {
-            name: String(formData.get("name") || ""),
             phone: String(formData.get("phone") || ""),
-            staffType: String(formData.get("staffType") || "") || null,
             icPassport: String(formData.get("icPassport") || ""),
             address: String(formData.get("address") || ""),
             email: String(formData.get("email") || ""),
             emergencyContact: String(formData.get("emergencyContact") || ""),
             bankName: String(formData.get("bankName") || ""),
             bankAccount: String(formData.get("bankAccount") || ""),
-            payRate: String(formData.get("payRate") || "") || undefined,
-            needCheckin: formData.get("needCheckin") === "on",
-            donePhotos: String(formData.get("donePhotos") || "0"),
           };
-          const res = await fetch(`/api/users/${props.userId}`, {
+          const res = await fetch("/api/account/profile", {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
@@ -62,39 +50,22 @@ export function UserProfileForm(props: Props) {
       }}
     >
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">姓名 Name</span>
-        <input name="name" defaultValue={props.name} required className="input" />
-      </label>
-      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">电话 Phone</span>
         <input name="phone" defaultValue={props.phone ?? ""} className="input" />
-      </label>
-      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">工种 Staff type</span>
-        <input name="staffType" list="staffTypeSuggestions" defaultValue={props.staffType ?? ""} className="input" />
-        <datalist id="staffTypeSuggestions">
-          {STAFF_TYPE_SUGGESTIONS.map((t) => (
-            <option key={t} value={t} />
-          ))}
-        </datalist>
-      </label>
-      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">单价 Pay rate</span>
-        <input name="payRate" type="number" step="0.01" defaultValue={props.payRate ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">IC / 护照 IC/Passport</span>
         <input name="icPassport" defaultValue={props.icPassport ?? ""} className="input" />
       </label>
-      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">邮箱 Email</span>
-        <input name="email" type="email" defaultValue={props.email ?? ""} className="input" />
-      </label>
       <label className="col-span-2 space-y-1 text-sm">
         <span className="font-medium">地址 Address</span>
         <textarea name="address" defaultValue={props.address ?? ""} rows={2} className="input" />
       </label>
-      <label className="col-span-2 space-y-1 text-sm">
+      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
+        <span className="font-medium">邮箱 Email</span>
+        <input name="email" type="email" defaultValue={props.email ?? ""} className="input" />
+      </label>
+      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">紧急联系人 Emergency contact</span>
         <input name="emergencyContact" defaultValue={props.emergencyContact ?? ""} className="input" />
       </label>
@@ -105,14 +76,6 @@ export function UserProfileForm(props: Props) {
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">银行账号 Bank account</span>
         <input name="bankAccount" defaultValue={props.bankAccount ?? ""} className="input" />
-      </label>
-      <label className="col-span-2 flex items-center gap-2 text-sm">
-        <input type="checkbox" name="needCheckin" defaultChecked={props.needCheckin} />
-        需要 GPS 打卡 Requires GPS check-in
-      </label>
-      <label className="col-span-2 space-y-1 text-sm">
-        <span className="font-medium">不打卡时，完成任务需要几张照片 Photos required to mark done (0 = none)</span>
-        <input name="donePhotos" type="number" min={0} max={10} defaultValue={props.donePhotos} className="input" />
       </label>
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}

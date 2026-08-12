@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, units } from "@/db/schema";
 import { haversineDistanceMeters } from "@/lib/geo";
+import { parsePhotos } from "@/lib/photos";
 
 const bodySchema = z.object({
   lat: z.number(),
@@ -23,7 +24,7 @@ export async function POST(
   const { id } = await params;
   const parsed = bodySchema.safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
+    return NextResponse.json({ error: "无法获取定位 Could not read your location" }, { status: 400 });
   }
 
   const [job] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
@@ -33,18 +34,31 @@ export async function POST(
   if (job.assignedTo !== session.user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (!job.checkInTime) {
-    return NextResponse.json({ error: "Must check in first" }, { status: 409 });
+  if (job.status !== "in_progress") {
+    return NextResponse.json({ error: "请先打卡上班 Please check in first" }, { status: 409 });
   }
-  if (job.checkOutTime) {
-    return NextResponse.json({ error: "Already checked out" }, { status: 409 });
+
+  const afterPhotos = parsePhotos(job.photos).filter((p) => p.kind === "after" || p.kind === "photo");
+  if (afterPhotos.length < 1) {
+    return NextResponse.json(
+      { error: "请先上传至少 1 张打卡后照片 Please upload at least 1 photo before checking out" },
+      { status: 400 },
+    );
   }
 
   let dist: number | null = null;
   if (job.unitId) {
     const [unit] = await db.select().from(units).where(eq(units.id, job.unitId)).limit(1);
-    if (unit) {
+    if (unit && !(unit.lat === 0 && unit.lon === 0)) {
       dist = haversineDistanceMeters(parsed.data.lat, parsed.data.lon, unit.lat, unit.lon);
+      if (dist > unit.radiusM) {
+        return NextResponse.json(
+          {
+            error: `距离太远 Too far from site — you are ~${Math.round(dist)}m from ${unit.unitName} (allowed ${unit.radiusM}m)`,
+          },
+          { status: 409 },
+        );
+      }
     }
   }
 

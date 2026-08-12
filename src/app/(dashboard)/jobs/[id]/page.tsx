@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { jobs, jobTypes, units, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
 import { parsePhotos, PHOTO_KINDS } from "@/lib/photos";
+import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { JobAdminActions } from "@/components/job-admin-actions";
@@ -37,10 +38,13 @@ export default async function JobDetailPage({
   const { job, unit, assignee, jobType } = row;
   const isAdmin = ["boss", "admin", "supervisor"].includes(currentUser.role);
   const isOwner = job.assignedTo === currentUser.id;
-  if (!isAdmin && !isOwner) notFound();
+  const isOwnTeam =
+    currentUser.role !== "supervisor" || isOwner || assignee?.supervisorId === currentUser.id;
+  if ((!isAdmin && !isOwner) || !isOwnTeam) notFound();
 
   const photos = parsePhotos(job.photos);
   const needCheckin = assignee?.needCheckin ?? true;
+  const requiredPhotos = assignee?.donePhotos ?? 0;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -54,7 +58,7 @@ export default async function JobDetailPage({
 
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <Field label="日期 Date" value={job.schedDate} />
-        <Field label="状态 Status" value={job.status} />
+        <Field label="状态 Status" value={JOB_STATUS_LABEL[job.status] ?? job.status} />
         <Field label="负责人 Assignee" value={assignee?.name ?? "-"} />
         <Field label="工种 Job type" value={jobType?.typeName ?? "-"} />
         <Field label="单位 Unit" value={unit?.unitName ?? "-"} />
@@ -84,9 +88,9 @@ export default async function JobDetailPage({
         <JobCheckinActions
           jobId={job.id}
           needCheckin={needCheckin}
-          hasCheckedIn={!!job.checkInTime}
-          hasCheckedOut={!!job.checkOutTime}
-          isCompleted={job.status === "completed"}
+          status={job.status}
+          photoCount={photos.length}
+          requiredPhotos={requiredPhotos}
         />
       ) : null}
 
@@ -123,6 +127,8 @@ export default async function JobDetailPage({
         <JobAdminActions
           jobId={job.id}
           status={job.status}
+          pay={job.pay}
+          hasPayroll={!!job.payrollId}
           canDelete={currentUser.role === "boss" || currentUser.role === "admin"}
         />
       ) : null}

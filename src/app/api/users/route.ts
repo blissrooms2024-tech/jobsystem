@@ -11,11 +11,12 @@ const bodySchema = z.object({
   name: z.string().min(1),
   username: z.string().min(3),
   role: z.enum(["boss", "admin", "supervisor", "employee"]),
-  staffType: z.enum(["posting_agent", "cleaner"]).optional(),
+  staffType: z.string().optional(),
   phone: z.string().optional(),
   payType: z.enum(["per_job", "base"]).default("per_job"),
   payRate: z.coerce.number().nonnegative().optional(),
   needCheckin: z.boolean().default(true),
+  donePhotos: z.coerce.number().int().min(0).max(10).default(0),
 });
 
 export async function POST(request: Request) {
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
       payType: data.payType,
       payRate: data.payRate?.toFixed(2),
       needCheckin: data.needCheckin,
+      donePhotos: data.donePhotos,
     })
     .returning();
 

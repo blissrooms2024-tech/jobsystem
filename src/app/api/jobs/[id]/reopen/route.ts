@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { jobs, payroll } from "@/db/schema";
+import { jobs, payroll, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 
 export async function POST(
@@ -14,8 +14,26 @@ export async function POST(
   const { id } = await params;
   const [job] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
   if (!job) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (job.status === "assigned") {
-    return NextResponse.json({ error: "此任务还未完成 Job is not completed/missed" }, { status: 409 });
+
+  if (auth.session.user.role === "supervisor") {
+    const [assignee] = job.assignedTo
+      ? await db.select().from(users).where(eq(users.id, job.assignedTo)).limit(1)
+      : [];
+    const isOwnTeam =
+      job.assignedTo === auth.session.user.id || assignee?.supervisorId === auth.session.user.id;
+    if (!isOwnTeam) {
+      return NextResponse.json(
+        { error: "只能重开自己团队的任务 You can only reopen your own team's jobs" },
+        { status: 403 },
+      );
+    }
+  }
+
+  if (job.status !== "missed" && job.status !== "cancelled") {
+    return NextResponse.json(
+      { error: "只有错过/取消的任务才能重开 Only missed/cancelled jobs can be reopened" },
+      { status: 409 },
+    );
   }
 
   if (job.payrollId) {
