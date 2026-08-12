@@ -82,7 +82,7 @@ export function JobCheckinActions({
             type="button"
             disabled={isPending || status !== "assigned" || photoCount < 1}
             onClick={() => call("checkin", true)}
-            className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {status === "in_progress" ? "已打卡上班 Checked in" : "打卡上班 Check in"}
           </button>
@@ -90,7 +90,7 @@ export function JobCheckinActions({
             type="button"
             disabled={isPending || status !== "in_progress" || photoCount < 1}
             onClick={() => call("checkout", true)}
-            className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             打卡下班 & 完成 Check out & complete
           </button>
@@ -104,7 +104,7 @@ export function JobCheckinActions({
             type="button"
             disabled={isPending || photoCount < requiredPhotos}
             onClick={() => call("complete", true)}
-            className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             标记完成 Mark complete
           </button>

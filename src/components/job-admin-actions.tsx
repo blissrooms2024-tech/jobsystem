@@ -100,7 +100,7 @@ export function JobAdminActions({
                 type="button"
                 disabled={isPending}
                 onClick={() => call("PATCH", "/pay", { pay: payValue })}
-                className="rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+                className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm text-white disabled:opacity-50"
               >
                 确认 Confirm
               </button>
@@ -137,7 +137,7 @@ export function JobAdminActions({
               onClick={() =>
                 call("POST", "/duplicate", { schedDate: dupDate, untilDate: dupUntil || undefined })
               }
-              className="rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
+              className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm text-white disabled:opacity-50"
             >
               确认复制 Confirm
             </button>

@@ -48,7 +48,7 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}
-            className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm font-medium text-white"
           >
             {showAdd ? "取消 Cancel" : "+ 新增员工 Add employee"}
           </button>

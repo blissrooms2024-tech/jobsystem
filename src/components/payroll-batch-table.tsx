@@ -138,7 +138,7 @@ export function PayrollBatchTable() {
               onClick={() => setPeriod(t)}
               className={
                 periodType === t
-                  ? "rounded-full bg-neutral-900 px-3 py-1 text-white"
+                  ? "rounded-full bg-purple-700 hover:bg-purple-800 px-3 py-1 text-white"
                   : "rounded-full bg-neutral-100 px-3 py-1 text-neutral-700"
               }
             >
@@ -343,7 +343,7 @@ function PayrollRow({
               type="button"
               disabled={isPending}
               onClick={save}
-              className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+              className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm text-white disabled:opacity-50"
             >
               保存 Save
             </button>

@@ -55,8 +55,8 @@ export function DashboardNav({
             className={cn(
               "rounded-md px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "bg-neutral-900 text-white"
-                : "text-neutral-700 hover:bg-neutral-100",
+                ? "bg-purple-700 text-white hover:bg-purple-800"
+                : "text-neutral-700 hover:bg-purple-100/70 hover:text-purple-900",
             )}
           >
             {item.label}
