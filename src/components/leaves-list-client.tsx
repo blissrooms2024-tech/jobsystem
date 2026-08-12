@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -30,6 +31,8 @@ type Row = {
 };
 
 export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boolean }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -45,7 +48,7 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜索员工姓名/类型... Search"
+          placeholder={t("搜索员工姓名/类型...", "Search")}
           className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
       ) : null}

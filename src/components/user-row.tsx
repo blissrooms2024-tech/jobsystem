@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 export function UserRow({
   id,
@@ -27,6 +28,8 @@ export function UserRow({
   bankAccount: string | null;
 }) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
   const [resetInfo, setResetInfo] = useState<string | null>(null);
 
@@ -74,8 +77,8 @@ export function UserRow({
           <button
             type="button"
             disabled={isPending}
-            title="重置密码 Reset password"
-            aria-label="重置密码 Reset password"
+            title={t("重置密码", "Reset password")}
+            aria-label={t("重置密码", "Reset password")}
             onClick={() => {
               startTransition(async () => {
                 const res = await fetch(`/api/users/${id}/reset-password`, { method: "POST" });
@@ -91,8 +94,8 @@ export function UserRow({
           </button>
           <Link
             href={`/users/${id}`}
-            title="编辑更多资料 Edit full profile"
-            aria-label="编辑更多资料 Edit full profile"
+            title={t("编辑更多资料", "Edit full profile")}
+            aria-label={t("编辑更多资料", "Edit full profile")}
             className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
           >
             ✏️

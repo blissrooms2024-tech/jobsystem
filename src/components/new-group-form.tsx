@@ -3,11 +3,14 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type SimpleUser = { id: string; name: string; role: string };
 
 export function NewGroupForm({ users }: { users: SimpleUser[] }) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -36,7 +39,7 @@ export function NewGroupForm({ users }: { users: SimpleUser[] }) {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="群组名称 Group name"
+          placeholder={t("群组名称", "Group name")}
           className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
         />
         <div>
