@@ -89,6 +89,9 @@ export const users = pgTable(
     // Photos required to mark a no-checkin job "done" (0 = none required).
     // Matches the legacy system exactly — this was always a count, not a flag.
     donePhotos: integer("done_photos").notNull().default(0),
+    // Bumped by a periodic client heartbeat while the app is open — "online"
+    // in chat is just "seen in the last minute", no websocket/session tracking.
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -266,6 +269,11 @@ export const chatGroupMembers = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     addedAt: timestamp("added_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Bumped whenever this member fetches the group's messages — unread
+    // count for the group is just "messages newer than this, not sent by me".
+    lastReadAt: timestamp("last_read_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },

@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { LanguageToggle } from "@/components/language-toggle";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { ChatNotifier } from "@/components/chat-notifier";
 import { Bi } from "@/components/bi";
 import { signOutAction } from "./actions";
 
@@ -15,6 +17,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
+      <PresenceHeartbeat />
+      <ChatNotifier />
       <aside className="hidden w-56 shrink-0 flex-col border-r border-purple-100 bg-purple-50/40 p-4 sm:flex">
         <div className="mb-6">
           <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>

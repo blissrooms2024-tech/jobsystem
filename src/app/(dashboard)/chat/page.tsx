@@ -1,9 +1,10 @@
-import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { chatGroups, chatGroupMembers, chatMessages, users } from "@/db/schema";
 import { NewGroupForm } from "@/components/new-group-form";
+import { NotificationPermissionButton } from "@/components/notification-permission-button";
+import { ChatGroupsClient } from "@/components/chat-groups-client";
 import { Bi } from "@/components/bi";
 
 export default async function ChatPage() {
@@ -12,10 +13,11 @@ export default async function ChatPage() {
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
 
   const memberships = await db
-    .select({ groupId: chatGroupMembers.groupId })
+    .select({ groupId: chatGroupMembers.groupId, lastReadAt: chatGroupMembers.lastReadAt })
     .from(chatGroupMembers)
     .where(eq(chatGroupMembers.userId, user.id));
   const groupIds = memberships.map((m) => m.groupId);
+  const lastReadByGroup = new Map(memberships.map((m) => [m.groupId, m.lastReadAt]));
 
   const groups = groupIds.length
     ? await db.select().from(chatGroups).where(inArray(chatGroups.id, groupIds)).orderBy(desc(chatGroups.createdAt))
@@ -23,7 +25,12 @@ export default async function ChatPage() {
 
   const recentMessages = groupIds.length
     ? await db
-        .select({ groupId: chatMessages.groupId, body: chatMessages.body, createdAt: chatMessages.createdAt })
+        .select({
+          groupId: chatMessages.groupId,
+          body: chatMessages.body,
+          createdAt: chatMessages.createdAt,
+          senderId: chatMessages.senderId,
+        })
         .from(chatMessages)
         .where(inArray(chatMessages.groupId, groupIds))
         .orderBy(desc(chatMessages.createdAt))
@@ -31,6 +38,18 @@ export default async function ChatPage() {
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
   for (const m of recentMessages) {
     if (!lastByGroup.has(m.groupId)) lastByGroup.set(m.groupId, m);
+  }
+
+  // recentMessages is already fetched (for the last-message preview) with
+  // no per-group limit, so unread-per-group can just be filtered in JS
+  // against each group's lastReadAt rather than a second query.
+  const unreadByGroup = new Map<string, number>();
+  for (const groupId of groupIds) {
+    const lastRead = lastReadByGroup.get(groupId);
+    const count = recentMessages.filter(
+      (m) => m.groupId === groupId && m.senderId !== user.id && m.createdAt > (lastRead ?? new Date(0)),
+    ).length;
+    if (count > 0) unreadByGroup.set(groupId, count);
   }
 
   const activeUsers = isAdmin
@@ -46,36 +65,20 @@ export default async function ChatPage() {
         <h1 className="text-lg font-semibold">
           <Bi zh="聊天" en="Chat" />
         </h1>
+        <NotificationPermissionButton />
       </div>
 
       {isAdmin ? <NewGroupForm users={activeUsers.filter((u) => u.id !== user.id)} /> : null}
 
-      <div className="space-y-2">
-        {groups.map((g) => {
-          const last = lastByGroup.get(g.id);
-          return (
-            <Link
-              key={g.id}
-              href={`/chat/${g.id}`}
-              className="block rounded-lg border border-neutral-200 p-4 hover:bg-neutral-50"
-            >
-              <p className="font-medium">{g.name}</p>
-              <p className="truncate text-xs text-neutral-500">
-                {last?.body ?? <Bi zh="暂无消息" en="No messages yet" />}
-              </p>
-            </Link>
-          );
-        })}
-        {groups.length === 0 ? (
-          <p className="text-sm text-neutral-400">
-            {isAdmin ? (
-              <Bi zh="还没有群组，创建一个吧" en="No groups yet — create one above" />
-            ) : (
-              <Bi zh="还没有加入任何群组" en="Not in any groups yet" />
-            )}
-          </p>
-        ) : null}
-      </div>
+      <ChatGroupsClient
+        isAdmin={isAdmin}
+        groups={groups.map((g) => ({
+          id: g.id,
+          name: g.name,
+          lastMessage: lastByGroup.get(g.id)?.body ?? null,
+          unread: unreadByGroup.get(g.id) ?? 0,
+        }))}
+      />
     </div>
   );
 }
