@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { formatMoney, cn } from "@/lib/utils";
 import { DeletePayrollButton } from "@/components/delete-payroll-button";
 import { Bi } from "@/components/bi";
@@ -21,6 +22,7 @@ type Row = {
 };
 
 export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boolean }) {
+  const router = useRouter();
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
@@ -72,7 +74,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
               <th className="px-3 py-2"><Bi zh="周期" en="Period" /></th>
               <th className="px-3 py-2"><Bi zh="净额" en="Net" /></th>
               <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
-              {isAdmin ? <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th> : null}
+              <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
             </tr>
           </thead>
           <tbody>
@@ -80,9 +82,15 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
               const net =
                 Number(r.jobsPay) + Number(r.baseSalary) + Number(r.allowance) - Number(r.deduction);
               return (
-                <tr key={r.id} className="border-t border-neutral-100 hover:bg-neutral-50">
+                <tr
+                  key={r.id}
+                  onClick={() => router.push(`/payroll/${r.id}`)}
+                  className="cursor-pointer border-t border-neutral-100 hover:bg-purple-50"
+                >
                   <td className="px-3 py-2">
-                    <Link href={`/payroll/${r.id}`}>{r.payrollCode}</Link>
+                    <Link href={`/payroll/${r.id}`} className="font-medium text-purple-700 hover:underline">
+                      {r.payrollCode}
+                    </Link>
                   </td>
                   <td className="px-3 py-2">{r.employeeName}</td>
                   <td className="px-3 py-2">
@@ -101,17 +109,25 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
                       <Bi zh={r.status === "paid" ? "已发放" : "草稿"} en={r.status === "paid" ? "Paid" : "Draft"} />
                     </span>
                   </td>
-                  {isAdmin ? (
-                    <td className="px-3 py-2">
-                      {r.status === "draft" ? <DeletePayrollButton payrollId={r.id} /> : null}
-                    </td>
-                  ) : null}
+                  <td className="px-3 py-2">
+                    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        href={`/payroll/${r.id}`}
+                        title={t("查看", "View")}
+                        aria-label={t("查看", "View")}
+                        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-white"
+                      >
+                        👁
+                      </Link>
+                      {isAdmin && r.status === "draft" ? <DeletePayrollButton payrollId={r.id} /> : null}
+                    </div>
+                  </td>
                 </tr>
               );
             })}
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 6 : 5} className="px-3 py-6 text-center text-neutral-400">
+                <td colSpan={6} className="px-3 py-6 text-center text-neutral-400">
                   <Bi zh="没有符合的工资单" en="No matching payslips" />
                 </td>
               </tr>
