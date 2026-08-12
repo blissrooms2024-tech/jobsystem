@@ -8,6 +8,7 @@ type UserData = {
   id: string;
   name: string;
   username: string;
+  staffId: string | null;
   role: string;
   staffType: string | null;
   phone: string | null;
@@ -26,7 +27,7 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
     const q = search.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((u) =>
-      [u.name, u.username, u.staffType, u.phone, u.icPassport, u.email]
+      [u.name, u.username, u.staffId, u.staffType, u.phone, u.icPassport, u.email]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     );
@@ -41,7 +42,7 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索姓名/用户名/电话... Search"
+            placeholder="搜索姓名/员工编号/电话... Search"
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
           <button
@@ -65,10 +66,9 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
               <th className="px-3 py-2">姓名 Name</th>
-              <th className="px-3 py-2">角色 Role</th>
+              <th className="px-3 py-2">员工编号 Staff ID</th>
               <th className="px-3 py-2">类型 Staff type</th>
               <th className="px-3 py-2">电话 Phone</th>
-              <th className="px-3 py-2">IC / 护照</th>
               <th className="px-3 py-2">邮箱 Email</th>
               <th className="px-3 py-2">银行资料 Bank</th>
               <th className="px-3 py-2">状态 Status</th>
@@ -82,6 +82,7 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
                 id={u.id}
                 name={u.name}
                 username={u.username}
+                staffId={u.staffId}
                 role={u.role}
                 staffType={u.staffType}
                 phone={u.phone}

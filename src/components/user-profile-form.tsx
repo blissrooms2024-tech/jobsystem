@@ -7,6 +7,7 @@ import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 type Props = {
   userId: string;
   name: string;
+  staffId: string | null;
   phone: string | null;
   staffType: string | null;
   icPassport: string | null;
@@ -35,6 +36,7 @@ export function UserProfileForm(props: Props) {
         startTransition(async () => {
           const payload = {
             name: String(formData.get("name") || ""),
+            staffId: String(formData.get("staffId") || ""),
             phone: String(formData.get("phone") || ""),
             staffType: String(formData.get("staffType") || "") || null,
             icPassport: String(formData.get("icPassport") || ""),
@@ -64,6 +66,10 @@ export function UserProfileForm(props: Props) {
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">姓名 Name</span>
         <input name="name" defaultValue={props.name} required className="input" />
+      </label>
+      <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
+        <span className="font-medium">员工编号 Staff ID</span>
+        <input name="staffId" defaultValue={props.staffId ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium">电话 Phone</span>
