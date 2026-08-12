@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# one-off generated SQL dumps containing real employee data (PII, password
+# hashes) — never commit these, they're handed to the user directly
+/setup-output/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
