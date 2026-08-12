@@ -33,13 +33,18 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // ?download=1 forces a file download instead of opening inline in the
-  // browser's PDF viewer — Vercel Blob honors a `download` query param on
-  // the blob URL itself by setting Content-Disposition: attachment.
+  // Stream the PDF bytes directly rather than redirecting to the Blob URL —
+  // the project's Blob store is private, so its URL isn't fetchable by the
+  // browser without a signed request. ?download=1 switches the disposition
+  // from opening inline to forcing a file download.
   const wantsDownload = new URL(request.url).searchParams.has("download");
-  const target = wantsDownload
-    ? `${result.blobUrl}?download=${encodeURIComponent(`${result.payroll.payrollCode}.pdf`)}`
-    : result.blobUrl;
+  const disposition = wantsDownload ? "attachment" : "inline";
 
-  return NextResponse.redirect(target);
+  return new NextResponse(new Uint8Array(result.pdfBuffer), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `${disposition}; filename="${result.payroll.payrollCode}.pdf"`,
+      "Cache-Control": "private, no-store",
+    },
+  });
 }
