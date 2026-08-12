@@ -34,9 +34,12 @@ export function UserRow({
   const [resetInfo, setResetInfo] = useState<string | null>(null);
 
   return (
-    <tr className="border-t border-neutral-100 align-middle">
+    <tr
+      className="cursor-pointer border-t border-neutral-100 align-middle hover:bg-purple-50"
+      onClick={() => router.push(`/users/${id}`)}
+    >
       <td className="whitespace-nowrap px-3 py-1.5">
-        <Link href={`/users/${id}`} className="font-medium hover:underline">
+        <Link href={`/users/${id}`} className="font-medium text-purple-700 hover:underline">
           {name}
         </Link>
         <span className="ml-1.5 text-xs text-neutral-400">{username}</span>
@@ -49,7 +52,7 @@ export function UserRow({
           ? [bankName, bankAccount].filter(Boolean).join(" · ")
           : "-"}
       </td>
-      <td className="whitespace-nowrap px-3 py-1.5">
+      <td className="whitespace-nowrap px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           disabled={isPending}
@@ -72,7 +75,7 @@ export function UserRow({
           <Bi zh={active ? "在职" : "停用"} en={active ? "Active" : "Inactive"} />
         </button>
       </td>
-      <td className="whitespace-nowrap px-3 py-1.5">
+      <td className="whitespace-nowrap px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1.5">
           <button
             type="button"

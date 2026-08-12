@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
@@ -31,6 +32,7 @@ type Row = {
 };
 
 export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boolean }) {
+  const router = useRouter();
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
@@ -62,21 +64,18 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
               <th className="px-3 py-2"><Bi zh="日期" en="Dates" /></th>
               <th className="px-3 py-2"><Bi zh="天数" en="Days" /></th>
               <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((r) => (
-              <tr key={r.id} className="border-t border-neutral-100 hover:bg-neutral-50">
-                {isAdmin ? (
-                  <td className="px-3 py-2">
-                    <Link href={`/leaves/${r.id}`}>{r.employeeName}</Link>
-                  </td>
-                ) : null}
-                <td className="px-3 py-2">
-                  <Link href={`/leaves/${r.id}`} className="block">
-                    {r.type}
-                  </Link>
-                </td>
+              <tr
+                key={r.id}
+                onClick={() => router.push(`/leaves/${r.id}`)}
+                className="cursor-pointer border-t border-neutral-100 hover:bg-purple-50"
+              >
+                {isAdmin ? <td className="px-3 py-2 font-medium text-purple-700">{r.employeeName}</td> : null}
+                <td className={isAdmin ? "px-3 py-2" : "px-3 py-2 font-medium text-purple-700"}>{r.type}</td>
                 <td className="px-3 py-2">
                   {r.startDate} ~ {r.endDate}
                 </td>
@@ -86,11 +85,21 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
                     <Bi zh={STATUS_LABEL[r.status].zh} en={STATUS_LABEL[r.status].en} />
                   </span>
                 </td>
+                <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
+                  <Link
+                    href={`/leaves/${r.id}`}
+                    title={t("查看", "View")}
+                    aria-label={t("查看", "View")}
+                    className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-white"
+                  >
+                    👁
+                  </Link>
+                </td>
               </tr>
             ))}
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 5 : 4} className="px-3 py-6 text-center text-neutral-400">
+                <td colSpan={isAdmin ? 6 : 5} className="px-3 py-6 text-center text-neutral-400">
                   <Bi zh="没有符合的请假记录" en="No matching leave requests" />
                 </td>
               </tr>
