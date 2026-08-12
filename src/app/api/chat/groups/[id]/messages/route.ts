@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { db } from "@/db";
 import { chatGroupMembers, chatMessages, users } from "@/db/schema";
 import { auth } from "@/auth";
@@ -42,7 +42,22 @@ export async function GET(
     .orderBy(asc(chatMessages.createdAt))
     .limit(200);
 
-  return NextResponse.json({ messages: rows });
+  // "Online" is just "seen in the last 60s" via the periodic presence
+  // heartbeat — good enough for a small team, no websocket session tracking.
+  const oneMinuteAgo = new Date(Date.now() - 60_000);
+  const onlineRows = await db
+    .select({ id: users.id })
+    .from(chatGroupMembers)
+    .innerJoin(users, eq(chatGroupMembers.userId, users.id))
+    .where(and(eq(chatGroupMembers.groupId, id), gt(users.lastSeenAt, oneMinuteAgo)));
+
+  // Viewing the group (i.e. fetching its messages) counts as reading it.
+  await db
+    .update(chatGroupMembers)
+    .set({ lastReadAt: new Date() })
+    .where(and(eq(chatGroupMembers.groupId, id), eq(chatGroupMembers.userId, session.user.id)));
+
+  return NextResponse.json({ messages: rows, onlineCount: onlineRows.length });
 }
 
 const bodySchema = z.object({ body: z.string().min(1).max(2000) });
@@ -71,6 +86,12 @@ export async function POST(
     .insert(chatMessages)
     .values({ groupId: id, senderId: session.user.id, body: parsed.data.body })
     .returning();
+
+  // Sending a message also counts as having read up to that point.
+  await db
+    .update(chatGroupMembers)
+    .set({ lastReadAt: new Date() })
+    .where(and(eq(chatGroupMembers.groupId, id), eq(chatGroupMembers.userId, session.user.id)));
 
   return NextResponse.json({ message: row }, { status: 201 });
 }
