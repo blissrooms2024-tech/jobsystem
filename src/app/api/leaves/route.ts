@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { leaves } from "@/db/schema";
 import { auth } from "@/auth";
 import { generateLeaveCode } from "@/lib/codes";
-import { nextSequenceNumber } from "@/lib/sequence";
+import { insertWithNextCode } from "@/lib/sequence";
 
 const bodySchema = z.object({
   type: z.string().min(1),
@@ -22,25 +22,33 @@ export async function POST(request: Request) {
 
   const parsed = bodySchema.safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const message = parsed.error.issues[0]?.message ?? "Invalid input";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
   const data = parsed.data;
 
-  const seq = await nextSequenceNumber(leaves, leaves.leaveCode, 1);
-  const leaveCode = generateLeaveCode(seq);
-
-  const [created] = await db
-    .insert(leaves)
-    .values({
-      leaveCode,
-      userId: session.user.id,
-      type: data.type,
-      startDate: data.startDate,
-      endDate: data.endDate,
-      days: data.days.toFixed(1),
-      reason: data.reason,
-    })
-    .returning();
+  const created = await insertWithNextCode(
+    leaves,
+    leaves.leaveCode,
+    1,
+    "leaves_leave_code_unique",
+    async (leaveCode) => {
+      const [row] = await db
+        .insert(leaves)
+        .values({
+          leaveCode,
+          userId: session.user.id,
+          type: data.type,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          days: data.days.toFixed(1),
+          reason: data.reason,
+        })
+        .returning();
+      return row;
+    },
+    generateLeaveCode,
+  );
 
   return NextResponse.json({ leave: created }, { status: 201 });
 }

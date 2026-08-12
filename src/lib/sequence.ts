@@ -21,3 +21,45 @@ export async function nextSequenceNumber(
     .from(table);
   return (row?.max ?? 0) + 1;
 }
+
+function isUniqueViolation(err: unknown, constraintName: string): boolean {
+  let cur: unknown = err;
+  for (let i = 0; i < 5 && cur; i++) {
+    const e = cur as { code?: string; constraint?: string; cause?: unknown };
+    if (e.code === "23505" && (!e.constraint || e.constraint === constraintName)) return true;
+    cur = e.cause;
+  }
+  return false;
+}
+
+/**
+ * Reads the next sequence number and inserts, retrying with a fresh number
+ * on a unique-constraint collision (`nextSequenceNumber` reads-then-writes,
+ * so two requests racing between the read and the insert can both compute
+ * the same "next" number — e.g. a double-click on Save). Not a true atomic
+ * sequence, but self-healing under that race instead of failing outright.
+ */
+export async function insertWithNextCode<T>(
+  table: PgTable,
+  codeColumn: SQLWrapper,
+  prefixLength: number,
+  constraintName: string,
+  attempt: (code: string, seq: number) => Promise<T>,
+  formatCode: (seq: number) => string,
+  maxRetries = 5,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i <= maxRetries; i++) {
+    const seq = await nextSequenceNumber(table, codeColumn, prefixLength);
+    try {
+      return await attempt(formatCode(seq), seq);
+    } catch (err) {
+      if (isUniqueViolation(err, constraintName) && i < maxRetries) {
+        lastErr = err;
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
+}
