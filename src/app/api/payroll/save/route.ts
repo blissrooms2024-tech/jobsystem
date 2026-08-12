@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { payroll } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { generatePayrollCode } from "@/lib/codes";
-import { nextSequenceNumber } from "@/lib/sequence";
+import { insertWithNextCode } from "@/lib/sequence";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -71,21 +71,30 @@ export async function POST(request: Request) {
     return NextResponse.json({ payroll: updated });
   }
 
-  const seq = await nextSequenceNumber(payroll, payroll.payrollCode, 1);
-  const [created] = await db
-    .insert(payroll)
-    .values({
-      ...values,
-      payrollCode: generatePayrollCode(seq),
-      userId: data.userId,
-      month: data.periodStart.slice(0, 7) + "-01",
-      periodStart: data.periodStart,
-      periodEnd: data.periodEnd,
-      periodType: data.periodType,
-      createdBy: auth.session.user.id,
-      status: "draft",
-    })
-    .returning();
+  const created = await insertWithNextCode(
+    payroll,
+    payroll.payrollCode,
+    1,
+    "payroll_payroll_code_unique",
+    async (payrollCode) => {
+      const [row] = await db
+        .insert(payroll)
+        .values({
+          ...values,
+          payrollCode,
+          userId: data.userId,
+          month: data.periodStart.slice(0, 7) + "-01",
+          periodStart: data.periodStart,
+          periodEnd: data.periodEnd,
+          periodType: data.periodType,
+          createdBy: auth.session.user.id,
+          status: "draft",
+        })
+        .returning();
+      return row;
+    },
+    generatePayrollCode,
+  );
 
   return NextResponse.json({ payroll: created }, { status: 201 });
 }

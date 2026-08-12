@@ -19,7 +19,8 @@ export async function POST(request: Request) {
 
   const parsed = bodySchema.safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const message = parsed.error.issues[0]?.message ?? "Invalid input";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const [user] = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1);

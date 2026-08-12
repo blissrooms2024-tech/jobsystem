@@ -22,7 +22,8 @@ export async function PATCH(
   const { id } = await params;
   const parsed = bodySchema.safeParse(await request.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const message = parsed.error.issues[0]?.message ?? "Invalid input";
+    return NextResponse.json({ error: message }, { status: 400 });
   }
 
   const [existing] = await db.select().from(payroll).where(eq(payroll.id, id)).limit(1);
