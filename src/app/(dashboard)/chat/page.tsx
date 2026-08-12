@@ -28,6 +28,8 @@ export default async function ChatPage() {
         .select({
           groupId: chatMessages.groupId,
           body: chatMessages.body,
+          attachmentUrl: chatMessages.attachmentUrl,
+          deletedAt: chatMessages.deletedAt,
           createdAt: chatMessages.createdAt,
           senderId: chatMessages.senderId,
         })
@@ -37,7 +39,10 @@ export default async function ChatPage() {
     : [];
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
   for (const m of recentMessages) {
-    if (!lastByGroup.has(m.groupId)) lastByGroup.set(m.groupId, m);
+    if (!lastByGroup.has(m.groupId)) {
+      const preview = m.deletedAt ? "此消息已删除" : m.attachmentUrl && !m.body ? "[照片]" : m.body;
+      lastByGroup.set(m.groupId, { body: preview, createdAt: m.createdAt });
+    }
   }
 
   // recentMessages is already fetched (for the last-message preview) with
