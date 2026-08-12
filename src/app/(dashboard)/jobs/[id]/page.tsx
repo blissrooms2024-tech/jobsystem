@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/utils";
 import { parsePhotos, PHOTO_KINDS } from "@/lib/photos";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { JobAdminActions } from "@/components/job-admin-actions";
 
 export default async function JobDetailPage({
   params,
@@ -116,6 +117,14 @@ export default async function JobDetailPage({
             <p className="text-sm text-neutral-400">暂无照片 No photos yet</p>
           )}
         </div>
+      ) : null}
+
+      {isAdmin ? (
+        <JobAdminActions
+          jobId={job.id}
+          status={job.status}
+          canDelete={currentUser.role === "boss" || currentUser.role === "admin"}
+        />
       ) : null}
     </div>
   );

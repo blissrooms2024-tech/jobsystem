@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export function UserRow({
   id,
@@ -10,6 +11,8 @@ export function UserRow({
   role,
   staffType,
   active,
+  bankName,
+  bankAccount,
 }: {
   id: string;
   name: string;
@@ -17,6 +20,8 @@ export function UserRow({
   role: string;
   staffType: string | null;
   active: boolean;
+  bankName: string | null;
+  bankAccount: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -25,11 +30,23 @@ export function UserRow({
   return (
     <tr className="border-t border-neutral-100 align-top">
       <td className="px-3 py-2">
-        <p className="font-medium">{name}</p>
+        <Link href={`/users/${id}`} className="font-medium hover:underline">
+          {name}
+        </Link>
         <p className="text-xs text-neutral-400">{username}</p>
       </td>
       <td className="px-3 py-2 capitalize">{role}</td>
       <td className="px-3 py-2">{staffType ?? "-"}</td>
+      <td className="px-3 py-2">
+        {bankName || bankAccount ? (
+          <>
+            <p>{bankName ?? "-"}</p>
+            <p className="text-xs text-neutral-400">{bankAccount ?? "-"}</p>
+          </>
+        ) : (
+          "-"
+        )}
+      </td>
       <td className="px-3 py-2">
         <button
           type="button"

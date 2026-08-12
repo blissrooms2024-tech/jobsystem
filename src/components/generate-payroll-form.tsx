@@ -15,24 +15,25 @@ export function GeneratePayrollForm({ employees }: { employees: Option[] }) {
       className="max-w-md space-y-4"
       action={(formData: FormData) => {
         setError(null);
+        const userId = String(formData.get("userId") || "");
+        const periodStart = String(formData.get("periodStart") || "");
+        const periodEnd = String(formData.get("periodEnd") || "");
+        if (!userId || !periodStart || !periodEnd) {
+          setError("请把员工和开始/结束日期都填好 Please fill in employee and both dates");
+          return;
+        }
         startTransition(async () => {
-          const payload = {
-            userId: String(formData.get("userId") || ""),
-            periodStart: String(formData.get("periodStart") || ""),
-            periodEnd: String(formData.get("periodEnd") || ""),
-            periodType: "custom" as const,
-          };
           const res = await fetch("/api/payroll/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ userId, periodStart, periodEnd, periodType: "custom" as const }),
           });
+          const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            setError("生成失败 Failed to generate");
+            setError(typeof data.error === "string" ? data.error : "生成失败 Failed to generate");
             return;
           }
-          const { payroll } = await res.json();
-          router.push(`/payroll/${payroll.id}`);
+          router.push(`/payroll/${data.payroll.id}`);
         });
       }}
     >
