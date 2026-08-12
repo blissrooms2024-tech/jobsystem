@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import { Bi } from "@/components/bi";
+import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/use-lang";
 
 type Message = {
@@ -67,9 +68,11 @@ export function ChatRoom({
   const [showEmoji, setShowEmoji] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  const [menuMessageId, setMenuMessageId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const memberNames = useMemo(() => members.map((m) => m.name), [members]);
   const otherMembers = useMemo(
@@ -169,6 +172,19 @@ export function ChatRoom({
     }
   };
 
+  const startLongPress = (id: string, canDelete: boolean) => {
+    if (!canDelete) return;
+    cancelLongPress();
+    longPressTimer.current = setTimeout(() => setMenuMessageId(id), 450);
+  };
+
+  const cancelLongPress = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
   const deleteMessage = async (messageId: string) => {
     const res = await fetch(`/api/chat/groups/${groupId}/messages/${messageId}`, { method: "DELETE" });
     if (res.ok) {
@@ -224,13 +240,21 @@ export function ChatRoom({
             (isGroupAdmin || (mine && now - new Date(m.createdAt).getTime() < RECALL_WINDOW_MS));
           return (
             <div key={m.id} className={mine ? "flex justify-end" : "flex justify-start"}>
-              <div className="group max-w-[75%]">
+              <div className="relative max-w-[75%]">
                 <div
-                  className={
-                    mine
-                      ? "rounded-lg bg-purple-700 px-3 py-2 text-sm text-white"
-                      : "rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-900"
-                  }
+                  onPointerDown={() => startLongPress(m.id, canDelete)}
+                  onPointerUp={cancelLongPress}
+                  onPointerLeave={cancelLongPress}
+                  onPointerCancel={cancelLongPress}
+                  onContextMenu={(e) => {
+                    if (canDelete) e.preventDefault();
+                  }}
+                  style={canDelete ? { WebkitTouchCallout: "none" } : undefined}
+                  className={cn(
+                    "rounded-lg px-3 py-2 text-sm",
+                    canDelete && "select-none",
+                    mine ? "bg-purple-700 text-white" : "bg-neutral-100 text-neutral-900",
+                  )}
                 >
                   {mine ? null : <p className="mb-0.5 text-xs font-medium text-neutral-500">{m.senderName}</p>}
                   {m.deleted ? (
@@ -260,31 +284,48 @@ export function ChatRoom({
                       ) : null}
                     </>
                   )}
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <p className={mine ? "text-[10px] text-purple-200" : "text-[10px] text-neutral-400"}>
-                      {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
-                    </p>
-                    {canDelete ? (
-                      <button
-                        type="button"
-                        onClick={() => deleteMessage(m.id)}
-                        title={t("撤回", "Recall")}
-                        aria-label={t("撤回", "Recall")}
-                        className={
-                          mine
-                            ? "text-[10px] text-purple-200 opacity-0 hover:underline group-hover:opacity-100"
-                            : "text-[10px] text-neutral-400 opacity-0 hover:underline group-hover:opacity-100"
-                        }
-                      >
-                        🗑
-                      </button>
-                    ) : null}
-                  </div>
+                  <p className={mine ? "mt-1 text-[10px] text-purple-200" : "mt-1 text-[10px] text-neutral-400"}>
+                    {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
+                  </p>
                 </div>
+                {menuMessageId === m.id ? (
+                  <div
+                    className={cn(
+                      "absolute bottom-full z-50 mb-1 w-44 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg",
+                      mine ? "right-0" : "left-0",
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        deleteMessage(m.id);
+                        setMenuMessageId(null);
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    >
+                      🗑 {mine ? <Bi zh="撤回消息" en="Recall message" /> : <Bi zh="删除消息" en="Delete message" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMenuMessageId(null)}
+                      className="block w-full border-t border-neutral-100 px-3 py-2 text-left text-sm text-neutral-500 hover:bg-neutral-50"
+                    >
+                      <Bi zh="取消" en="Cancel" />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           );
         })}
+        {menuMessageId ? (
+          <button
+            type="button"
+            aria-label={t("关闭菜单", "Close menu")}
+            onClick={() => setMenuMessageId(null)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+        ) : null}
         {messages.length === 0 ? (
           <p className="text-center text-sm text-neutral-400">
             <Bi zh="还没有消息，说点什么吧" en="No messages yet — say something" />
