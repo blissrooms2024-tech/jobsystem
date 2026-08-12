@@ -16,6 +16,7 @@ const ADMIN_ROLES: Role[] = ["boss", "admin", "supervisor"];
 const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "总览 Dashboard" },
   { href: "/jobs", label: "任务 Jobs" },
+  { href: "/jobs/calendar", label: "日历 Calendar" },
   { href: "/payroll", label: "工资 Payroll", roles: ["boss", "admin"] },
   { href: "/payroll/me", label: "我的工资 My Payslips", roles: ["employee", "supervisor"] },
   { href: "/leaves", label: "请假 Leaves" },

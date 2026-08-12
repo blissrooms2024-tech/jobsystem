@@ -100,7 +100,12 @@ export default async function JobDetailPage({
           {isOwner ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {PHOTO_KINDS.map((kind) => (
-                <PhotoUploader key={kind} jobId={job.id} kind={kind} />
+                <PhotoUploader
+                  key={kind}
+                  jobId={job.id}
+                  kind={kind}
+                  context={{ staffName: assignee?.name ?? "", unitName: unit?.unitName, jobTitle: job.title }}
+                />
               ))}
             </div>
           ) : null}

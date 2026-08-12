@@ -9,12 +9,12 @@ import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; date?: string }>;
 }) {
   const session = await auth();
   const user = session!.user;
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
-  const { status } = await searchParams;
+  const { status, date } = await searchParams;
 
   const conditions = [];
   if (!isAdmin) {
@@ -30,6 +30,7 @@ export default async function JobsPage({
     conditions.push(
       eq(jobs.status, status as "assigned" | "in_progress" | "completed" | "cancelled" | "missed"),
     );
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) conditions.push(eq(jobs.schedDate, date));
 
   const rows = await db
     .select({
@@ -52,7 +53,14 @@ export default async function JobsPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">任务 Jobs</h1>
+        <h1 className="text-lg font-semibold">
+          任务 Jobs
+          {date ? (
+            <span className="ml-2 text-sm font-normal text-neutral-500">
+              {date} <Link href="/jobs" className="underline">清除 clear</Link>
+            </span>
+          ) : null}
+        </h1>
         {isAdmin ? (
           <Link
             href="/jobs/new"

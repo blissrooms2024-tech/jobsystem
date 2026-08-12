@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 type Props = {
@@ -18,6 +18,24 @@ export function UnitRow(props: Props) {
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const latRef = useRef<HTMLInputElement>(null);
+  const lonRef = useRef<HTMLInputElement>(null);
+
+  const grabHere = () => {
+    setError(null);
+    if (!navigator.geolocation) {
+      setError("此设备不支持定位 Geolocation not supported");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        if (latRef.current) latRef.current.value = pos.coords.latitude.toFixed(6);
+        if (lonRef.current) lonRef.current.value = pos.coords.longitude.toFixed(6);
+      },
+      (err) => setError(err.message || "无法获取定位 Could not get location"),
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  };
 
   if (!editing) {
     return (
@@ -69,9 +87,12 @@ export function UnitRow(props: Props) {
         >
           <input name="unitName" defaultValue={props.unitName} className="edit-input w-32" />
           <input name="property" defaultValue={props.property ?? ""} placeholder="Property" className="edit-input w-24" />
-          <input name="lat" type="number" step="0.000001" defaultValue={props.lat} className="edit-input w-24" />
-          <input name="lon" type="number" step="0.000001" defaultValue={props.lon} className="edit-input w-24" />
+          <input ref={latRef} name="lat" type="number" step="0.000001" defaultValue={props.lat} className="edit-input w-24" />
+          <input ref={lonRef} name="lon" type="number" step="0.000001" defaultValue={props.lon} className="edit-input w-24" />
           <input name="radiusM" type="number" defaultValue={props.radiusM} className="edit-input w-16" />
+          <button type="button" onClick={grabHere} className="rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-white">
+            📍 当前定位 Use location
+          </button>
           <button
             type="submit"
             disabled={isPending}
@@ -82,7 +103,7 @@ export function UnitRow(props: Props) {
           <button type="button" onClick={() => setEditing(false)} className="text-xs text-neutral-500">
             取消
           </button>
-          {error ? <span className="text-xs text-red-600">{error}</span> : null}
+          {error ? <span className="w-full text-xs text-red-600">{error}</span> : null}
           <style jsx>{`
             .edit-input {
               border: 1px solid #d4d4d4;

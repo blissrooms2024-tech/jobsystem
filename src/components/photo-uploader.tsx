@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import type { PhotoKind } from "@/lib/photos";
+import { tryGetPosition, watermarkImage } from "@/lib/watermark";
 
 const KIND_LABEL: Record<PhotoKind, string> = {
   photo: "任务照片 Photo",
@@ -11,7 +12,15 @@ const KIND_LABEL: Record<PhotoKind, string> = {
   after: "清洁后 After",
 };
 
-export function PhotoUploader({ jobId, kind }: { jobId: string; kind: PhotoKind }) {
+export function PhotoUploader({
+  jobId,
+  kind,
+  context,
+}: {
+  jobId: string;
+  kind: PhotoKind;
+  context?: { staffName: string; unitName?: string; jobTitle?: string };
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +30,18 @@ export function PhotoUploader({ jobId, kind }: { jobId: string; kind: PhotoKind 
     setError(null);
     startTransition(async () => {
       try {
-        const blob = await upload(`jobs/${jobId}/${kind}-${Date.now()}-${file.name}`, file, {
+        const pos = await tryGetPosition();
+        const lines = [
+          `${context?.jobTitle ?? "Bliss Rooms"} · ${KIND_LABEL[kind]}${context?.unitName ? ` · ${context.unitName}` : ""}`,
+          new Date().toLocaleString(),
+          ...(pos ? [`GPS ${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`] : []),
+          ...(context?.staffName ? [context.staffName] : []),
+        ];
+        const watermarked = await watermarkImage(file, lines);
+
+        const blob = await upload(`jobs/${jobId}/${kind}-${Date.now()}-${file.name}`, watermarked, {
           access: "public",
+          contentType: "image/jpeg",
           handleUploadUrl: `/api/jobs/${jobId}/photo-upload`,
         });
 
