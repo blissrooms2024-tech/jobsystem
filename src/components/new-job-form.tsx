@@ -67,9 +67,7 @@ export function NewJobForm({
       </Field>
       <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" className="input">
-          <option value="">
-            -- <Bi zh="选择" en="select" /> --
-          </option>
+          <option value="">-- 选择 select --</option>
           {jobTypes.map((jt) => (
             <option key={jt.id} value={jt.id}>
               {jt.label} (RM {jt.pay})
@@ -79,9 +77,7 @@ export function NewJobForm({
       </Field>
       <Field labelZh="单位" labelEn="Unit">
         <select name="unitId" className="input">
-          <option value="">
-            -- <Bi zh="选择" en="select" /> --
-          </option>
+          <option value="">-- 选择 select --</option>
           {units.map((u) => (
             <option key={u.id} value={u.id}>
               {u.label}
@@ -91,9 +87,7 @@ export function NewJobForm({
       </Field>
       <Field labelZh="负责人" labelEn="Assign to">
         <select name="assignedTo" required className="input">
-          <option value="">
-            -- <Bi zh="选择" en="select" /> --
-          </option>
+          <option value="">-- 选择 select --</option>
           {employees.map((e) => (
             <option key={e.id} value={e.id}>
               {e.label}

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { leaves, users } from "@/db/schema";
 import { LeavesListClient } from "@/components/leaves-list-client";
+import { Bi } from "@/components/bi";
 
 export default async function LeavesPage() {
   const session = await auth();
@@ -44,12 +45,14 @@ export default async function LeavesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">请假 Leaves</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="请假" en="Leaves" />
+        </h1>
         <Link
           href="/leaves/new"
           className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white"
         >
-          + 申请请假 Request leave
+          + <Bi zh="申请请假" en="Request leave" />
         </Link>
       </div>
 

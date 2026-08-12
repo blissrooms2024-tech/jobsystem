@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
+import { biText } from "@/lib/lang";
 
 export function LeaveReviewActions({ leaveId, status }: { leaveId: string; status: string }) {
   const router = useRouter();
@@ -37,7 +39,7 @@ export function LeaveReviewActions({ leaveId, status }: { leaveId: string; statu
               onClick={() => review("approved")}
               className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              批准 Approve
+              <Bi zh="批准" en="Approve" />
             </button>
             <button
               type="button"
@@ -45,7 +47,7 @@ export function LeaveReviewActions({ leaveId, status }: { leaveId: string; statu
               onClick={() => review("rejected")}
               className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
             >
-              拒绝 Reject
+              <Bi zh="拒绝" en="Reject" />
             </button>
           </>
         ) : null}
@@ -54,11 +56,12 @@ export function LeaveReviewActions({ leaveId, status }: { leaveId: string; statu
             type="button"
             disabled={isPending}
             onClick={() => {
-              if (confirm("确定要撤销这个已批准的请假吗？\nCancel this approved leave?")) review("cancelled");
+              if (confirm(biText("确定要撤销这个已批准的请假吗？", "Cancel this approved leave?")))
+                review("cancelled");
             }}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
           >
-            撤销 Cancel this leave
+            <Bi zh="撤销" en="Cancel this leave" />
           </button>
         ) : null}
       </div>
