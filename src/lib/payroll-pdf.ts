@@ -9,6 +9,12 @@ function appUrl() {
   return process.env.APP_URL?.replace(/\/$/, "") ?? "";
 }
 
+/** "YYYY-MM-DD HH:mm:ss" in Malaysia time (fixed UTC+8, no DST), for the payslip footer. */
+export function generatedAtStamp(): string {
+  const my = new Date(Date.now() + 8 * 3600 * 1000);
+  return my.toISOString().slice(0, 19).replace("T", " ");
+}
+
 /**
  * Renders the payslip PDF for a payroll row and uploads it to Blob storage
  * as a private object (the project's Blob store is configured private — a
@@ -30,19 +36,24 @@ export async function generateAndStorePayslipPdf(payrollId: string) {
   const pdfBuffer = await renderPayslipPdf({
     payrollCode: row.payroll.payrollCode,
     employeeName: row.employee.name,
+    staffId: row.employee.staffId,
     staffType: row.employee.staffType,
     icPassport: row.employee.icPassport,
     bankName: row.employee.bankName,
     bankAccount: row.employee.bankAccount,
     periodStart: row.payroll.periodStart,
     periodEnd: row.payroll.periodEnd,
+    periodType: row.payroll.periodType,
+    issuedDate: row.payroll.createdAt.toISOString().slice(0, 10),
     jobsCount: row.payroll.jobsCount,
     jobsPay: row.payroll.jobsPay,
     baseSalary: row.payroll.baseSalary,
     allowance: row.payroll.allowance,
     deduction: row.payroll.deduction,
     note: row.payroll.note,
+    status: row.payroll.status,
     paidAt: row.payroll.paidAt ? row.payroll.paidAt.toISOString().slice(0, 10) : null,
+    generatedAt: generatedAtStamp(),
   });
 
   const blob = await put(`payroll/${row.payroll.payrollCode}.pdf`, pdfBuffer, {

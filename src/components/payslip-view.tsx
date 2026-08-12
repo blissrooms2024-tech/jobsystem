@@ -12,17 +12,8 @@ const COMPANY = {
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex text-sm">
-      <span className="w-32 shrink-0 text-neutral-500">{label}</span>
-      <span>{value}</span>
-    </div>
-  );
-}
-
-function AmountRow({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
-  return (
-    <div className="flex justify-between py-1 text-sm">
-      <span className={muted ? "text-neutral-500" : undefined}>{label}</span>
-      <span>{value}</span>
+      <span className="w-28 shrink-0 text-neutral-500">{label}</span>
+      <span className="font-medium">{value}</span>
     </div>
   );
 }
@@ -32,6 +23,7 @@ export function PayslipView({ data }: { data: PayslipData }) {
   const net =
     Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance) - Number(data.deduction);
   const gross = Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance);
+  const periodTypeLabel = data.periodType === "month" ? "Month" : "Custom";
 
   return (
     <div className="rounded-lg border border-neutral-200 p-6">
@@ -42,36 +34,80 @@ export function PayslipView({ data }: { data: PayslipData }) {
         <p className="text-xs text-neutral-500">{COMPANY.contact}</p>
       </div>
 
-      <p className="text-base font-bold">PAYSLIP</p>
-      <p className="mb-3 text-sm text-neutral-500">
-        {data.payrollCode} · {data.periodStart} to {data.periodEnd}
-      </p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <p className="text-base font-bold">PAYSLIP</p>
+        <div className="text-right text-xs text-neutral-600">
+          <p>
+            Pay period: <span className="font-medium">{data.periodStart} – {data.periodEnd}</span>
+          </p>
+          <p>
+            Type: {periodTypeLabel} &nbsp; Issued: {data.issuedDate}
+          </p>
+        </div>
+      </div>
 
-      <div className="space-y-1">
+      <div className="mb-4 grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2">
         <InfoRow label="Name" value={data.employeeName} />
         <InfoRow label="Position" value={data.staffType ?? "-"} />
+        <InfoRow label="Staff ID" value={data.staffId ?? "-"} />
         <InfoRow label="IC / Passport" value={data.icPassport ?? "-"} />
-        <InfoRow
-          label="Bank"
-          value={`${data.bankName ?? "-"}${data.bankAccount ? ` · ${data.bankAccount}` : ""}`}
-        />
+        <InfoRow label="Bank" value={data.bankName ?? "-"} />
+        <InfoRow label="Account No." value={data.bankAccount ?? "-"} />
       </div>
 
-      <div className="my-4 border-t border-neutral-200" />
-
-      <div>
-        <AmountRow label={`Jobs pay (${data.jobsCount} jobs)`} value={formatMoney(data.jobsPay)} muted />
-        <AmountRow label="Base salary" value={formatMoney(data.baseSalary)} muted />
-        <AmountRow label="Allowance" value={formatMoney(data.allowance)} muted />
-        <AmountRow label="Gross earnings" value={formatMoney(gross)} muted />
-        <AmountRow label="Deduction" value={`-${formatMoney(data.deduction)}`} muted />
+      <div className="grid grid-cols-1 overflow-hidden rounded-md border border-neutral-300 sm:grid-cols-2">
+        <div className="border-b border-neutral-300 sm:border-b-0 sm:border-r">
+          <div className="flex justify-between bg-neutral-100 px-3 py-1.5 text-xs font-semibold">
+            <span>Earnings</span>
+            <span>RM</span>
+          </div>
+          <div className="flex justify-between border-b border-neutral-100 px-3 py-1.5 text-sm">
+            <span>Job pay ({data.jobsCount} jobs)</span>
+            <span>{formatMoney(data.jobsPay)}</span>
+          </div>
+          <div className="flex justify-between border-b border-neutral-100 px-3 py-1.5 text-sm">
+            <span>Basic salary</span>
+            <span>{formatMoney(data.baseSalary)}</span>
+          </div>
+          <div className="flex justify-between border-b border-neutral-100 px-3 py-1.5 text-sm">
+            <span>Allowance</span>
+            <span>{formatMoney(data.allowance)}</span>
+          </div>
+          <div className="flex justify-between bg-neutral-50 px-3 py-1.5 text-sm font-semibold">
+            <span>Gross Earnings</span>
+            <span>{formatMoney(gross)}</span>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between bg-neutral-100 px-3 py-1.5 text-xs font-semibold">
+            <span>Deductions</span>
+            <span>RM</span>
+          </div>
+          <div className="flex justify-between border-b border-neutral-100 px-3 py-1.5 text-sm">
+            <span>Deduction</span>
+            <span>{formatMoney(data.deduction)}</span>
+          </div>
+          <div className="px-3 py-1.5 text-sm">&nbsp;</div>
+          <div className="px-3 py-1.5 text-sm">&nbsp;</div>
+          <div className="flex justify-between bg-neutral-50 px-3 py-1.5 text-sm font-semibold">
+            <span>Total Deductions</span>
+            <span>{formatMoney(data.deduction)}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-3 flex justify-between rounded-md bg-neutral-900 px-4 py-3">
-        <span className="text-base font-bold text-white">NET PAY</span>
-        <span className="text-base font-bold text-white">{formatMoney(net)}</span>
+      <div className="mt-4 flex justify-between">
+        <span className="text-base font-bold text-neutral-400">NET PAY</span>
+        <span className="text-base font-bold text-neutral-400">{formatMoney(net)}</span>
       </div>
-      <p className="mt-2 text-xs italic text-neutral-600">{amountInWords(net)}</p>
+      <p className="mt-1 text-xs italic text-neutral-600">{amountInWords(net)}</p>
+
+      <div className="mt-2 flex items-center gap-1.5 text-xs">
+        <span>Payment:</span>
+        <span className="rounded-full border border-neutral-400 px-2 py-0.5">
+          {data.status === "paid" ? "PAID" : "DRAFT"}
+        </span>
+      </div>
 
       {data.note ? (
         <div className="mt-4">
@@ -80,30 +116,22 @@ export function PayslipView({ data }: { data: PayslipData }) {
         </div>
       ) : null}
 
-      <p className="mt-3 text-xs text-neutral-400">
-        {data.paidAt ? `Paid on ${data.paidAt}` : "Draft — not yet paid"}
-      </p>
-
-      <div className="mt-12 flex gap-8 text-xs text-neutral-500">
-        <div className="w-1/2 border-t border-neutral-300 pt-1">
-          Authorised by (Employer)
-          <br />
-          {COMPANY.name}
-        </div>
-        <div className="w-1/2 border-t border-neutral-300 pt-1">
-          Received by (Employee)
-          <br />
-          {data.employeeName}
-          {data.icPassport ? (
-            <>
-              <br />
-              IC / Passport: {data.icPassport}
-            </>
-          ) : null}
+      <div className="mt-8 border-t border-neutral-300 pt-3">
+        <div className="flex justify-between text-xs text-neutral-500">
+          <div>
+            <p>Authorised by (Employer)</p>
+            <p className="font-semibold">{COMPANY.name}</p>
+          </div>
+          <div className="text-right">
+            <p>Received by (Employee)</p>
+            <p className="font-semibold">{data.employeeName}</p>
+          </div>
         </div>
       </div>
 
-      <p className="mt-6 text-center text-[10px] text-neutral-400">This is a computer-generated payslip.</p>
+      <p className="mt-4 text-center text-[10px] text-neutral-400">
+        This is a computer-generated payslip. Generated on {data.generatedAt}.
+      </p>
     </div>
   );
 }

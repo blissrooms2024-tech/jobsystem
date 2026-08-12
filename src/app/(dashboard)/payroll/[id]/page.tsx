@@ -4,8 +4,9 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { payroll, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
+import { generatedAtStamp } from "@/lib/payroll-pdf";
 import { PayrollEditForm } from "@/components/payroll-edit-form";
-import { PayslipView } from "@/components/payslip-view";
+import { PayslipPreviewToggle } from "@/components/payslip-preview-toggle";
 import { MarkPaidButton } from "@/components/mark-paid-button";
 import { UnpayButton } from "@/components/unpay-button";
 import { ResendPayslipButton } from "@/components/resend-payslip-button";
@@ -67,35 +68,36 @@ export default async function PayrollDetailPage({
         editable={canEdit}
       />
 
-      <div>
-        <p className="mb-2 text-xs text-neutral-500">工资单预览 Payslip preview</p>
-        <PayslipView
-          data={{
-            payrollCode: p.payrollCode,
-            employeeName: row.employee.name,
-            staffType: row.employee.staffType,
-            icPassport: row.employee.icPassport,
-            bankName: row.employee.bankName,
-            bankAccount: row.employee.bankAccount,
-            periodStart: p.periodStart,
-            periodEnd: p.periodEnd,
-            jobsCount: p.jobsCount,
-            jobsPay: p.jobsPay,
-            baseSalary: p.baseSalary,
-            allowance: p.allowance,
-            deduction: p.deduction,
-            note: p.note,
-            paidAt: p.paidAt ? p.paidAt.toISOString().slice(0, 10) : null,
-          }}
-        />
-      </div>
-
       <div className="space-y-4 border-t border-neutral-200 pt-4">
         <div>
           <p className="text-xs text-neutral-500">净额 Net pay</p>
           <p className="text-2xl font-semibold">{formatMoney(net)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <PayslipPreviewToggle
+            data={{
+              payrollCode: p.payrollCode,
+              employeeName: row.employee.name,
+              staffId: row.employee.staffId,
+              staffType: row.employee.staffType,
+              icPassport: row.employee.icPassport,
+              bankName: row.employee.bankName,
+              bankAccount: row.employee.bankAccount,
+              periodStart: p.periodStart,
+              periodEnd: p.periodEnd,
+              periodType: p.periodType,
+              issuedDate: p.createdAt.toISOString().slice(0, 10),
+              jobsCount: p.jobsCount,
+              jobsPay: p.jobsPay,
+              baseSalary: p.baseSalary,
+              allowance: p.allowance,
+              deduction: p.deduction,
+              note: p.note,
+              status: p.status,
+              paidAt: p.paidAt ? p.paidAt.toISOString().slice(0, 10) : null,
+              generatedAt: generatedAtStamp(),
+            }}
+          />
           <a
             href={`/api/payroll/${p.id}/pdf`}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-neutral-50"
