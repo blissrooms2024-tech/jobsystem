@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type Message = {
   id: string;
@@ -22,6 +23,8 @@ export function ChatRoom({
   currentUserId: string;
   initialMessages: Message[];
 }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -107,7 +110,7 @@ export function ChatRoom({
             }
           }}
           rows={1}
-          placeholder="输入消息... Type a message"
+          placeholder={t("输入消息...", "Type a message")}
           className="flex-1 resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm"
         />
         <button
