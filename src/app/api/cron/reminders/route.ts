@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runReminders, sweepMissedJobs } from "@/lib/reminders";
+import { runReminders, sweepInactiveUsers, sweepMissedJobs } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,8 +15,9 @@ export async function GET(request: Request) {
 
   try {
     const missed = await sweepMissedJobs();
+    const deactivated = await sweepInactiveUsers();
     const result = await runReminders();
-    return NextResponse.json({ ok: true, missed, ...result });
+    return NextResponse.json({ ok: true, missed, deactivated, ...result });
   } catch (err) {
     console.error("cron/reminders failed", err);
     return NextResponse.json(

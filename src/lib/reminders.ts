@@ -134,3 +134,31 @@ export async function sweepMissedJobs() {
   }
   return missed;
 }
+
+const INACTIVITY_DAYS = 7;
+
+/**
+ * Auto-deactivates staff (employee/supervisor only — never boss/admin, to
+ * avoid an admin locking themselves out) who haven't opened the app in 7
+ * days. "Seen" is the presence heartbeat's lastSeenAt; a user who has never
+ * logged in at all is measured from their account creation date instead,
+ * so brand-new accounts aren't deactivated the instant this sweep runs.
+ * Admin can always flip a user back to Active from the Users page.
+ */
+export async function sweepInactiveUsers() {
+  const cutoff = new Date(Date.now() - INACTIVITY_DAYS * 24 * 60 * 60 * 1000);
+  const candidates = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.active, true), inArray(users.role, ["employee", "supervisor"])));
+
+  let deactivated = 0;
+  for (const u of candidates) {
+    const lastActivity = u.lastSeenAt ?? u.createdAt;
+    if (lastActivity < cutoff) {
+      await db.update(users).set({ active: false }).where(eq(users.id, u.id));
+      deactivated++;
+    }
+  }
+  return deactivated;
+}
