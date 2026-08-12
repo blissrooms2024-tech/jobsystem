@@ -17,3 +17,13 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Language toggle: pure CSS show/hide driven by data-lang on <html>, so
+   both server- and client-rendered text work without a locale-routing
+   framework. See src/components/bi.tsx and src/components/language-toggle.tsx. */
+html[data-lang="zh"] .i18n-en {
+  display: none;
+}
+html[data-lang="en"] .i18n-zh {
+  display: none;
+}

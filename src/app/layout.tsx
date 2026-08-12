@@ -20,10 +20,21 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="zh"
+      data-lang="zh"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {/* Applies the saved language choice before paint, so returning
+            English-preference users don't see a flash of Chinese first. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var m=document.cookie.match(/(?:^|; )lang=([^;]+)/);if(m&&m[1]==='en')document.documentElement.setAttribute('data-lang','en');}catch(e){}})();",
+          }}
+        />
+        {children}
+      </body>
     </html>
   );
 }
