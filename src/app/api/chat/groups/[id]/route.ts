@@ -1,11 +1,46 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { chatGroups } from "@/db/schema";
+import { chatGroups, chatGroupMembers, users } from "@/db/schema";
 import { auth } from "@/auth";
 
 const bodySchema = z.object({ name: z.string().min(1) });
+
+// Used by the floating chat widget to load a group's info + members
+// on demand, without a full server-rendered page.
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const session = await auth();
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const [group] = await db.select().from(chatGroups).where(eq(chatGroups.id, id)).limit(1);
+  if (!group) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const [membership] = await db
+    .select()
+    .from(chatGroupMembers)
+    .where(and(eq(chatGroupMembers.groupId, id), eq(chatGroupMembers.userId, session.user.id)))
+    .limit(1);
+  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const members = await db
+    .select({ id: users.id, name: users.name })
+    .from(chatGroupMembers)
+    .innerJoin(users, eq(chatGroupMembers.userId, users.id))
+    .where(eq(chatGroupMembers.groupId, id));
+
+  return NextResponse.json({
+    group: { id: group.id, name: group.name },
+    members,
+    isGroupAdmin: group.createdBy === session.user.id,
+  });
+}
 
 export async function PATCH(
   request: Request,
