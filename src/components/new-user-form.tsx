@@ -14,10 +14,10 @@ export function NewUserForm() {
 
   const onStaffTypeChange = (value: string) => {
     // Matches the legacy system: typing "Posting Agent" auto-switches this
-    // employee to no-checkin + 3 completion photos (still editable after).
+    // employee to no-checkin + requires a completion photo (still editable after).
     if (value.trim().toLowerCase() === "posting agent") {
       if (needCheckinRef.current) needCheckinRef.current.checked = false;
-      if (donePhotosRef.current && !donePhotosRef.current.value) donePhotosRef.current.value = "3";
+      if (donePhotosRef.current) donePhotosRef.current.checked = true;
     }
   };
 
@@ -51,7 +51,7 @@ export function NewUserForm() {
               phone: String(formData.get("phone") || "") || undefined,
               payRate: String(formData.get("payRate") || "") || undefined,
               needCheckin: formData.get("needCheckin") === "on",
-              donePhotos: String(formData.get("donePhotos") || "0"),
+              donePhotos: formData.get("donePhotos") === "on" ? "1" : "0",
             };
             const res = await fetch("/api/users", {
               method: "POST",
@@ -97,17 +97,9 @@ export function NewUserForm() {
           <input ref={needCheckinRef} type="checkbox" name="needCheckin" defaultChecked />
           需要 GPS 打卡 Requires GPS check-in
         </label>
-        <label className="col-span-2 space-y-1 text-sm">
-          <span>不打卡时，完成任务需要几张照片 Photos required to mark done (no check-in staff)</span>
-          <input
-            ref={donePhotosRef}
-            name="donePhotos"
-            type="number"
-            min={0}
-            max={10}
-            defaultValue={0}
-            className="input"
-          />
+        <label className="col-span-2 flex items-center gap-2 text-sm">
+          <input ref={donePhotosRef} type="checkbox" name="donePhotos" />
+          不打卡时，需要上传完成照片 Requires a completion photo (no check-in staff)
         </label>
         {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
         <button

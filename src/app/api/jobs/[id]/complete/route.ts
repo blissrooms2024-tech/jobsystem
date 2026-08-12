@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, users } from "@/db/schema";
 import { assertWithinCheckinWindow, jobEndInstant } from "@/lib/job-timing";
-import { parsePhotos } from "@/lib/photos";
+import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
 
 const bodySchema = z.object({
   lat: z.number().optional(),
@@ -59,7 +59,7 @@ export async function POST(
   }
 
   const [assignee] = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1);
-  const need = assignee?.donePhotos ?? 0;
+  const need = requiredPhotoCount(assignee?.donePhotos);
   if (need > 0) {
     const photoCount = parsePhotos(job.photos).length;
     if (photoCount < need) {

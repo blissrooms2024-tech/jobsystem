@@ -38,6 +38,17 @@ export async function POST(
   }
 
   const existing = parsePhotos(job.photos);
+
+  // The completion "photo" (proof-of-work for no-checkin staff) may only be
+  // uploaded once per job — no replacing it after the fact. Before/after
+  // comparison shots are unaffected.
+  if (parsed.data.kind === "photo" && existing.some((p) => p.kind === "photo")) {
+    return NextResponse.json(
+      { error: "该照片已上传，不能重新上传 This photo was already uploaded and can't be re-uploaded" },
+      { status: 409 },
+    );
+  }
+
   const nextIdx = existing.filter((p) => p.kind === parsed.data.kind).length;
   const updated = [...existing, { ...parsed.data, idx: nextIdx }];
 
