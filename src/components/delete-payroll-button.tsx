@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { biText } from "@/lib/lang";
 
 export function DeletePayrollButton({
   payrollId,
@@ -22,7 +23,12 @@ export function DeletePayrollButton({
         title="删除 Delete"
         aria-label="删除 Delete"
         onClick={() => {
-          if (!confirm("删除这张草稿工资单？此操作无法撤销。\nDelete this draft payslip? This cannot be undone.")) return;
+          if (
+            !confirm(
+              biText("删除这张草稿工资单？此操作无法撤销。", "Delete this draft payslip? This cannot be undone."),
+            )
+          )
+            return;
           setError(null);
           startTransition(async () => {
             const res = await fetch(`/api/payroll/${payrollId}`, { method: "DELETE" });

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 export function MarkPaidButton({ payrollId }: { payrollId: string }) {
   const router = useRouter();
@@ -19,7 +20,7 @@ export function MarkPaidButton({ payrollId }: { payrollId: string }) {
       }}
       className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
     >
-      {isPending ? "处理中... Processing..." : "标记已发放 Mark as paid"}
+      {isPending ? <Bi zh="处理中..." en="Processing..." /> : <Bi zh="标记已发放" en="Mark as paid" />}
     </button>
   );
 }

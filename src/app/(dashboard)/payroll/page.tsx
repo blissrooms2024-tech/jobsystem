@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { payroll, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
 import { PayrollListClient } from "@/components/payroll-list-client";
+import { Bi } from "@/components/bi";
 
 export default async function PayrollListPage() {
   const session = await auth();
@@ -45,12 +46,14 @@ export default async function PayrollListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">工资 Payroll</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="工资" en="Payroll" />
+        </h1>
         <Link
           href="/payroll/generate"
           className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white"
         >
-          + 生成工资单 Generate payslip
+          + <Bi zh="生成工资单" en="Generate payslip" />
         </Link>
       </div>
 
@@ -59,9 +62,9 @@ export default async function PayrollListPage() {
           <table className="w-full min-w-[420px] text-left text-sm">
             <thead className="bg-neutral-50 text-neutral-500">
               <tr>
-                <th className="px-3 py-2">月份 Month</th>
-                <th className="px-3 py-2">工资单数 Payslips</th>
-                <th className="px-3 py-2">已发放合计 Paid total</th>
+                <th className="px-3 py-2"><Bi zh="月份" en="Month" /></th>
+                <th className="px-3 py-2"><Bi zh="工资单数" en="Payslips" /></th>
+                <th className="px-3 py-2"><Bi zh="已发放合计" en="Paid total" /></th>
               </tr>
             </thead>
             <tbody>

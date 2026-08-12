@@ -5,6 +5,8 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/utils";
 import { addDays, firstOfMonth, lastOfMonth, todayISO } from "@/lib/pay-periods";
 import { PayslipView } from "@/components/payslip-view";
+import { Bi } from "@/components/bi";
+import { biText } from "@/lib/lang";
 
 type Row = {
   userId: string;
@@ -42,7 +44,7 @@ export function PayrollBatchTable() {
   const [from, setFrom] = useState(firstOfMonth(today));
   const [to, setTo] = useState(lastOfMonth(today));
   const [rows, setRows] = useState<Row[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
   const [selectedUserId, setSelectedUserId] = useState("");
   const [search, setSearch] = useState("");
@@ -62,7 +64,7 @@ export function PayrollBatchTable() {
     startTransition(async () => {
       const res = await fetch(`/api/payroll/preview?periodStart=${from}&periodEnd=${to}`);
       if (!res.ok) {
-        setError("加载失败 Failed to load");
+        setError(<Bi zh="加载失败" en="Failed to load" />);
         return;
       }
       const data = await res.json();
@@ -133,7 +135,7 @@ export function PayrollBatchTable() {
     const tsv = [header.join("\t"), ...lines].join("\n");
     navigator.clipboard
       .writeText(tsv)
-      .then(() => alert("已复制，粘贴到 Excel 即可 Copied — paste into Excel"))
+      .then(() => alert(biText("已复制，粘贴到 Excel 即可", "Copied — paste into Excel")))
       .catch(() => alert(tsv));
   };
 
@@ -158,7 +160,7 @@ export function PayrollBatchTable() {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-neutral-500">开始 From</span>
+            <span className="text-xs text-neutral-500"><Bi zh="开始" en="From" /></span>
             <input
               type="date"
               value={from}
@@ -170,7 +172,7 @@ export function PayrollBatchTable() {
             />
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-neutral-500">结束 To</span>
+            <span className="text-xs text-neutral-500"><Bi zh="结束" en="To" /></span>
             <input
               type="date"
               value={to}
@@ -184,7 +186,7 @@ export function PayrollBatchTable() {
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3">
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-neutral-500">员工 Employee</span>
+            <span className="text-xs text-neutral-500"><Bi zh="员工" en="Employee" /></span>
             <select
               value={selectedUserId}
               onChange={(e) => setSelectedUserId(e.target.value)}
@@ -199,7 +201,7 @@ export function PayrollBatchTable() {
             </select>
           </label>
           <label className="space-y-1 text-sm">
-            <span className="text-xs text-neutral-500">搜索姓名 Search name</span>
+            <span className="text-xs text-neutral-500"><Bi zh="搜索姓名" en="Search name" /></span>
             <input
               type="text"
               value={search}
@@ -210,22 +212,26 @@ export function PayrollBatchTable() {
           </label>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Badge label="员工 Staff" value={filteredRows?.length ?? "-"} />
-          <Badge label="任务 Jobs" value={totals.jobs} />
-          <Badge label="净额合计 Total net" value={formatMoney(totals.net)} />
+          <Badge labelZh="员工" labelEn="Staff" value={filteredRows?.length ?? "-"} />
+          <Badge labelZh="任务" labelEn="Jobs" value={totals.jobs} />
+          <Badge labelZh="净额合计" labelEn="Total net" value={formatMoney(totals.net)} />
           <button
             type="button"
             onClick={exportTsv}
             disabled={!filteredRows || filteredRows.length === 0}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
           >
-            📋 导出 Export
+            📋 <Bi zh="导出" en="Export" />
           </button>
         </div>
       </div>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      {isPending && !rows ? <p className="text-sm text-neutral-400">加载中... Loading...</p> : null}
+      {isPending && !rows ? (
+        <p className="text-sm text-neutral-400">
+          <Bi zh="加载中..." en="Loading..." />
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         {filteredRows?.map((row) => (
@@ -242,10 +248,20 @@ export function PayrollBatchTable() {
   );
 }
 
-function Badge({ label, value }: { label: string; value: string | number }) {
+function Badge({
+  labelZh,
+  labelEn,
+  value,
+}: {
+  labelZh: string;
+  labelEn: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-md bg-neutral-50 px-3 py-2 text-center">
-      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="text-xs text-neutral-500">
+        <Bi zh={labelZh} en={labelEn} />
+      </p>
       <p className="text-lg font-semibold">{value}</p>
     </div>
   );
@@ -269,7 +285,7 @@ function PayrollRow({
   const [deduction, setDeduction] = useState(row.deduction);
   const [note, setNote] = useState(row.note);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [showPreview, setShowPreview] = useState(false);
 
   const net =
@@ -297,7 +313,7 @@ function PayrollRow({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "保存失败 Failed to save");
+        setError(typeof data.error === "string" ? data.error : <Bi zh="保存失败" en="Failed to save" />);
         return;
       }
       setShowPreview(true);
@@ -331,24 +347,26 @@ function PayrollRow({
                 : "rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
             }
           >
-            {isPaid ? "已发放 Paid" : "草稿 Draft"}
+            <Bi zh={isPaid ? "已发放" : "草稿"} en={isPaid ? "Paid" : "Draft"} />
           </span>
         ) : null}
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Field label="任务数 Jobs" value={jobsCount} onChange={setJobsCount} disabled={isPaid} type="number" />
-        <Field label="任务工资 Job pay" value={jobsPay} onChange={setJobsPay} disabled={isPaid} type="number" />
-        <Field label="底薪 Base" value={baseSalary} onChange={setBaseSalary} disabled={isPaid} type="number" />
-        <Field label="津贴 Allowance" value={allowance} onChange={setAllowance} disabled={isPaid} type="number" />
-        <Field label="扣款 Deduction" value={deduction} onChange={setDeduction} disabled={isPaid} type="number" />
-        <Field label="备注 Note" value={note} onChange={setNote} disabled={isPaid} />
+        <Field labelZh="任务数" labelEn="Jobs" value={jobsCount} onChange={setJobsCount} disabled={isPaid} type="number" />
+        <Field labelZh="任务工资" labelEn="Job pay" value={jobsPay} onChange={setJobsPay} disabled={isPaid} type="number" />
+        <Field labelZh="底薪" labelEn="Base" value={baseSalary} onChange={setBaseSalary} disabled={isPaid} type="number" />
+        <Field labelZh="津贴" labelEn="Allowance" value={allowance} onChange={setAllowance} disabled={isPaid} type="number" />
+        <Field labelZh="扣款" labelEn="Deduction" value={deduction} onChange={setDeduction} disabled={isPaid} type="number" />
+        <Field labelZh="备注" labelEn="Note" value={note} onChange={setNote} disabled={isPaid} />
       </div>
 
       {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
 
       <div className="mt-3 flex items-center justify-between">
-        <p className="font-semibold">净额 Net: {formatMoney(net)}</p>
+        <p className="font-semibold">
+          <Bi zh="净额" en="Net" />: {formatMoney(net)}
+        </p>
         <div className="flex flex-wrap gap-2">
           {!isPaid ? (
             <button
@@ -357,7 +375,7 @@ function PayrollRow({
               onClick={save}
               className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm text-white disabled:opacity-50"
             >
-              保存 Save
+              <Bi zh="保存" en="Save" />
             </button>
           ) : null}
           <button
@@ -365,7 +383,7 @@ function PayrollRow({
             onClick={() => setShowPreview((v) => !v)}
             className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
           >
-            {showPreview ? "隐藏预览 Hide preview" : "预览 Preview"}
+            {showPreview ? <Bi zh="隐藏预览" en="Hide preview" /> : <Bi zh="预览" en="Preview" />}
           </button>
           {row.payrollId ? (
             <>
@@ -373,18 +391,18 @@ function PayrollRow({
                 href={`/payroll/${row.payrollId}`}
                 className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
               >
-                详情 Detail
+                <Bi zh="详情" en="Detail" />
               </Link>
               {isPaid ? (
                 <button
                   type="button"
                   disabled={isPending}
                   onClick={() => {
-                    if (confirm("撤销已发放状态？\nRevert this payslip to draft?")) action("unpay");
+                    if (confirm(biText("撤销已发放状态？", "Revert this payslip to draft?"))) action("unpay");
                   }}
                   className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
                 >
-                  撤销 Unpay
+                  <Bi zh="撤销" en="Unpay" />
                 </button>
               ) : (
                 <button
@@ -393,7 +411,7 @@ function PayrollRow({
                   onClick={() => action("mark-paid")}
                   className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
                 >
-                  标记已发放 Mark paid
+                  <Bi zh="标记已发放" en="Mark paid" />
                 </button>
               )}
             </>
@@ -434,13 +452,15 @@ function PayrollRow({
 }
 
 function Field({
-  label,
+  labelZh,
+  labelEn,
   value,
   onChange,
   disabled,
   type = "text",
 }: {
-  label: string;
+  labelZh: string;
+  labelEn: string;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
@@ -448,7 +468,9 @@ function Field({
 }) {
   return (
     <label className="space-y-1 text-xs">
-      <span className="text-neutral-500">{label}</span>
+      <span className="text-neutral-500">
+        <Bi zh={labelZh} en={labelEn} />
+      </span>
       <input
         type={type}
         step={type === "number" ? "0.01" : undefined}

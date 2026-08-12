@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 export function PayrollEditForm({
   payrollId,
@@ -19,7 +20,7 @@ export function PayrollEditForm({
   editable: boolean;
 }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -39,7 +40,7 @@ export function PayrollEditForm({
             }),
           });
           if (!res.ok) {
-            setError("保存失败 Failed to save");
+            setError(<Bi zh="保存失败" en="Failed to save" />);
             return;
           }
           router.refresh();
@@ -47,7 +48,7 @@ export function PayrollEditForm({
       }}
     >
       <label className="col-span-1 space-y-1 text-sm">
-        <span className="font-medium">底薪 Base salary</span>
+        <span className="font-medium"><Bi zh="底薪" en="Base salary" /></span>
         <input
           name="baseSalary"
           type="number"
@@ -58,7 +59,7 @@ export function PayrollEditForm({
         />
       </label>
       <label className="col-span-1 space-y-1 text-sm">
-        <span className="font-medium">津贴 Allowance</span>
+        <span className="font-medium"><Bi zh="津贴" en="Allowance" /></span>
         <input
           name="allowance"
           type="number"
@@ -69,7 +70,7 @@ export function PayrollEditForm({
         />
       </label>
       <label className="col-span-1 space-y-1 text-sm">
-        <span className="font-medium">扣款 Deduction</span>
+        <span className="font-medium"><Bi zh="扣款" en="Deduction" /></span>
         <input
           name="deduction"
           type="number"
@@ -80,7 +81,7 @@ export function PayrollEditForm({
         />
       </label>
       <label className="col-span-2 space-y-1 text-sm">
-        <span className="font-medium">备注 Note</span>
+        <span className="font-medium"><Bi zh="备注" en="Note" /></span>
         <textarea
           name="note"
           disabled={!editable}
@@ -96,7 +97,7 @@ export function PayrollEditForm({
           disabled={isPending}
           className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {isPending ? "保存中... Saving..." : "保存 Save"}
+          {isPending ? <Bi zh="保存中..." en="Saving..." /> : <Bi zh="保存" en="Save" />}
         </button>
       ) : null}
     </form>

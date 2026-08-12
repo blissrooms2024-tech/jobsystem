@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { payroll } from "@/db/schema";
 import { formatMoney, cn } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 
 export default async function MyPayrollPage() {
   const session = await auth();
@@ -18,7 +19,9 @@ export default async function MyPayrollPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">我的工资单 My payslips</h1>
+      <h1 className="text-lg font-semibold">
+        <Bi zh="我的工资单" en="My payslips" />
+      </h1>
       <div className="space-y-2">
         {rows.map((p) => {
           const net =
@@ -43,7 +46,7 @@ export default async function MyPayrollPage() {
                       p.status === "paid" ? "text-emerald-700" : "text-amber-700",
                     )}
                   >
-                    {p.status === "paid" ? "已发放 Paid" : "草稿 Draft"}
+                    <Bi zh={p.status === "paid" ? "已发放" : "草稿"} en={p.status === "paid" ? "Paid" : "Draft"} />
                   </span>
                 </div>
                 <a
@@ -60,7 +63,9 @@ export default async function MyPayrollPage() {
           );
         })}
         {rows.length === 0 ? (
-          <p className="text-sm text-neutral-400">暂无工资单 No payslips yet</p>
+          <p className="text-sm text-neutral-400">
+            <Bi zh="暂无工资单" en="No payslips yet" />
+          </p>
         ) : null}
       </div>
     </div>

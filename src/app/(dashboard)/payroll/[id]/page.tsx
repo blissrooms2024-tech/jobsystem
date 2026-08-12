@@ -11,6 +11,7 @@ import { MarkPaidButton } from "@/components/mark-paid-button";
 import { UnpayButton } from "@/components/unpay-button";
 import { ResendPayslipButton } from "@/components/resend-payslip-button";
 import { DeletePayrollButton } from "@/components/delete-payroll-button";
+import { Bi } from "@/components/bi";
 
 export default async function PayrollDetailPage({
   params,
@@ -44,17 +45,18 @@ export default async function PayrollDetailPage({
         <p className="text-xs text-neutral-400">{p.payrollCode}</p>
         <h1 className="text-lg font-semibold">{row.employee.name}</h1>
         <p className="text-sm text-neutral-500">
-          {p.periodStart} ~ {p.periodEnd} · {p.status === "paid" ? "已发放 Paid" : "草稿 Draft"}
+          {p.periodStart} ~ {p.periodEnd} ·{" "}
+          <Bi zh={p.status === "paid" ? "已发放" : "草稿"} en={p.status === "paid" ? "Paid" : "Draft"} />
         </p>
       </div>
 
       <div className="rounded-lg border border-neutral-200 p-4 text-sm">
         <div className="flex justify-between py-1">
-          <span className="text-neutral-500">已完成任务 Jobs completed</span>
+          <span className="text-neutral-500"><Bi zh="已完成任务" en="Jobs completed" /></span>
           <span>{p.jobsCount}</span>
         </div>
         <div className="flex justify-between py-1">
-          <span className="text-neutral-500">任务工资 Jobs pay</span>
+          <span className="text-neutral-500"><Bi zh="任务工资" en="Jobs pay" /></span>
           <span>{formatMoney(p.jobsPay)}</span>
         </div>
       </div>
@@ -70,7 +72,7 @@ export default async function PayrollDetailPage({
 
       <div className="space-y-4 border-t border-neutral-200 pt-4">
         <div>
-          <p className="text-xs text-neutral-500">净额 Net pay</p>
+          <p className="text-xs text-neutral-500"><Bi zh="净额" en="Net pay" /></p>
           <p className="text-2xl font-semibold">{formatMoney(net)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -102,7 +104,7 @@ export default async function PayrollDetailPage({
             href={`/api/payroll/${p.id}/pdf`}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-neutral-50"
           >
-            下载 PDF Download PDF
+            <Bi zh="下载 PDF" en="Download PDF" />
           </a>
           {isAdmin && p.status === "draft" ? <MarkPaidButton payrollId={p.id} /> : null}
           {isAdmin && p.status === "paid" ? <ResendPayslipButton payrollId={p.id} /> : null}
