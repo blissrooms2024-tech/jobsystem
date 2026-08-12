@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 type Props = {
   id: string;
@@ -16,7 +17,7 @@ type Props = {
 export function UnitRow(props: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
   const latRef = useRef<HTMLInputElement>(null);
   const lonRef = useRef<HTMLInputElement>(null);
@@ -24,7 +25,7 @@ export function UnitRow(props: Props) {
   const grabHere = () => {
     setError(null);
     if (!navigator.geolocation) {
-      setError("此设备不支持定位 Geolocation not supported");
+      setError(<Bi zh="此设备不支持定位" en="Geolocation not supported" />);
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -32,7 +33,7 @@ export function UnitRow(props: Props) {
         if (latRef.current) latRef.current.value = pos.coords.latitude.toFixed(6);
         if (lonRef.current) lonRef.current.value = pos.coords.longitude.toFixed(6);
       },
-      (err) => setError(err.message || "无法获取定位 Could not get location"),
+      (err) => setError(err.message || <Bi zh="无法获取定位" en="Could not get location" />),
       { enableHighAccuracy: true, timeout: 15000 },
     );
   };
@@ -83,7 +84,7 @@ export function UnitRow(props: Props) {
                 }),
               });
               if (!res.ok) {
-                setError("保存失败 Failed to save");
+                setError(<Bi zh="保存失败" en="Failed to save" />);
                 return;
               }
               setEditing(false);
@@ -97,7 +98,7 @@ export function UnitRow(props: Props) {
           <input ref={lonRef} name="lon" type="number" step="0.000001" defaultValue={props.lon} className="edit-input w-24" />
           <input name="radiusM" type="number" defaultValue={props.radiusM} className="edit-input w-16" />
           <button type="button" onClick={grabHere} className="rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-white">
-            📍 当前定位 Use location
+            📍 <Bi zh="当前定位" en="Use location" />
           </button>
           <button
             type="submit"

@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 
 export function JobTypeRow({
   id,
@@ -42,7 +43,7 @@ export function JobTypeRow({
               : "rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-600"
           }
         >
-          {active ? "启用中 Active" : "已停用 Inactive"}
+          <Bi zh={active ? "启用中" : "已停用"} en={active ? "Active" : "Inactive"} />
         </button>
       </td>
     </tr>

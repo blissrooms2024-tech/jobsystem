@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { JobTypeRow } from "@/components/job-type-row";
 import { NewJobTypeForm } from "@/components/new-job-type-form";
+import { Bi } from "@/components/bi";
 
 type JobTypeData = {
   id: string;
@@ -24,7 +25,9 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">工种 Job Types</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="工种" en="Job Types" />
+        </h1>
         <div className="flex items-center gap-2">
           <input
             type="search"
@@ -38,7 +41,13 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
             onClick={() => setShowAdd((v) => !v)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm font-medium text-white"
           >
-            {showAdd ? "取消 Cancel" : "+ 新增工种 Add job type"}
+            {showAdd ? (
+              <Bi zh="取消" en="Cancel" />
+            ) : (
+              <>
+                + <Bi zh="新增工种" en="Add job type" />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -53,9 +62,9 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
         <table className="w-full max-w-lg text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="px-3 py-2">名称 Name</th>
-              <th className="px-3 py-2">单价 Pay</th>
-              <th className="px-3 py-2">状态 Status</th>
+              <th className="px-3 py-2"><Bi zh="名称" en="Name" /></th>
+              <th className="px-3 py-2"><Bi zh="单价" en="Pay" /></th>
+              <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +74,9 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
           </tbody>
         </table>
         {filtered.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-neutral-500">没有符合的工种 No matching job types</p>
+          <p className="px-3 py-4 text-sm text-neutral-500">
+            <Bi zh="没有符合的工种" en="No matching job types" />
+          </p>
         ) : null}
       </div>
     </div>
