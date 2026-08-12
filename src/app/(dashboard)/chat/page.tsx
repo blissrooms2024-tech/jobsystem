@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { chatGroups, chatGroupMembers, chatMessages, users } from "@/db/schema";
 import { NewGroupForm } from "@/components/new-group-form";
 import { NotificationPermissionButton } from "@/components/notification-permission-button";
+import { ChatGroupsClient } from "@/components/chat-groups-client";
 import { Bi } from "@/components/bi";
 
 export default async function ChatPage() {
@@ -70,40 +70,15 @@ export default async function ChatPage() {
 
       {isAdmin ? <NewGroupForm users={activeUsers.filter((u) => u.id !== user.id)} /> : null}
 
-      <div className="space-y-2">
-        {groups.map((g) => {
-          const last = lastByGroup.get(g.id);
-          const unread = unreadByGroup.get(g.id) ?? 0;
-          return (
-            <Link
-              key={g.id}
-              href={`/chat/${g.id}`}
-              className="flex items-center justify-between rounded-lg border border-neutral-200 p-4 hover:bg-neutral-50"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">{g.name}</p>
-                <p className="truncate text-xs text-neutral-500">
-                  {last?.body ?? <Bi zh="暂无消息" en="No messages yet" />}
-                </p>
-              </div>
-              {unread > 0 ? (
-                <span className="ml-3 shrink-0 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white">
-                  {unread > 99 ? "99+" : unread}
-                </span>
-              ) : null}
-            </Link>
-          );
-        })}
-        {groups.length === 0 ? (
-          <p className="text-sm text-neutral-400">
-            {isAdmin ? (
-              <Bi zh="还没有群组，创建一个吧" en="No groups yet — create one above" />
-            ) : (
-              <Bi zh="还没有加入任何群组" en="Not in any groups yet" />
-            )}
-          </p>
-        ) : null}
-      </div>
+      <ChatGroupsClient
+        isAdmin={isAdmin}
+        groups={groups.map((g) => ({
+          id: g.id,
+          name: g.name,
+          lastMessage: lastByGroup.get(g.id)?.body ?? null,
+          unread: unreadByGroup.get(g.id) ?? 0,
+        }))}
+      />
     </div>
   );
 }

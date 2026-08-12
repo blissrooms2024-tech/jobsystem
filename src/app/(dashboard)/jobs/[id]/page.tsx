@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, units, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
-import { parsePhotos, requiredPhotoCount, PHOTO_KINDS } from "@/lib/photos";
+import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
@@ -124,7 +124,10 @@ export default async function JobDetailPage({
           </p>
           {isOwner ? (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {PHOTO_KINDS.map((kind) =>
+              {/* No-checkin staff (Posting Agent) only need the single
+                  completion photo; before/after comparison shots are a
+                  Cleaner (on-site, GPS check-in) concept. */}
+              {(needCheckin ? (["before", "after"] as const) : (["photo"] as const)).map((kind) =>
                 kind === "photo" && hasCompletionPhoto ? (
                   <p key={kind} className="text-xs text-neutral-500">
                     <Bi
