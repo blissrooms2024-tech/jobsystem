@@ -16,7 +16,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRole("boss", "admin", "supervisor");
+  const auth = await requireRole("boss", "admin");
   if ("error" in auth) return auth.error;
 
   const { id } = await params;

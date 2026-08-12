@@ -16,7 +16,7 @@ const querySchema = z.object({
 // payslip's numbers are authoritative ("frozen") until explicitly re-saved,
 // same as the legacy sheet's payroll preview.
 export async function GET(request: Request) {
-  const auth = await requireRole("boss", "admin", "supervisor");
+  const auth = await requireRole("boss", "admin");
   if ("error" in auth) return auth.error;
 
   const url = new URL(request.url);

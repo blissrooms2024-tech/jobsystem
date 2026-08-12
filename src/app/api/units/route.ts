@@ -15,7 +15,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const auth = await requireRole("boss", "admin", "supervisor");
+  const auth = await requireRole("boss", "admin");
   if ("error" in auth) return auth.error;
 
   const parsed = bodySchema.safeParse(await request.json());

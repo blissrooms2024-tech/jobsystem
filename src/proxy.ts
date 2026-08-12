@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 
-const ADMIN_ROLES = new Set(["boss", "admin", "supervisor"]);
+const ADMIN_ROLES = new Set(["boss", "admin"]);
 const ADMIN_ONLY_PREFIXES = ["/users", "/units", "/job-types"];
 const APPROVAL_ROLES = new Set(["boss", "admin", "supervisor"]);
 
@@ -37,8 +37,9 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/", req.nextUrl.origin));
     }
 
-    if (pathname.startsWith("/payroll") && role === "employee") {
-      // Employees may only view their own payslips under /payroll/me
+    if (pathname.startsWith("/payroll") && (role === "employee" || role === "supervisor")) {
+      // Employees and supervisors may only view their own payslips under
+      // /payroll/me — full payroll administration is boss/admin only.
       if (!pathname.startsWith("/payroll/me")) {
         return NextResponse.redirect(new URL("/payroll/me", req.nextUrl.origin));
       }

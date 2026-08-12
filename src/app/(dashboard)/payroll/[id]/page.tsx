@@ -31,7 +31,7 @@ export default async function PayrollDetailPage({
 
   if (!row) notFound();
 
-  const isAdmin = ["boss", "admin", "supervisor"].includes(currentUser.role);
+  const isAdmin = ["boss", "admin"].includes(currentUser.role);
   const isOwner = row.payroll.userId === currentUser.id;
   if (!isAdmin && !isOwner) notFound();
 
