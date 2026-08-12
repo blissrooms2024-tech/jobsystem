@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -36,11 +37,21 @@ export function DashboardNav({ role }: { role: Role }) {
   const unread = useUnreadCount();
   const items = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
 
+  // Several hrefs can share a prefix (e.g. "/jobs" and "/jobs/calendar") —
+  // only the most specific (longest) match should light up, otherwise a
+  // page like /jobs/calendar would highlight both "Jobs" and "Calendar".
+  const activeHref = useMemo(() => {
+    const matches = items.filter((item) =>
+      item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`),
+    );
+    if (matches.length === 0) return null;
+    return matches.reduce((best, cur) => (cur.href.length > best.href.length ? cur : best)).href;
+  }, [items, pathname]);
+
   return (
     <nav className="flex flex-col gap-1">
       {items.map((item) => {
-        const active =
-          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        const active = item.href === activeHref;
         return (
           <Link
             key={item.href}
