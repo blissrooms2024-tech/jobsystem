@@ -40,29 +40,33 @@ export function JobRowActions({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-1">
       {status !== "completed" && status !== "cancelled" ? (
         <button
           type="button"
           disabled={isPending}
+          title="取消 Cancel"
+          aria-label="取消 Cancel"
           onClick={() => {
             if (confirm("取消这个任务？")) call("POST", "/cancel");
           }}
-          className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+          className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
         >
-          取消
+          🚫
         </button>
       ) : null}
       {status === "missed" || status === "cancelled" ? (
         <button
           type="button"
           disabled={isPending}
+          title="重开 Reopen"
+          aria-label="重开 Reopen"
           onClick={() => {
             if (confirm("重开这个任务？")) call("POST", "/reopen");
           }}
-          className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+          className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
         >
-          重开
+          ↩️
         </button>
       ) : null}
       <button
@@ -70,20 +74,23 @@ export function JobRowActions({
         disabled={isPending}
         onClick={() => call("POST", "/duplicate", { schedDate: tomorrow() })}
         title="复制到明天 Duplicate to tomorrow"
-        className="rounded border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+        aria-label="复制到明天 Duplicate to tomorrow"
+        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
       >
-        复制
+        📋
       </button>
       {canDelete ? (
         <button
           type="button"
           disabled={isPending}
+          title="删除 Delete"
+          aria-label="删除 Delete"
           onClick={() => {
             if (confirm("删除这个任务？此操作无法撤销。")) call("DELETE", "");
           }}
-          className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+          className="rounded-md border border-red-200 px-1.5 py-1 text-sm text-red-700 hover:bg-red-50"
         >
-          删除
+          🗑️
         </button>
       ) : null}
       {error ? <span className="text-xs text-red-600">{error}</span> : null}

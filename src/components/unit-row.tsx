@@ -48,8 +48,14 @@ export function UnitRow(props: Props) {
         </td>
         <td className="px-3 py-2">{props.radiusM}m</td>
         <td className="px-3 py-2">
-          <button type="button" onClick={() => setEditing(true)} className="text-xs text-neutral-600 underline">
-            编辑 Edit
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            title="编辑 Edit"
+            aria-label="编辑 Edit"
+            className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+          >
+            ✏️
           </button>
         </td>
       </tr>

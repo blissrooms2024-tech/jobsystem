@@ -32,6 +32,7 @@ async function getEmployeeStats(userId: string) {
 
 async function getAdminStats() {
   const today = new Date().toISOString().slice(0, 10);
+  const monthStart = startOfMonth().toISOString();
   const [jobStats] = await db
     .select({
       todayJobs: sql<number>`count(*) filter (where ${jobs.schedDate} = ${today})`,
@@ -45,6 +46,7 @@ async function getAdminStats() {
     .select({
       draftCount: sql<number>`count(*) filter (where ${payroll.status} = 'draft')`,
       draftTotal: sql<string>`coalesce(sum(${payroll.jobsPay} + ${payroll.baseSalary} + ${payroll.allowance} - ${payroll.deduction}) filter (where ${payroll.status} = 'draft'), 0)`,
+      paidThisMonthTotal: sql<string>`coalesce(sum(${payroll.jobsPay} + ${payroll.baseSalary} + ${payroll.allowance} - ${payroll.deduction}) filter (where ${payroll.status} = 'paid' and ${payroll.paidAt} >= ${monthStart}), 0)`,
     })
     .from(payroll);
 
@@ -95,6 +97,7 @@ async function AdminOverview() {
       <StatCard label="错过任务 Missed jobs" value={stats.missedJobs} />
       <StatCard label="待发放工资单 Draft payroll" value={stats.draftCount} />
       <StatCard label="草稿总额 Draft total" value={formatMoney(stats.draftTotal)} />
+      <StatCard label="本月已发放 Paid this month" value={formatMoney(stats.paidThisMonthTotal)} />
       <StatCard label="待批请假 Pending leaves" value={stats.pendingLeaves} />
     </div>
   );
