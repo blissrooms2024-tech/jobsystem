@@ -17,12 +17,18 @@ function getTransporter() {
   return transporter;
 }
 
-export async function sendMail(opts: { to: string; subject: string; html: string }) {
+export async function sendMail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  attachments?: { filename: string; content: Buffer; contentType?: string }[];
+}) {
   const from = process.env.GMAIL_USER;
   await getTransporter().sendMail({
     from: `Bliss Rooms Job System <${from}>`,
     to: opts.to,
     subject: opts.subject,
     html: opts.html,
+    attachments: opts.attachments,
   });
 }

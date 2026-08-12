@@ -3,6 +3,7 @@ import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, payroll } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
+import { emailPayslip } from "@/lib/payroll-pdf";
 
 export async function POST(
   _request: Request,
@@ -42,6 +43,15 @@ export async function POST(
         lte(jobs.schedDate, existing.periodEnd),
       ),
     );
+
+  // Email the payslip PDF to the employee, matching the legacy system's
+  // behavior of emailing payroll directly once it's marked paid. Best-effort
+  // — a missing address or a mail failure shouldn't block marking as paid.
+  try {
+    await emailPayslip(id);
+  } catch (err) {
+    console.error("Failed to email payslip on mark-paid", err);
+  }
 
   return NextResponse.json({ payroll: updated });
 }
