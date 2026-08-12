@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { jobTypes, jobs, units, users } from "@/db/schema";
 import { generateJobCode } from "@/lib/codes";
 import { requireRole } from "@/lib/api-auth";
-import { assertSchedulableDate } from "@/lib/job-timing";
+import { assertSchedulableDate, datesBetween } from "@/lib/job-timing";
 import { eq } from "drizzle-orm";
 
 const bodySchema = z.object({
@@ -13,11 +13,14 @@ const bodySchema = z.object({
   unitId: z.string().uuid().optional(),
   assignedTo: z.string().uuid(),
   schedDate: z.string(), // yyyy-mm-dd
+  repeatUntil: z.string().optional(), // yyyy-mm-dd — creates one job per day through this date
   startTime: z.string().optional(), // HH:mm
   endTime: z.string().optional(),
   jobTypeId: z.string().uuid().optional(),
   notes: z.string().optional(),
 });
+
+const MAX_REPEAT_DAYS = 60;
 
 export async function POST(request: Request) {
   const auth = await requireRole("boss", "admin", "supervisor");
@@ -29,8 +32,24 @@ export async function POST(request: Request) {
   }
   const data = parsed.data;
 
+  const scheduleDates = data.repeatUntil ? datesBetween(data.schedDate, data.repeatUntil) : [data.schedDate];
+  if (data.repeatUntil && data.repeatUntil < data.schedDate) {
+    return NextResponse.json(
+      { error: "结束日期不能早于开始日期 End date must be after start date" },
+      { status: 400 },
+    );
+  }
+  if (scheduleDates.length > MAX_REPEAT_DAYS) {
+    return NextResponse.json(
+      { error: `一次最多重复 ${MAX_REPEAT_DAYS} 天 Can only repeat up to ${MAX_REPEAT_DAYS} days at once` },
+      { status: 400 },
+    );
+  }
+
   try {
-    assertSchedulableDate(data.schedDate);
+    for (const d of [data.schedDate, data.repeatUntil].filter((x): x is string => !!x)) {
+      assertSchedulableDate(d);
+    }
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Invalid date" },
@@ -62,24 +81,26 @@ export async function POST(request: Request) {
     if (unit) property = unit.property;
   }
 
-  const [created] = await db
+  const created = await db
     .insert(jobs)
-    .values({
-      jobCode: generateJobCode(new Date(data.schedDate)),
-      title: data.title,
-      description: data.description,
-      property,
-      unitId: data.unitId,
-      assignedTo: data.assignedTo,
-      assignedBy: auth.session.user.id,
-      schedDate: data.schedDate,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      jobTypeId: data.jobTypeId,
-      notes: data.notes,
-      pay,
-    })
+    .values(
+      scheduleDates.map((schedDate) => ({
+        jobCode: generateJobCode(new Date(schedDate)),
+        title: data.title,
+        description: data.description,
+        property,
+        unitId: data.unitId,
+        assignedTo: data.assignedTo,
+        assignedBy: auth.session.user.id,
+        schedDate,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        jobTypeId: data.jobTypeId,
+        notes: data.notes,
+        pay,
+      })),
+    )
     .returning();
 
-  return NextResponse.json({ job: created }, { status: 201 });
+  return NextResponse.json({ job: created[0], jobs: created, count: created.length }, { status: 201 });
 }

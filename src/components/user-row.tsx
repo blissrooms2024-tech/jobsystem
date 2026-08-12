@@ -10,6 +10,9 @@ export function UserRow({
   username,
   role,
   staffType,
+  phone,
+  icPassport,
+  email,
   active,
   bankName,
   bankAccount,
@@ -19,6 +22,9 @@ export function UserRow({
   username: string;
   role: string;
   staffType: string | null;
+  phone: string | null;
+  icPassport: string | null;
+  email: string | null;
   active: boolean;
   bankName: string | null;
   bankAccount: string | null;
@@ -37,6 +43,9 @@ export function UserRow({
       </td>
       <td className="px-3 py-2 capitalize">{role}</td>
       <td className="px-3 py-2">{staffType ?? "-"}</td>
+      <td className="px-3 py-2">{phone ?? "-"}</td>
+      <td className="px-3 py-2">{icPassport ?? "-"}</td>
+      <td className="px-3 py-2">{email ?? "-"}</td>
       <td className="px-3 py-2">
         {bankName || bankAccount ? (
           <>
@@ -92,6 +101,9 @@ export function UserRow({
             新密码 <code className="rounded bg-neutral-100 px-1">{resetInfo}</code>
           </p>
         ) : null}
+        <Link href={`/users/${id}`} className="mt-1 block text-xs text-neutral-600 underline">
+          编辑更多资料 Edit full profile
+        </Link>
       </td>
     </tr>
   );

@@ -34,6 +34,7 @@ export function NewJobForm({
             unitId: String(formData.get("unitId") || "") || undefined,
             assignedTo: String(formData.get("assignedTo") || ""),
             schedDate: String(formData.get("schedDate") || ""),
+            repeatUntil: String(formData.get("repeatUntil") || "") || undefined,
             startTime: String(formData.get("startTime") || "") || undefined,
             endTime: String(formData.get("endTime") || "") || undefined,
             jobTypeId: String(formData.get("jobTypeId") || "") || undefined,
@@ -49,7 +50,11 @@ export function NewJobForm({
             setError(typeof data.error === "string" ? data.error : "创建失败 Failed to create job");
             return;
           }
-          router.push(`/jobs/${data.job.id}`);
+          if (data.count > 1) {
+            router.push("/jobs");
+          } else {
+            router.push(`/jobs/${data.job.id}`);
+          }
         });
       }}
     >
@@ -93,13 +98,24 @@ export function NewJobForm({
         <Field label="日期 Date">
           <input type="date" name="schedDate" required min={minDate} max={maxDate} className="input" />
         </Field>
+        <Field label="重复直到（可选）Repeat until (optional)">
+          <input type="date" name="repeatUntil" min={minDate} max={maxDate} className="input" />
+        </Field>
+      </div>
+      <p className="-mt-2 text-xs text-neutral-500">
+        填了&ldquo;重复直到&rdquo;，就会从上面的日期开始，每天都建一份一样的任务，直到这个日期为止（同一个人、同一个单位）。
+        <br />
+        Fill in &quot;Repeat until&quot; to create the same job every day from the start date through that date (same
+        assignee, same unit).
+      </p>
+      <div className="grid grid-cols-2 gap-3">
         <Field label="开始时间 Start">
           <input type="time" name="startTime" className="input" />
         </Field>
+        <Field label="结束时间 End">
+          <input type="time" name="endTime" className="input" />
+        </Field>
       </div>
-      <Field label="结束时间 End">
-        <input type="time" name="endTime" className="input" />
-      </Field>
       <Field label="备注 Notes">
         <textarea name="notes" className="input" rows={2} />
       </Field>

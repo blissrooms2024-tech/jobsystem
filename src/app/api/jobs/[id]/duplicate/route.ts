@@ -5,10 +5,14 @@ import { db } from "@/db";
 import { jobs } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { generateJobCode } from "@/lib/codes";
+import { datesBetween } from "@/lib/job-timing";
 
 const bodySchema = z.object({
   schedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "请选择日期 Please pick a date"),
+  untilDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
+
+const MAX_REPEAT_DAYS = 60;
 
 export async function POST(
   request: Request,
@@ -26,24 +30,42 @@ export async function POST(
   const [source] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
   if (!source) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const [created] = await db
+  const dates = parsed.data.untilDate
+    ? datesBetween(parsed.data.schedDate, parsed.data.untilDate)
+    : [parsed.data.schedDate];
+  if (parsed.data.untilDate && parsed.data.untilDate < parsed.data.schedDate) {
+    return NextResponse.json(
+      { error: "结束日期不能早于开始日期 End date must be after start date" },
+      { status: 400 },
+    );
+  }
+  if (dates.length > MAX_REPEAT_DAYS) {
+    return NextResponse.json(
+      { error: `一次最多重复 ${MAX_REPEAT_DAYS} 天 Can only repeat up to ${MAX_REPEAT_DAYS} days at once` },
+      { status: 400 },
+    );
+  }
+
+  const created = await db
     .insert(jobs)
-    .values({
-      jobCode: generateJobCode(new Date(parsed.data.schedDate)),
-      title: source.title,
-      description: source.description,
-      property: source.property,
-      unitId: source.unitId,
-      assignedTo: source.assignedTo,
-      assignedBy: auth.session.user.id,
-      schedDate: parsed.data.schedDate,
-      startTime: source.startTime,
-      endTime: source.endTime,
-      jobTypeId: source.jobTypeId,
-      notes: source.notes,
-      pay: source.pay,
-    })
+    .values(
+      dates.map((schedDate) => ({
+        jobCode: generateJobCode(new Date(schedDate)),
+        title: source.title,
+        description: source.description,
+        property: source.property,
+        unitId: source.unitId,
+        assignedTo: source.assignedTo,
+        assignedBy: auth.session.user.id,
+        schedDate,
+        startTime: source.startTime,
+        endTime: source.endTime,
+        jobTypeId: source.jobTypeId,
+        notes: source.notes,
+        pay: source.pay,
+      })),
+    )
     .returning();
 
-  return NextResponse.json({ job: created }, { status: 201 });
+  return NextResponse.json({ job: created[0], jobs: created, count: created.length }, { status: 201 });
 }

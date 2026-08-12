@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
 import { formatMoney, cn } from "@/lib/utils";
 import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
+import { JobRowActions } from "@/components/job-row-actions";
 
 export default async function JobsPage({
   searchParams,
@@ -98,6 +99,7 @@ export default async function JobsPage({
               <th className="px-3 py-2">单位 Unit</th>
               <th className="px-3 py-2">状态 Status</th>
               <th className="px-3 py-2">工资 Pay</th>
+              {isAdmin ? <th className="px-3 py-2">操作 Actions</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -126,11 +128,20 @@ export default async function JobsPage({
                   </span>
                 </td>
                 <td className="px-3 py-2">{formatMoney(row.pay)}</td>
+                {isAdmin ? (
+                  <td className="px-3 py-2">
+                    <JobRowActions
+                      jobId={row.id}
+                      status={row.status}
+                      canDelete={user.role === "boss" || user.role === "admin"}
+                    />
+                  </td>
+                ) : null}
               </tr>
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={isAdmin ? 5 : 4} className="px-3 py-6 text-center text-neutral-400">
+                <td colSpan={isAdmin ? 6 : 4} className="px-3 py-6 text-center text-neutral-400">
                   暂无任务 No jobs
                 </td>
               </tr>
