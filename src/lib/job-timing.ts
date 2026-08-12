@@ -49,6 +49,18 @@ export function maxSchedulableDate(): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Inclusive list of ISO date strings from start to end (both YYYY-MM-DD). */
+export function datesBetween(start: string, end: string): string[] {
+  const dates: string[] = [];
+  let cursor = new Date(`${start}T00:00:00${MY_TZ_OFFSET}`);
+  const endDate = new Date(`${end}T00:00:00${MY_TZ_OFFSET}`);
+  while (cursor.getTime() <= endDate.getTime()) {
+    dates.push(cursor.toISOString().slice(0, 10));
+    cursor = new Date(cursor.getTime() + 24 * 3600 * 1000);
+  }
+  return dates;
+}
+
 /** Validates a schedDate is not in the past and not too far in the future. */
 export function assertSchedulableDate(schedDate: string) {
   const today = myToday();

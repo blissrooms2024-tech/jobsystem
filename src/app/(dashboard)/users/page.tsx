@@ -17,6 +17,9 @@ export default async function UsersPage() {
               <th className="px-3 py-2">姓名 Name</th>
               <th className="px-3 py-2">角色 Role</th>
               <th className="px-3 py-2">类型 Staff type</th>
+              <th className="px-3 py-2">电话 Phone</th>
+              <th className="px-3 py-2">IC / 护照</th>
+              <th className="px-3 py-2">邮箱 Email</th>
               <th className="px-3 py-2">银行资料 Bank</th>
               <th className="px-3 py-2">状态 Status</th>
               <th className="px-3 py-2">操作 Actions</th>
@@ -31,6 +34,9 @@ export default async function UsersPage() {
                 username={u.username}
                 role={u.role}
                 staffType={u.staffType}
+                phone={u.phone}
+                icPassport={u.icPassport}
+                email={u.email}
                 active={u.active}
                 bankName={u.bankName}
                 bankAccount={u.bankAccount}

@@ -34,6 +34,8 @@ export function PayrollBatchTable() {
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [search, setSearch] = useState("");
 
   const setPeriod = (type: PeriodType) => {
     setPeriodType(type);
@@ -66,19 +68,29 @@ export function PayrollBatchTable() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [from, to]);
 
+  const filteredRows = useMemo(() => {
+    if (!rows) return null;
+    return rows.filter((r) => {
+      if (selectedUserId && r.userId !== selectedUserId) return false;
+      if (search && !r.name.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    });
+  }, [rows, selectedUserId, search]);
+
   const totals = useMemo(() => {
-    if (!rows) return { jobs: 0, net: 0 };
-    return rows.reduce(
+    if (!filteredRows) return { jobs: 0, net: 0 };
+    return filteredRows.reduce(
       (acc, r) => ({
         jobs: acc.jobs + r.jobsCount,
         net: acc.net + Number(r.jobsPay) + Number(r.baseSalary) + Number(r.allowance) - Number(r.deduction),
       }),
       { jobs: 0, net: 0 },
     );
-  }, [rows]);
+  }, [filteredRows]);
 
   const exportTsv = () => {
-    if (!rows) return;
+    const rows = filteredRows;
+    if (!rows || rows.length === 0) return;
     const header = [
       "Name",
       "StaffType",
@@ -160,14 +172,41 @@ export function PayrollBatchTable() {
             />
           </label>
         </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <label className="space-y-1 text-sm">
+            <span className="text-xs text-neutral-500">员工 Employee</span>
+            <select
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
+            >
+              <option value="">全部 All employees</option>
+              {rows?.map((r) => (
+                <option key={r.userId} value={r.userId}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="space-y-1 text-sm">
+            <span className="text-xs text-neutral-500">搜索姓名 Search name</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="输入姓名 Type a name"
+              className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
+            />
+          </label>
+        </div>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Badge label="员工 Staff" value={rows?.length ?? "-"} />
+          <Badge label="员工 Staff" value={filteredRows?.length ?? "-"} />
           <Badge label="任务 Jobs" value={totals.jobs} />
           <Badge label="净额合计 Total net" value={formatMoney(totals.net)} />
           <button
             type="button"
             onClick={exportTsv}
-            disabled={!rows}
+            disabled={!filteredRows || filteredRows.length === 0}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
           >
             📋 导出 Export
@@ -179,7 +218,7 @@ export function PayrollBatchTable() {
       {isPending && !rows ? <p className="text-sm text-neutral-400">加载中... Loading...</p> : null}
 
       <div className="space-y-3">
-        {rows?.map((row) => (
+        {filteredRows?.map((row) => (
           <PayrollRow
             key={`${row.userId}-${row.payrollId ?? "new"}-${row.status ?? "draft"}`}
             row={row}

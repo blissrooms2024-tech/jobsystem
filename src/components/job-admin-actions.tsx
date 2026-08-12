@@ -20,6 +20,7 @@ export function JobAdminActions({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [dupDate, setDupDate] = useState("");
+  const [dupUntil, setDupUntil] = useState("");
   const [showDup, setShowDup] = useState(false);
   const [showPay, setShowPay] = useState(false);
   const [payValue, setPayValue] = useState(pay);
@@ -38,7 +39,7 @@ export function JobAdminActions({
         return;
       }
       if (path === "/duplicate") {
-        router.push(`/jobs/${data.job.id}`);
+        router.push(data.count > 1 ? "/jobs" : `/jobs/${data.job.id}`);
       } else if (path === "") {
         router.push("/jobs");
       } else {
@@ -116,17 +117,26 @@ export function JobAdminActions({
         ) : null}
 
         {showDup ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="date"
               value={dupDate}
               onChange={(e) => setDupDate(e.target.value)}
               className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm"
             />
+            <span className="text-xs text-neutral-500">到 to (可选 optional)</span>
+            <input
+              type="date"
+              value={dupUntil}
+              onChange={(e) => setDupUntil(e.target.value)}
+              className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm"
+            />
             <button
               type="button"
               disabled={isPending || !dupDate}
-              onClick={() => call("POST", "/duplicate", { schedDate: dupDate })}
+              onClick={() =>
+                call("POST", "/duplicate", { schedDate: dupDate, untilDate: dupUntil || undefined })
+              }
               className="rounded-md bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
             >
               确认复制 Confirm
