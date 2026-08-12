@@ -117,7 +117,7 @@ export function JobCheckinActions({
             onClick={() => call("complete", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            <Bi zh="标记完成" en="Mark complete" />
+            <Bi zh="提交" en="Submit" />
           </button>
           {requiredPhotos > 0 && photoCount < requiredPhotos ? (
             <p className="mt-1 text-xs text-neutral-500">
