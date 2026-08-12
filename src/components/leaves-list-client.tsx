@@ -36,24 +36,53 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+
+  const months = useMemo(() => {
+    const set = new Set(rows.map((r) => r.startDate.slice(0, 7)));
+    return Array.from(set).sort().reverse();
+  }, [rows]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => [r.employeeName, r.type].some((v) => v.toLowerCase().includes(q)));
-  }, [rows, search]);
+    return rows.filter((r) => {
+      if (q && ![r.employeeName, r.type].some((v) => v.toLowerCase().includes(q))) return false;
+      // Pending requests always stay visible regardless of month, so a
+      // request from an earlier month never silently falls out of view
+      // before it's been acted on.
+      if (month && r.status !== "pending" && r.startDate.slice(0, 7) !== month) return false;
+      return true;
+    });
+  }, [rows, search, month]);
 
   return (
     <div className="space-y-3">
-      {isAdmin ? (
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("搜索员工姓名/类型...", "Search")}
-          className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
-        />
-      ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        {isAdmin ? (
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("搜索员工姓名/类型...", "Search")}
+            className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+          />
+        ) : null}
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
+        >
+          <option value="">{t("全部月份", "All months")}</option>
+          {months.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <p className="w-full text-xs text-neutral-400">
+          <Bi zh="待审批的请假无论哪个月份都会显示" en="Pending requests always show regardless of month" />
+        </p>
+      </div>
 
       <div className="overflow-x-auto rounded-lg border border-neutral-200">
         <table className="w-full min-w-[560px] text-left text-sm">
