@@ -34,6 +34,7 @@ export default async function UserDetailPage({
         <UserProfileForm
           userId={user.id}
           name={user.name}
+          staffId={user.staffId}
           phone={user.phone}
           staffType={user.staffType}
           icPassport={user.icPassport}
@@ -48,6 +49,7 @@ export default async function UserDetailPage({
         />
       ) : (
         <dl className="grid max-w-2xl grid-cols-2 gap-3 text-sm">
+          <Field label="员工编号 Staff ID" value={user.staffId} />
           <Field label="电话 Phone" value={user.phone} />
           <Field label="类型 Staff type" value={user.staffType} />
           <Field label="IC / 护照" value={user.icPassport} />

@@ -9,6 +9,7 @@ import { nextUserCode } from "@/lib/user-code";
 
 const bodySchema = z.object({
   name: z.string().min(1),
+  staffId: z.string().optional(),
   username: z.string().min(3),
   role: z.enum(["boss", "admin", "supervisor", "employee"]),
   staffType: z.string().optional(),
@@ -38,6 +39,7 @@ export async function POST(request: Request) {
     .insert(users)
     .values({
       userCode,
+      staffId: data.staffId || null,
       name: data.name,
       username: data.username,
       passwordHash,

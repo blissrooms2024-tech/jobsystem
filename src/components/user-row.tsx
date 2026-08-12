@@ -8,10 +8,9 @@ export function UserRow({
   id,
   name,
   username,
-  role,
+  staffId,
   staffType,
   phone,
-  icPassport,
   email,
   active,
   bankName,
@@ -20,6 +19,7 @@ export function UserRow({
   id: string;
   name: string;
   username: string;
+  staffId: string | null;
   role: string;
   staffType: string | null;
   phone: string | null;
@@ -41,10 +41,9 @@ export function UserRow({
         </Link>
         <span className="ml-1.5 text-xs text-neutral-400">{username}</span>
       </td>
-      <td className="whitespace-nowrap px-3 py-1.5 capitalize">{role}</td>
+      <td className="whitespace-nowrap px-3 py-1.5">{staffId ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{staffType ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{phone ?? "-"}</td>
-      <td className="whitespace-nowrap px-3 py-1.5">{icPassport ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{email ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">
         {bankName || bankAccount
@@ -75,10 +74,12 @@ export function UserRow({
         </button>
       </td>
       <td className="whitespace-nowrap px-3 py-1.5">
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             disabled={isPending}
+            title="重置密码 Reset password"
+            aria-label="重置密码 Reset password"
             onClick={() => {
               startTransition(async () => {
                 const res = await fetch(`/api/users/${id}/reset-password`, { method: "POST" });
@@ -88,13 +89,17 @@ export function UserRow({
                 }
               });
             }}
-            className="text-neutral-600 underline"
+            className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
           >
-            重置密码 Reset
+            🔑
           </button>
-          <span className="text-neutral-300">·</span>
-          <Link href={`/users/${id}`} className="text-neutral-600 underline">
-            编辑 Edit
+          <Link
+            href={`/users/${id}`}
+            title="编辑更多资料 Edit full profile"
+            aria-label="编辑更多资料 Edit full profile"
+            className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+          >
+            ✏️
           </Link>
         </div>
         {resetInfo ? (

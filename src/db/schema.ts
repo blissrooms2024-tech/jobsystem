@@ -58,6 +58,10 @@ export const users = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     userCode: varchar("user_code", { length: 20 }).notNull().unique(),
+    // Separate from userCode (which is auto-generated U001-style) — this is
+    // a free-text ID the admin sets by hand, e.g. to match an external HR
+    // reference number that predates this system.
+    staffId: varchar("staff_id", { length: 50 }),
     name: text("name").notNull(),
     username: varchar("username", { length: 100 }).notNull().unique(),
     passwordHash: text("password_hash").notNull(),

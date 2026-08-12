@@ -44,6 +44,7 @@ export function NewUserForm() {
           startTransition(async () => {
             const payload = {
               name: String(formData.get("name") || ""),
+              staffId: String(formData.get("staffId") || "") || undefined,
               username: String(formData.get("username") || ""),
               role: String(formData.get("role") || "employee"),
               staffType: String(formData.get("staffType") || "") || undefined,
@@ -70,6 +71,7 @@ export function NewUserForm() {
         id="new-user-form"
       >
         <input name="name" placeholder="姓名 Name" required className="input" />
+        <input name="staffId" placeholder="员工编号 Staff ID" className="input" />
         <input name="username" placeholder="用户名 Username" required className="input" />
         <select name="role" className="input" defaultValue="employee">
           <option value="employee">Employee</option>
