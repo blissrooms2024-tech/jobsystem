@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { payroll, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
 import { PayrollEditForm } from "@/components/payroll-edit-form";
+import { PayslipView } from "@/components/payslip-view";
 import { MarkPaidButton } from "@/components/mark-paid-button";
 import { UnpayButton } from "@/components/unpay-button";
 import { ResendPayslipButton } from "@/components/resend-payslip-button";
@@ -66,6 +67,29 @@ export default async function PayrollDetailPage({
         editable={canEdit}
       />
 
+      <div>
+        <p className="mb-2 text-xs text-neutral-500">工资单预览 Payslip preview</p>
+        <PayslipView
+          data={{
+            payrollCode: p.payrollCode,
+            employeeName: row.employee.name,
+            staffType: row.employee.staffType,
+            icPassport: row.employee.icPassport,
+            bankName: row.employee.bankName,
+            bankAccount: row.employee.bankAccount,
+            periodStart: p.periodStart,
+            periodEnd: p.periodEnd,
+            jobsCount: p.jobsCount,
+            jobsPay: p.jobsPay,
+            baseSalary: p.baseSalary,
+            allowance: p.allowance,
+            deduction: p.deduction,
+            note: p.note,
+            paidAt: p.paidAt ? p.paidAt.toISOString().slice(0, 10) : null,
+          }}
+        />
+      </div>
+
       <div className="space-y-4 border-t border-neutral-200 pt-4">
         <div>
           <p className="text-xs text-neutral-500">净额 Net pay</p>
@@ -74,14 +98,6 @@ export default async function PayrollDetailPage({
         <div className="flex flex-wrap items-center gap-2">
           <a
             href={`/api/payroll/${p.id}/pdf`}
-            target="_blank"
-            rel="noreferrer"
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-neutral-50"
-          >
-            查看 PDF View PDF
-          </a>
-          <a
-            href={`/api/payroll/${p.id}/pdf?download=1`}
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium whitespace-nowrap hover:bg-neutral-50"
           >
             下载 PDF Download PDF
