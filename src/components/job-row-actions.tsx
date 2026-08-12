@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useLang } from "@/lib/use-lang";
 
 export function JobRowActions({
   jobId,
@@ -13,6 +14,8 @@ export function JobRowActions({
   canDelete: boolean;
 }) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -45,8 +48,8 @@ export function JobRowActions({
         <button
           type="button"
           disabled={isPending}
-          title="取消 Cancel"
-          aria-label="取消 Cancel"
+          title={t("取消", "Cancel")}
+          aria-label={t("取消", "Cancel")}
           onClick={() => {
             if (confirm("取消这个任务？")) call("POST", "/cancel");
           }}
@@ -59,8 +62,8 @@ export function JobRowActions({
         <button
           type="button"
           disabled={isPending}
-          title="重开 Reopen"
-          aria-label="重开 Reopen"
+          title={t("重开", "Reopen")}
+          aria-label={t("重开", "Reopen")}
           onClick={() => {
             if (confirm("重开这个任务？")) call("POST", "/reopen");
           }}
@@ -73,8 +76,8 @@ export function JobRowActions({
         type="button"
         disabled={isPending}
         onClick={() => call("POST", "/duplicate", { schedDate: tomorrow() })}
-        title="复制到明天 Duplicate to tomorrow"
-        aria-label="复制到明天 Duplicate to tomorrow"
+        title={t("复制到明天", "Duplicate to tomorrow")}
+        aria-label={t("复制到明天", "Duplicate to tomorrow")}
         className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
       >
         📋
@@ -83,8 +86,8 @@ export function JobRowActions({
         <button
           type="button"
           disabled={isPending}
-          title="删除 Delete"
-          aria-label="删除 Delete"
+          title={t("删除", "Delete")}
+          aria-label={t("删除", "Delete")}
           onClick={() => {
             if (confirm("删除这个任务？此操作无法撤销。")) call("DELETE", "");
           }}

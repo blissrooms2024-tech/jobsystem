@@ -4,9 +4,12 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 export function NewUserForm() {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [error, setError] = useState<React.ReactNode>(null);
   const [created, setCreated] = useState<{ username: string; tempPassword: string } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -73,9 +76,9 @@ export function NewUserForm() {
         }}
         id="new-user-form"
       >
-        <input name="name" placeholder="姓名 Name" required className="input" />
-        <input name="staffId" placeholder="员工编号 Staff ID" className="input" />
-        <input name="username" placeholder="用户名 Username" required className="input" />
+        <input name="name" placeholder={t("姓名", "Name")} required className="input" />
+        <input name="staffId" placeholder={t("员工编号", "Staff ID")} className="input" />
+        <input name="username" placeholder={t("用户名", "Username")} required className="input" />
         <select name="role" className="input" defaultValue="employee">
           <option value="employee">Employee</option>
           <option value="supervisor">Supervisor</option>
@@ -85,7 +88,7 @@ export function NewUserForm() {
         <input
           name="staffType"
           list="staffTypeSuggestions"
-          placeholder="工种 Staff type"
+          placeholder={t("工种", "Staff type")}
           className="input"
           onChange={(e) => onStaffTypeChange(e.target.value)}
         />
@@ -94,8 +97,8 @@ export function NewUserForm() {
             <option key={t} value={t} />
           ))}
         </datalist>
-        <input name="phone" placeholder="电话 Phone" className="input" />
-        <input name="payRate" type="number" step="0.01" placeholder="单价 Pay rate" className="input" />
+        <input name="phone" placeholder={t("电话", "Phone")} className="input" />
+        <input name="payRate" type="number" step="0.01" placeholder={t("单价", "Pay rate")} className="input" />
         <label className="col-span-2 flex items-center gap-2 text-sm">
           <input ref={needCheckinRef} type="checkbox" name="needCheckin" defaultChecked />
           <Bi zh="需要 GPS 打卡" en="Requires GPS check-in" />
@@ -111,7 +114,7 @@ export function NewUserForm() {
           className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
           {isPending ? (
-            "创建中..."
+            t("创建中...", "Creating...")
           ) : (
             <>
               + <Bi zh="新增员工" en="Add employee" />

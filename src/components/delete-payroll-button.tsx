@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { biText } from "@/lib/lang";
+import { useLang } from "@/lib/use-lang";
 
 export function DeletePayrollButton({
   payrollId,
@@ -12,6 +13,9 @@ export function DeletePayrollButton({
   redirectTo?: string;
 }) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
+  const deleteLabel = t("删除", "Delete");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -20,8 +24,8 @@ export function DeletePayrollButton({
       <button
         type="button"
         disabled={isPending}
-        title="删除 Delete"
-        aria-label="删除 Delete"
+        title={deleteLabel}
+        aria-label={deleteLabel}
         onClick={() => {
           if (
             !confirm(

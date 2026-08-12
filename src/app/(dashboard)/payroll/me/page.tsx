@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { payroll } from "@/db/schema";
 import { formatMoney, cn } from "@/lib/utils";
 import { Bi } from "@/components/bi";
+import { PayslipDownloadLink } from "@/components/payslip-download-link";
 
 export default async function MyPayrollPage() {
   const session = await auth();
@@ -49,15 +50,7 @@ export default async function MyPayrollPage() {
                     <Bi zh={p.status === "paid" ? "已发放" : "草稿"} en={p.status === "paid" ? "Paid" : "Draft"} />
                   </span>
                 </div>
-                <a
-                  href={`/api/payroll/${p.id}/pdf`}
-                  title="下载 PDF Download PDF"
-                  aria-label="下载 PDF Download PDF"
-                  onClick={(e) => e.stopPropagation()}
-                  className="rounded-md border border-neutral-200 px-2 py-1.5 text-sm hover:bg-white"
-                >
-                  ⬇️
-                </a>
+                <PayslipDownloadLink payrollId={p.id} />
               </div>
             </div>
           );
