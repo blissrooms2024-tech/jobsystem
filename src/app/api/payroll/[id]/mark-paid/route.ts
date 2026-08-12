@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, isNull, lte } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, payroll } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
@@ -27,7 +27,21 @@ export async function POST(
     .where(eq(payroll.id, id))
     .returning();
 
-  await db.update(jobs).set({ paidDate: now.toISOString().slice(0, 10) }).where(eq(jobs.payrollId, id));
+  // Stamp any completed, still-unlinked jobs for this user in the period as
+  // paid by this payslip — matches the legacy system, which only ever links
+  // jobs to a payslip at the moment it's marked Paid, not when it's saved.
+  await db
+    .update(jobs)
+    .set({ payrollId: id, paidDate: now.toISOString().slice(0, 10) })
+    .where(
+      and(
+        eq(jobs.assignedTo, existing.userId),
+        eq(jobs.status, "completed"),
+        isNull(jobs.payrollId),
+        gte(jobs.schedDate, existing.periodStart),
+        lte(jobs.schedDate, existing.periodEnd),
+      ),
+    );
 
   return NextResponse.json({ payroll: updated });
 }

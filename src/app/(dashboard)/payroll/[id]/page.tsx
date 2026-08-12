@@ -6,6 +6,7 @@ import { payroll, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
 import { PayrollEditForm } from "@/components/payroll-edit-form";
 import { MarkPaidButton } from "@/components/mark-paid-button";
+import { UnpayButton } from "@/components/unpay-button";
 
 export default async function PayrollDetailPage({
   params,
@@ -78,6 +79,7 @@ export default async function PayrollDetailPage({
             下载 PDF Download PDF
           </a>
           {isAdmin && p.status === "draft" ? <MarkPaidButton payrollId={p.id} /> : null}
+          {isAdmin && p.status === "paid" ? <UnpayButton payrollId={p.id} /> : null}
         </div>
       </div>
     </div>

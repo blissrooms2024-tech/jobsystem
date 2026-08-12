@@ -19,7 +19,7 @@ export async function GET(
 
   const { id } = await params;
   const [row] = await db
-    .select({ payroll, employeeName: users.name })
+    .select({ payroll, employee: users })
     .from(payroll)
     .innerJoin(users, eq(payroll.userId, users.id))
     .where(eq(payroll.id, id))
@@ -37,7 +37,11 @@ export async function GET(
 
   const pdfBuffer = await renderPayslipPdf({
     payrollCode: row.payroll.payrollCode,
-    employeeName: row.employeeName,
+    employeeName: row.employee.name,
+    staffType: row.employee.staffType,
+    icPassport: row.employee.icPassport,
+    bankName: row.employee.bankName,
+    bankAccount: row.employee.bankAccount,
     periodStart: row.payroll.periodStart,
     periodEnd: row.payroll.periodEnd,
     jobsCount: row.payroll.jobsCount,
