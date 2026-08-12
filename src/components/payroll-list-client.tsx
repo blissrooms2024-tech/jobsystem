@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney, cn } from "@/lib/utils";
 import { DeletePayrollButton } from "@/components/delete-payroll-button";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type Row = {
   id: string;
@@ -20,6 +21,8 @@ type Row = {
 };
 
 export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boolean }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
   const [month, setMonth] = useState("");
 
@@ -43,7 +46,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="搜索员工姓名... Search employee"
+          placeholder={t("搜索员工姓名...", "Search employee")}
           className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
         <select

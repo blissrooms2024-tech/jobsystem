@@ -2,17 +2,21 @@
 
 import { useState } from "react";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 import type { Role } from "@/types/next-auth";
 
 export function MobileNav({ role }: { role: Role }) {
   const [open, setOpen] = useState(false);
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
 
   return (
     <div className="flex items-center gap-2 sm:hidden">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="菜单 Menu"
+        aria-label={t("菜单", "Menu")}
         className="rounded-md border border-neutral-300 px-2 py-1.5 text-neutral-700"
       >
         ☰
@@ -25,12 +29,14 @@ export function MobileNav({ role }: { role: Role }) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>
-                <p className="text-xs text-neutral-500">Job System</p>
+                <p className="text-xs text-neutral-500">
+                  <Bi zh="任务系统" en="Job System" />
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="关闭 Close"
+                aria-label={t("关闭", "Close")}
                 className="text-neutral-500"
               >
                 ✕
@@ -40,7 +46,7 @@ export function MobileNav({ role }: { role: Role }) {
           </div>
           <button
             type="button"
-            aria-label="关闭菜单 Close menu"
+            aria-label={t("关闭菜单", "Close menu")}
             onClick={() => setOpen(false)}
             className="flex-1 bg-black/30"
           />

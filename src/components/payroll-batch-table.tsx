@@ -7,6 +7,7 @@ import { addDays, firstOfMonth, lastOfMonth, todayISO } from "@/lib/pay-periods"
 import { PayslipView } from "@/components/payslip-view";
 import { Bi } from "@/components/bi";
 import { biText } from "@/lib/lang";
+import { useLang } from "@/lib/use-lang";
 
 type Row = {
   userId: string;
@@ -39,6 +40,8 @@ function nowStamp(): string {
 type PeriodType = "Day" | "Week" | "Month" | "Custom";
 
 export function PayrollBatchTable() {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const today = todayISO();
   const [periodType, setPeriodType] = useState<PeriodType>("Month");
   const [from, setFrom] = useState(firstOfMonth(today));
@@ -206,7 +209,7 @@ export function PayrollBatchTable() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="输入姓名 Type a name"
+              placeholder={t("输入姓名", "Type a name")}
               className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
             />
           </label>

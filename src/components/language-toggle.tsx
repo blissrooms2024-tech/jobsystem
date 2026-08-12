@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { notifyLangChange } from "@/lib/use-lang";
 
 export function LanguageToggle() {
   const [lang, setLangState] = useState<"zh" | "en">(() =>
@@ -13,6 +14,7 @@ export function LanguageToggle() {
     document.documentElement.setAttribute("data-lang", l);
     document.cookie = `lang=${l}; path=/; max-age=31536000`;
     setLangState(l);
+    notifyLangChange();
   };
 
   const base = "rounded px-1.5 py-0.5 text-xs font-medium";
