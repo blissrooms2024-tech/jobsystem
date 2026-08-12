@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 function getLocation(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
@@ -16,10 +17,10 @@ function getLocation(): Promise<GeolocationPosition> {
   });
 }
 
-const STATUS_NOTE: Record<string, string> = {
-  completed: "此任务已完成 Job completed",
-  cancelled: "此任务已取消 Job cancelled",
-  missed: "此任务已错过 Job missed — ask an admin to reopen it",
+const STATUS_NOTE: Record<string, { zh: string; en: string }> = {
+  completed: { zh: "此任务已完成", en: "Job completed" },
+  cancelled: { zh: "此任务已取消", en: "Job cancelled" },
+  missed: { zh: "此任务已错过", en: "Job missed — ask an admin to reopen it" },
 };
 
 export function JobCheckinActions({
@@ -70,7 +71,12 @@ export function JobCheckinActions({
   };
 
   if (status !== "assigned" && status !== "in_progress") {
-    return <p className="text-sm text-neutral-600">{STATUS_NOTE[status] ?? status}</p>;
+    const note = STATUS_NOTE[status];
+    return (
+      <p className="text-sm text-neutral-600">
+        {note ? <Bi zh={note.zh} en={note.en} /> : status}
+      </p>
+    );
   }
 
   return (
@@ -84,7 +90,10 @@ export function JobCheckinActions({
             onClick={() => call("checkin", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            {status === "in_progress" ? "已打卡上班 Checked in" : "打卡上班 Check in"}
+            <Bi
+              zh={status === "in_progress" ? "已打卡上班" : "打卡上班"}
+              en={status === "in_progress" ? "Checked in" : "Check in"}
+            />
           </button>
           <button
             type="button"
@@ -92,10 +101,12 @@ export function JobCheckinActions({
             onClick={() => call("checkout", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            打卡下班 & 完成 Check out & complete
+            <Bi zh="打卡下班 & 完成" en="Check out & complete" />
           </button>
           {status === "assigned" && photoCount < 1 ? (
-            <p className="w-full text-xs text-neutral-500">请先上传照片才能打卡 Upload a photo before checking in</p>
+            <p className="w-full text-xs text-neutral-500">
+              <Bi zh="请先上传照片才能打卡" en="Upload a photo before checking in" />
+            </p>
           ) : null}
         </div>
       ) : (
@@ -106,12 +117,15 @@ export function JobCheckinActions({
             onClick={() => call("complete", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
-            标记完成 Mark complete
+            <Bi zh="标记完成" en="Mark complete" />
           </button>
           {requiredPhotos > 0 && photoCount < requiredPhotos ? (
             <p className="mt-1 text-xs text-neutral-500">
-              还需 {requiredPhotos - photoCount} 张照片 Need {requiredPhotos - photoCount} more photo(s) (
-              {photoCount}/{requiredPhotos})
+              <Bi
+                zh={`还需 ${requiredPhotos - photoCount} 张照片`}
+                en={`Need ${requiredPhotos - photoCount} more photo(s)`}
+              />{" "}
+              ({photoCount}/{requiredPhotos})
             </p>
           ) : null}
         </div>
