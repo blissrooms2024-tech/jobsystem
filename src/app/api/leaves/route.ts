@@ -28,10 +28,7 @@ export async function POST(request: Request) {
   const data = parsed.data;
 
   const created = await insertWithNextCode(
-    leaves,
-    leaves.leaveCode,
-    1,
-    "leaves_leave_code_unique",
+    "leave",
     async (leaveCode) => {
       const [row] = await db
         .insert(leaves)

@@ -44,6 +44,15 @@ export const leaveStatusEnum = pgEnum("leave_status", [
   "cancelled",
 ]);
 
+// Backs atomic sequential code generation (P0001, L0001, U001, ...) via a
+// single `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` per name — the row
+// lock Postgres takes during that upsert is what makes it collision-proof,
+// unlike a `SELECT MAX(...) + 1` read-then-write. See src/lib/sequence.ts.
+export const codeSequences = pgTable("code_sequences", {
+  name: varchar("name", { length: 40 }).primaryKey(),
+  value: integer("value").notNull().default(0),
+});
+
 export const users = pgTable(
   "users",
   {
