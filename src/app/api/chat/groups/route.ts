@@ -13,13 +13,14 @@ export async function GET() {
   }
 
   const memberships = await db
-    .select({ groupId: chatGroupMembers.groupId })
+    .select({ groupId: chatGroupMembers.groupId, lastReadAt: chatGroupMembers.lastReadAt })
     .from(chatGroupMembers)
     .where(eq(chatGroupMembers.userId, session.user.id));
   const groupIds = memberships.map((m) => m.groupId);
   if (groupIds.length === 0) {
     return NextResponse.json({ groups: [] });
   }
+  const lastReadByGroup = new Map(memberships.map((m) => [m.groupId, m.lastReadAt]));
 
   const groups = await db
     .select()
@@ -28,13 +29,28 @@ export async function GET() {
     .orderBy(desc(chatGroups.createdAt));
 
   const recentMessages = await db
-    .select({ groupId: chatMessages.groupId, body: chatMessages.body, createdAt: chatMessages.createdAt })
+    .select({
+      groupId: chatMessages.groupId,
+      body: chatMessages.body,
+      attachmentUrl: chatMessages.attachmentUrl,
+      deletedAt: chatMessages.deletedAt,
+      createdAt: chatMessages.createdAt,
+      senderId: chatMessages.senderId,
+    })
     .from(chatMessages)
     .where(inArray(chatMessages.groupId, groupIds))
     .orderBy(desc(chatMessages.createdAt));
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
+  const unreadByGroup = new Map<string, number>();
   for (const m of recentMessages) {
-    if (!lastByGroup.has(m.groupId)) lastByGroup.set(m.groupId, m);
+    if (!lastByGroup.has(m.groupId)) {
+      const preview = m.deletedAt ? "此消息已删除" : m.attachmentUrl && !m.body ? "[照片]" : m.body;
+      lastByGroup.set(m.groupId, { body: preview, createdAt: m.createdAt });
+    }
+    const lastRead = lastReadByGroup.get(m.groupId);
+    if (m.senderId !== session.user.id && m.createdAt > (lastRead ?? new Date(0))) {
+      unreadByGroup.set(m.groupId, (unreadByGroup.get(m.groupId) ?? 0) + 1);
+    }
   }
 
   const result = groups.map((g) => ({
@@ -42,6 +58,7 @@ export async function GET() {
     name: g.name,
     lastMessage: lastByGroup.get(g.id)?.body ?? null,
     lastMessageAt: lastByGroup.get(g.id)?.createdAt ?? null,
+    unread: unreadByGroup.get(g.id) ?? 0,
   }));
 
   return NextResponse.json({ groups: result });

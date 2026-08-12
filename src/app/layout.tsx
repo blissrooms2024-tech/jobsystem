@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,6 +15,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Bliss Rooms Job System",
   description: "Job assignment, check-in and payroll system for Bliss Rooms",
+};
+
+// Explicit, rather than relying on Next's default — on a phone this is
+// what makes text render at its real size instead of a shrunk-down
+// desktop-width page that needs pinch-zooming to read.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

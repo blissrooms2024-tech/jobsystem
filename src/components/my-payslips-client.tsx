@@ -23,7 +23,7 @@ export function MyPayslipsClient({ rows }: { rows: Row[] }) {
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
-  const [month, setMonth] = useState("");
+  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   const months = useMemo(() => {
     const set = new Set(rows.map((r) => r.periodStart.slice(0, 7)));
