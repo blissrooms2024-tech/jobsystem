@@ -5,10 +5,17 @@ import { payroll, users } from "@/db/schema";
 import { renderPayslipPdf } from "@/lib/payslip-pdf";
 import { sendMail } from "@/lib/mailer";
 
+function appUrl() {
+  return process.env.APP_URL?.replace(/\/$/, "") ?? "";
+}
+
 /**
- * Renders the payslip PDF for a payroll row, uploads it to Blob storage,
- * and stamps pdfUrl on the row. Shared by the download endpoint and the
- * mark-paid email so both always produce the exact same document.
+ * Renders the payslip PDF for a payroll row and uploads it to Blob storage
+ * as a private object (the project's Blob store is configured private — a
+ * `public` put() against it fails outright). The blob is kept only as a
+ * record via pdfUrl; nothing serves it by redirecting to that URL, since a
+ * private blob isn't fetchable without a signed request. Actual viewing /
+ * downloading happens by streaming pdfBuffer straight from our own route.
  */
 export async function generateAndStorePayslipPdf(payrollId: string) {
   const [row] = await db
@@ -39,7 +46,7 @@ export async function generateAndStorePayslipPdf(payrollId: string) {
   });
 
   const blob = await put(`payroll/${row.payroll.payrollCode}.pdf`, pdfBuffer, {
-    access: "public",
+    access: "private",
     contentType: "application/pdf",
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -65,6 +72,8 @@ export async function emailPayslip(payrollId: string) {
     Number(result.payroll.allowance) -
     Number(result.payroll.deduction);
 
+  const viewLink = appUrl() ? `${appUrl()}/payroll/${payrollId}` : null;
+
   await sendMail({
     to: result.employee.email,
     subject: `工资单 Payslip ${result.payroll.payrollCode} (${result.payroll.periodStart} ~ ${result.payroll.periodEnd})`,
@@ -72,7 +81,7 @@ export async function emailPayslip(payrollId: string) {
       <p>Hi ${result.employee.name},</p>
       <p>你 ${result.payroll.periodStart} 至 ${result.payroll.periodEnd} 的工资单已发放，净额 RM ${net.toFixed(2)}，详情见附件。</p>
       <p>Your payslip for ${result.payroll.periodStart} to ${result.payroll.periodEnd} has been paid — net RM ${net.toFixed(2)}. See the attached PDF for details.</p>
-      <p><a href="${result.blobUrl}">查看 PDF View PDF</a></p>
+      ${viewLink ? `<p><a href="${viewLink}">查看工资单 View payslip</a></p>` : ""}
     `,
     attachments: [
       { filename: `${result.payroll.payrollCode}.pdf`, content: result.pdfBuffer, contentType: "application/pdf" },

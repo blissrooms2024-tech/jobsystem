@@ -20,9 +20,9 @@ export default async function DashboardLayout({
         <DashboardNav role={user.role} />
       </aside>
       <div className="flex min-h-screen flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 sm:px-6">
+        <header className="flex items-center justify-between border-b border-purple-100 bg-purple-50/40 px-4 py-3 sm:px-6">
           <div className="sm:hidden">
-            <p className="text-sm font-semibold">Bliss Rooms</p>
+            <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>
           </div>
           <div className="ml-auto flex items-center gap-3">
             <span className="text-sm text-neutral-600">
@@ -31,14 +31,14 @@ export default async function DashboardLayout({
             <form action={signOutAction}>
               <button
                 type="submit"
-                className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
+                className="rounded-md border border-purple-200 px-3 py-1.5 text-sm text-purple-900 hover:bg-purple-100"
               >
                 登出 Sign out
               </button>
             </form>
           </div>
         </header>
-        <div className="border-b border-neutral-200 px-4 py-2 sm:hidden">
+        <div className="border-b border-purple-100 bg-purple-50/40 px-4 py-2 sm:hidden">
           <DashboardNav role={user.role} orientation="horizontal" />
         </div>
         {user.mustChangePassword ? (
