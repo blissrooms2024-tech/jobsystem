@@ -11,7 +11,6 @@ export function UserRow({
   staffId,
   staffType,
   phone,
-  email,
   active,
   bankName,
   bankAccount,
@@ -20,11 +19,8 @@ export function UserRow({
   name: string;
   username: string;
   staffId: string | null;
-  role: string;
   staffType: string | null;
   phone: string | null;
-  icPassport: string | null;
-  email: string | null;
   active: boolean;
   bankName: string | null;
   bankAccount: string | null;
@@ -44,7 +40,6 @@ export function UserRow({
       <td className="whitespace-nowrap px-3 py-1.5">{staffId ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{staffType ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{phone ?? "-"}</td>
-      <td className="whitespace-nowrap px-3 py-1.5">{email ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">
         {bankName || bankAccount
           ? [bankName, bankAccount].filter(Boolean).join(" · ")

@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { put } from "@vercel/blob";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { payroll, users } from "@/db/schema";
-import { renderPayslipPdf } from "@/lib/payslip-pdf";
+import { payroll } from "@/db/schema";
+import { generateAndStorePayslipPdf } from "@/lib/payroll-pdf";
 
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await auth();
@@ -18,49 +17,29 @@ export async function GET(
   }
 
   const { id } = await params;
-  const [row] = await db
-    .select({ payroll, employee: users })
-    .from(payroll)
-    .innerJoin(users, eq(payroll.userId, users.id))
-    .where(eq(payroll.id, id))
-    .limit(1);
-
-  if (!row) {
+  const [existing] = await db.select().from(payroll).where(eq(payroll.id, id)).limit(1);
+  if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const isAdmin = ["boss", "admin", "supervisor"].includes(session.user.role);
-  const isOwner = row.payroll.userId === session.user.id;
+  const isOwner = existing.userId === session.user.id;
   if (!isAdmin && !isOwner) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const pdfBuffer = await renderPayslipPdf({
-    payrollCode: row.payroll.payrollCode,
-    employeeName: row.employee.name,
-    staffType: row.employee.staffType,
-    icPassport: row.employee.icPassport,
-    bankName: row.employee.bankName,
-    bankAccount: row.employee.bankAccount,
-    periodStart: row.payroll.periodStart,
-    periodEnd: row.payroll.periodEnd,
-    jobsCount: row.payroll.jobsCount,
-    jobsPay: row.payroll.jobsPay,
-    baseSalary: row.payroll.baseSalary,
-    allowance: row.payroll.allowance,
-    deduction: row.payroll.deduction,
-    note: row.payroll.note,
-    paidAt: row.payroll.paidAt ? row.payroll.paidAt.toISOString().slice(0, 10) : null,
-  });
+  const result = await generateAndStorePayslipPdf(id);
+  if (!result) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
-  const blob = await put(`payroll/${row.payroll.payrollCode}.pdf`, pdfBuffer, {
-    access: "public",
-    contentType: "application/pdf",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-  });
+  // ?download=1 forces a file download instead of opening inline in the
+  // browser's PDF viewer — Vercel Blob honors a `download` query param on
+  // the blob URL itself by setting Content-Disposition: attachment.
+  const wantsDownload = new URL(request.url).searchParams.has("download");
+  const target = wantsDownload
+    ? `${result.blobUrl}?download=${encodeURIComponent(`${result.payroll.payrollCode}.pdf`)}`
+    : result.blobUrl;
 
-  await db.update(payroll).set({ pdfUrl: blob.url }).where(eq(payroll.id, id));
-
-  return NextResponse.redirect(blob.url);
+  return NextResponse.redirect(target);
 }

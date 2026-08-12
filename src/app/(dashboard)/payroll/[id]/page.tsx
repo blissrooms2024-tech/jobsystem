@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/utils";
 import { PayrollEditForm } from "@/components/payroll-edit-form";
 import { MarkPaidButton } from "@/components/mark-paid-button";
 import { UnpayButton } from "@/components/unpay-button";
+import { ResendPayslipButton } from "@/components/resend-payslip-button";
 
 export default async function PayrollDetailPage({
   params,
@@ -76,9 +77,16 @@ export default async function PayrollDetailPage({
             rel="noreferrer"
             className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
           >
+            查看 PDF View PDF
+          </a>
+          <a
+            href={`/api/payroll/${p.id}/pdf?download=1`}
+            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50"
+          >
             下载 PDF Download PDF
           </a>
           {isAdmin && p.status === "draft" ? <MarkPaidButton payrollId={p.id} /> : null}
+          {isAdmin && p.status === "paid" ? <ResendPayslipButton payrollId={p.id} /> : null}
           {isAdmin && p.status === "paid" ? <UnpayButton payrollId={p.id} /> : null}
         </div>
       </div>
