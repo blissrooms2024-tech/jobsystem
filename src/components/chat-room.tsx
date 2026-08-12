@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Bi } from "@/components/bi";
 
 type Message = {
   id: string;
@@ -89,7 +90,9 @@ export function ChatRoom({
           );
         })}
         {messages.length === 0 ? (
-          <p className="text-center text-sm text-neutral-400">还没有消息，说点什么吧 No messages yet — say something</p>
+          <p className="text-center text-sm text-neutral-400">
+            <Bi zh="还没有消息，说点什么吧" en="No messages yet — say something" />
+          </p>
         ) : null}
         <div ref={bottomRef} />
       </div>
@@ -113,7 +116,7 @@ export function ChatRoom({
           disabled={sending || !draft.trim()}
           className="rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
         >
-          发送 Send
+          <Bi zh="发送" en="Send" />
         </button>
       </div>
     </div>
