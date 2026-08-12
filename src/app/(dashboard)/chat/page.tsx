@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { chatGroups, chatGroupMembers, chatMessages, users } from "@/db/schema";
 import { NewGroupForm } from "@/components/new-group-form";
+import { Bi } from "@/components/bi";
 
 export default async function ChatPage() {
   const session = await auth();
@@ -42,7 +43,9 @@ export default async function ChatPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">聊天 Chat</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="聊天" en="Chat" />
+        </h1>
       </div>
 
       {isAdmin ? <NewGroupForm users={activeUsers.filter((u) => u.id !== user.id)} /> : null}
@@ -57,13 +60,19 @@ export default async function ChatPage() {
               className="block rounded-lg border border-neutral-200 p-4 hover:bg-neutral-50"
             >
               <p className="font-medium">{g.name}</p>
-              <p className="truncate text-xs text-neutral-500">{last?.body ?? "暂无消息 No messages yet"}</p>
+              <p className="truncate text-xs text-neutral-500">
+                {last?.body ?? <Bi zh="暂无消息" en="No messages yet" />}
+              </p>
             </Link>
           );
         })}
         {groups.length === 0 ? (
           <p className="text-sm text-neutral-400">
-            {isAdmin ? "还没有群组，创建一个吧 No groups yet — create one above" : "还没有加入任何群组 Not in any groups yet"}
+            {isAdmin ? (
+              <Bi zh="还没有群组，创建一个吧" en="No groups yet — create one above" />
+            ) : (
+              <Bi zh="还没有加入任何群组" en="Not in any groups yet" />
+            )}
           </p>
         ) : null}
       </div>

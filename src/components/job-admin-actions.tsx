@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
+import { biText } from "@/lib/lang";
 
 export function JobAdminActions({
   jobId,
@@ -51,7 +53,9 @@ export function JobAdminActions({
 
   return (
     <div className="space-y-2 border-t border-neutral-200 pt-4">
-      <p className="text-xs font-medium text-neutral-500">管理操作 Admin actions</p>
+      <p className="text-xs font-medium text-neutral-500">
+        <Bi zh="管理操作" en="Admin actions" />
+      </p>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
         {status !== "completed" && status !== "cancelled" ? (
@@ -59,11 +63,11 @@ export function JobAdminActions({
             type="button"
             disabled={isPending}
             onClick={() => {
-              if (confirm("确定要取消这个任务吗？\nCancel this job?")) call("POST", "/cancel");
+              if (confirm(biText("确定要取消这个任务吗？", "Cancel this job?"))) call("POST", "/cancel");
             }}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
           >
-            取消 Cancel
+            <Bi zh="取消" en="Cancel" />
           </button>
         ) : null}
 
@@ -74,7 +78,10 @@ export function JobAdminActions({
             onClick={() => {
               if (
                 confirm(
-                  "确定要把这个任务重开吗？打卡记录会被清空。\nReopen this job? Check-in data will be cleared.",
+                  biText(
+                    "确定要把这个任务重开吗？打卡记录会被清空。",
+                    "Reopen this job? Check-in data will be cleared.",
+                  ),
                 )
               ) {
                 call("POST", "/reopen");
@@ -82,7 +89,7 @@ export function JobAdminActions({
             }}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
           >
-            重开 Reopen
+            <Bi zh="重开" en="Reopen" />
           </button>
         ) : null}
 
@@ -102,7 +109,7 @@ export function JobAdminActions({
                 onClick={() => call("PATCH", "/pay", { pay: payValue })}
                 className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm text-white disabled:opacity-50"
               >
-                确认 Confirm
+                <Bi zh="确认" en="Confirm" />
               </button>
             </div>
           ) : (
@@ -111,7 +118,7 @@ export function JobAdminActions({
               onClick={() => setShowPay(true)}
               className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
             >
-              改金额 Edit pay
+              <Bi zh="改金额" en="Edit pay" />
             </button>
           )
         ) : null}
@@ -124,7 +131,9 @@ export function JobAdminActions({
               onChange={(e) => setDupDate(e.target.value)}
               className="rounded-md border border-neutral-300 px-2 py-1.5 text-sm"
             />
-            <span className="text-xs text-neutral-500">到 to (可选 optional)</span>
+            <span className="text-xs text-neutral-500">
+              <Bi zh="到" en="to" /> (<Bi zh="可选" en="optional" />)
+            </span>
             <input
               type="date"
               value={dupUntil}
@@ -139,7 +148,7 @@ export function JobAdminActions({
               }
               className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm text-white disabled:opacity-50"
             >
-              确认复制 Confirm
+              <Bi zh="确认复制" en="Confirm" />
             </button>
           </div>
         ) : (
@@ -148,7 +157,7 @@ export function JobAdminActions({
             onClick={() => setShowDup(true)}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-50"
           >
-            复制 Duplicate
+            <Bi zh="复制" en="Duplicate" />
           </button>
         )}
 
@@ -157,13 +166,13 @@ export function JobAdminActions({
             type="button"
             disabled={isPending}
             onClick={() => {
-              if (confirm("确定要删除这个任务吗？此操作无法撤销。\nDelete this job? This cannot be undone.")) {
+              if (confirm(biText("确定要删除这个任务吗？此操作无法撤销。", "Delete this job? This cannot be undone."))) {
                 call("DELETE", "");
               }
             }}
             className="rounded-md border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
           >
-            删除 Delete
+            <Bi zh="删除" en="Delete" />
           </button>
         ) : null}
       </div>
