@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type Props = {
   id: string;
@@ -16,6 +17,8 @@ type Props = {
 
 export function UnitRow(props: Props) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
@@ -52,8 +55,8 @@ export function UnitRow(props: Props) {
           <button
             type="button"
             onClick={() => setEditing(true)}
-            title="编辑 Edit"
-            aria-label="编辑 Edit"
+            title={t("编辑", "Edit")}
+            aria-label={t("编辑", "Edit")}
             className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
           >
             ✏️

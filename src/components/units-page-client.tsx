@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { UnitRow } from "@/components/unit-row";
 import { NewUnitForm } from "@/components/new-unit-form";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type UnitData = {
   id: string;
@@ -16,6 +17,8 @@ type UnitData = {
 };
 
 export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
@@ -38,7 +41,7 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索编号/名称/物业... Search"
+            placeholder={t("搜索编号/名称/物业...", "Search")}
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
           <button

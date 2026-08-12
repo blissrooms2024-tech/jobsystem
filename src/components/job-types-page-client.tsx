@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { JobTypeRow } from "@/components/job-type-row";
 import { NewJobTypeForm } from "@/components/new-job-type-form";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type JobTypeData = {
   id: string;
@@ -13,6 +14,8 @@ type JobTypeData = {
 };
 
 export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
@@ -33,7 +36,7 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
             type="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索工种... Search"
+            placeholder={t("搜索工种...", "Search")}
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
           <button
