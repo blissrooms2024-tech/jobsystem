@@ -82,14 +82,6 @@ export function ChatRoom({
     return otherMembers.filter((m) => m.name.toLowerCase().includes(q));
   }, [mentionQuery, otherMembers]);
 
-  const refresh = async () => {
-    const res = await fetch(`/api/chat/groups/${groupId}/messages`);
-    if (!res.ok) return;
-    const data = await res.json();
-    setMessages(data.messages);
-    if (typeof data.onlineCount === "number") setOnlineCount(data.onlineCount);
-  };
-
   useEffect(() => {
     const poll = async () => {
       const res = await fetch(`/api/chat/groups/${groupId}/messages`);
@@ -123,7 +115,24 @@ export function ChatRoom({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body }),
     });
-    if (res.ok) await refresh();
+    if (res.ok) {
+      const data = await res.json();
+      // Append immediately instead of waiting on a second GET round-trip —
+      // own messages never render senderName, so the placeholder is fine
+      // until the next poll fills in the rest.
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: data.message.id,
+          body: data.message.body,
+          attachmentUrl: data.message.attachmentUrl ?? null,
+          deleted: false,
+          createdAt: data.message.createdAt,
+          senderId: data.message.senderId,
+          senderName: "",
+        },
+      ]);
+    }
     setSending(false);
   };
 
@@ -139,7 +148,21 @@ export function ChatRoom({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ attachmentUrl: blob.url }),
       });
-      if (res.ok) await refresh();
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: data.message.id,
+            body: data.message.body,
+            attachmentUrl: data.message.attachmentUrl ?? null,
+            deleted: false,
+            createdAt: data.message.createdAt,
+            senderId: data.message.senderId,
+            senderName: "",
+          },
+        ]);
+      }
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
