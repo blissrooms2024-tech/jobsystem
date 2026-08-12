@@ -3,28 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 import type { Role } from "@/types/next-auth";
 
 type NavItem = {
   href: string;
-  label: string;
+  zh: string;
+  en: string;
   roles?: Role[];
 };
 
 const ADMIN_ROLES: Role[] = ["boss", "admin", "supervisor"];
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "总览 Dashboard" },
-  { href: "/jobs", label: "任务 Jobs" },
-  { href: "/jobs/calendar", label: "日历 Calendar" },
-  { href: "/payroll", label: "工资 Payroll", roles: ["boss", "admin"] },
-  { href: "/payroll/me", label: "我的工资 My Payslips", roles: ["employee", "supervisor"] },
-  { href: "/leaves", label: "请假 Leaves" },
-  { href: "/chat", label: "聊天 Chat" },
-  { href: "/users", label: "员工 Users", roles: ADMIN_ROLES },
-  { href: "/units", label: "单位 Units", roles: ADMIN_ROLES },
-  { href: "/job-types", label: "工种 Job Types", roles: ADMIN_ROLES },
-  { href: "/account", label: "我的账号 Account" },
+  { href: "/", zh: "总览", en: "Dashboard" },
+  { href: "/jobs", zh: "任务", en: "Jobs" },
+  { href: "/jobs/calendar", zh: "日历", en: "Calendar" },
+  { href: "/payroll", zh: "工资", en: "Payroll", roles: ["boss", "admin"] },
+  { href: "/payroll/me", zh: "我的工资", en: "My Payslips", roles: ["employee", "supervisor"] },
+  { href: "/leaves", zh: "请假", en: "Leaves" },
+  { href: "/chat", zh: "聊天", en: "Chat" },
+  { href: "/users", zh: "员工", en: "Users", roles: ADMIN_ROLES },
+  { href: "/units", zh: "单位", en: "Units", roles: ADMIN_ROLES },
+  { href: "/job-types", zh: "工种", en: "Job Types", roles: ADMIN_ROLES },
+  { href: "/account", zh: "我的账号", en: "Account" },
 ];
 
 export function DashboardNav({ role }: { role: Role }) {
@@ -47,7 +49,7 @@ export function DashboardNav({ role }: { role: Role }) {
                 : "text-neutral-700 hover:bg-purple-100/70 hover:text-purple-900",
             )}
           >
-            {item.label}
+            <Bi zh={item.zh} en={item.en} />
           </Link>
         );
       })}
