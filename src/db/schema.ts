@@ -13,6 +13,7 @@ import {
   integer,
   jsonb,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -242,6 +243,68 @@ export const leaves = pgTable(
   },
   (t) => [index("leaves_user_status_idx").on(t.userId, t.status)],
 );
+
+export const chatGroups = pgTable("chat_groups", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const chatGroupMembers = pgTable(
+  "chat_group_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => chatGroups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    addedAt: timestamp("added_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [uniqueIndex("chat_group_members_group_user_idx").on(t.groupId, t.userId)],
+);
+
+export const chatMessages = pgTable(
+  "chat_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => chatGroups.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [index("chat_messages_group_created_idx").on(t.groupId, t.createdAt)],
+);
+
+export const chatGroupsRelations = relations(chatGroups, ({ many, one }) => ({
+  members: many(chatGroupMembers),
+  messages: many(chatMessages),
+  creator: one(users, { fields: [chatGroups.createdBy], references: [users.id] }),
+}));
+
+export const chatGroupMembersRelations = relations(chatGroupMembers, ({ one }) => ({
+  group: one(chatGroups, { fields: [chatGroupMembers.groupId], references: [chatGroups.id] }),
+  user: one(users, { fields: [chatGroupMembers.userId], references: [users.id] }),
+}));
+
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+  group: one(chatGroups, { fields: [chatMessages.groupId], references: [chatGroups.id] }),
+  sender: one(users, { fields: [chatMessages.senderId], references: [users.id] }),
+}));
 
 export const usersRelations = relations(users, ({ many, one }) => ({
   jobsAssigned: many(jobs, { relationName: "assignedTo" }),

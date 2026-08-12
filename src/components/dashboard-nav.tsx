@@ -20,6 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/payroll", label: "工资 Payroll", roles: ["boss", "admin"] },
   { href: "/payroll/me", label: "我的工资 My Payslips", roles: ["employee", "supervisor"] },
   { href: "/leaves", label: "请假 Leaves" },
+  { href: "/chat", label: "聊天 Chat" },
   { href: "/users", label: "员工 Users", roles: ADMIN_ROLES },
   { href: "/units", label: "单位 Units", roles: ADMIN_ROLES },
   { href: "/job-types", label: "工种 Job Types", roles: ADMIN_ROLES },
