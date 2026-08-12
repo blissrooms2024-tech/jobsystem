@@ -72,10 +72,7 @@ export async function POST(request: Request) {
   }
 
   const created = await insertWithNextCode(
-    payroll,
-    payroll.payrollCode,
-    1,
-    "payroll_payroll_code_unique",
+    "payroll",
     async (payrollCode) => {
       const [row] = await db
         .insert(payroll)

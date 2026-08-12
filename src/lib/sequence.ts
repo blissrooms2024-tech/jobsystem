@@ -1,65 +1,36 @@
-import { sql, type SQLWrapper } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import type { PgTable } from "drizzle-orm/pg-core";
+import { codeSequences } from "@/db/schema";
 
 /**
- * Picks the next sequential integer for a `PREFIX0001`-style code column by
- * reading the highest existing numeric suffix. Good enough for this app's
- * write volume (admin-triggered payroll/leave creation, not high-concurrency
- * user traffic) — a `SERIAL`-backed sequence would be overkill here since the
- * codes must stay human-legible with a letter prefix.
+ * Atomically claims the next integer for a named counter (e.g. "payroll",
+ * "leave") via a single `INSERT ... ON CONFLICT DO UPDATE ... RETURNING`.
+ * Postgres takes a row lock on the counter row for the duration of that one
+ * statement, so two requests racing to save at the same time are serialized
+ * by the database itself — one gets N, the other gets N+1, never the same
+ * number twice. This replaces an earlier `SELECT MAX(...) + 1` approach that
+ * read-then-wrote non-atomically and could hand out the same number to two
+ * concurrent requests (e.g. a double-click on Save), which surfaced as a
+ * "duplicate key value violates unique constraint" error.
  */
-export async function nextSequenceNumber(
-  table: PgTable,
-  codeColumn: SQLWrapper,
-  prefixLength: number,
-): Promise<number> {
+async function nextSeq(name: string): Promise<number> {
   const [row] = await db
-    .select({
-      max: sql<number | null>`max(cast(substring(${codeColumn} from ${prefixLength + 1}) as integer))`,
+    .insert(codeSequences)
+    .values({ name, value: 1 })
+    .onConflictDoUpdate({
+      target: codeSequences.name,
+      set: { value: sql`${codeSequences.value} + 1` },
     })
-    .from(table);
-  return (row?.max ?? 0) + 1;
+    .returning({ value: codeSequences.value });
+  return row.value;
 }
 
-function isUniqueViolation(err: unknown, constraintName: string): boolean {
-  let cur: unknown = err;
-  for (let i = 0; i < 5 && cur; i++) {
-    const e = cur as { code?: string; constraint?: string; cause?: unknown };
-    if (e.code === "23505" && (!e.constraint || e.constraint === constraintName)) return true;
-    cur = e.cause;
-  }
-  return false;
-}
-
-/**
- * Reads the next sequence number and inserts, retrying with a fresh number
- * on a unique-constraint collision (`nextSequenceNumber` reads-then-writes,
- * so two requests racing between the read and the insert can both compute
- * the same "next" number — e.g. a double-click on Save). Not a true atomic
- * sequence, but self-healing under that race instead of failing outright.
- */
+/** Claims the next sequence number for `seqName` and inserts with it. */
 export async function insertWithNextCode<T>(
-  table: PgTable,
-  codeColumn: SQLWrapper,
-  prefixLength: number,
-  constraintName: string,
+  seqName: string,
   attempt: (code: string, seq: number) => Promise<T>,
   formatCode: (seq: number) => string,
-  maxRetries = 5,
 ): Promise<T> {
-  let lastErr: unknown;
-  for (let i = 0; i <= maxRetries; i++) {
-    const seq = await nextSequenceNumber(table, codeColumn, prefixLength);
-    try {
-      return await attempt(formatCode(seq), seq);
-    } catch (err) {
-      if (isUniqueViolation(err, constraintName) && i < maxRetries) {
-        lastErr = err;
-        continue;
-      }
-      throw err;
-    }
-  }
-  throw lastErr;
+  const seq = await nextSeq(seqName);
+  return attempt(formatCode(seq), seq);
 }
