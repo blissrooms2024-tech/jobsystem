@@ -3,9 +3,12 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 export function NewUnitForm() {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
   const latRef = useRef<HTMLInputElement>(null);
@@ -49,13 +52,13 @@ export function NewUnitForm() {
       }}
       id="new-unit-form"
     >
-      <input name="unitCode" placeholder="单位编号 Unit code" required className="input" />
-      <input name="unitName" placeholder="单位名称 Unit name" required className="input" />
-      <input name="property" placeholder="物业 Property" className="input" />
-      <input name="address" placeholder="地址 Address" className="input" />
+      <input name="unitCode" placeholder={t("单位编号", "Unit code")} required className="input" />
+      <input name="unitName" placeholder={t("单位名称", "Unit name")} required className="input" />
+      <input name="property" placeholder={t("物业", "Property")} className="input" />
+      <input name="address" placeholder={t("地址", "Address")} className="input" />
       <input ref={latRef} name="lat" type="number" step="0.000001" placeholder="Lat" defaultValue={0} className="input" />
       <input ref={lonRef} name="lon" type="number" step="0.000001" placeholder="Lon" defaultValue={0} className="input" />
-      <input name="radiusM" type="number" placeholder="打卡半径(m) Radius" defaultValue={200} className="input" />
+      <input name="radiusM" type="number" placeholder={t("打卡半径(m)", "Radius")} defaultValue={200} className="input" />
       <button
         type="button"
         onClick={grabHere}
@@ -70,7 +73,7 @@ export function NewUnitForm() {
         className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
         {isPending ? (
-          "创建中..."
+          t("创建中...", "Creating...")
         ) : (
           <>
             + <Bi zh="新增单位" en="Add unit" />

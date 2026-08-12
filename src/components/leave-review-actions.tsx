@@ -4,9 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
 import { biText } from "@/lib/lang";
+import { useLang } from "@/lib/use-lang";
 
 export function LeaveReviewActions({ leaveId, status }: { leaveId: string; status: string }) {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [note, setNote] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -26,7 +29,7 @@ export function LeaveReviewActions({ leaveId, status }: { leaveId: string; statu
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="审批备注 Review note (optional)"
+        placeholder={t("审批备注", "Review note (optional)")}
         rows={2}
         className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
       />

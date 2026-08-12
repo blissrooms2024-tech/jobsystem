@@ -3,9 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 export function NewJobTypeForm() {
   const router = useRouter();
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -36,7 +39,7 @@ export function NewJobTypeForm() {
     >
       <input
         name="typeName"
-        placeholder="工种名称 Type name"
+        placeholder={t("工种名称", "Type name")}
         required
         className="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm"
       />
@@ -44,7 +47,7 @@ export function NewJobTypeForm() {
         name="pay"
         type="number"
         step="0.01"
-        placeholder="单价 Pay"
+        placeholder={t("单价", "Pay")}
         required
         className="w-32 rounded-md border border-neutral-300 px-3 py-2 text-sm"
       />

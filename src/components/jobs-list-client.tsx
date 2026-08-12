@@ -6,6 +6,7 @@ import { formatMoney, cn } from "@/lib/utils";
 import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
 import { JobRowActions } from "@/components/job-row-actions";
 import { Bi } from "@/components/bi";
+import { useLang } from "@/lib/use-lang";
 
 type Row = {
   id: string;
@@ -27,6 +28,8 @@ export function JobsListClient({
   isAdmin: boolean;
   canDelete: boolean;
 }) {
+  const lang = useLang();
+  const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -43,7 +46,7 @@ export function JobsListClient({
         type="search"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="搜索标题/负责人/单位... Search"
+        placeholder={t("搜索标题/负责人/单位...", "Search")}
         className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
       />
 
