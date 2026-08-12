@@ -64,7 +64,9 @@ export async function GET(request: Request) {
     return {
       userId: u.id,
       name: u.name,
+      staffId: u.staffId,
       staffType: u.staffType,
+      icPassport: u.icPassport,
       payType: u.payType,
       payRate: u.payRate,
       bankName: u.bankName,
@@ -78,6 +80,8 @@ export async function GET(request: Request) {
       payrollId: saved?.id ?? null,
       payrollCode: saved?.payrollCode ?? null,
       status: saved?.status ?? null,
+      issuedDate: saved ? saved.createdAt.toISOString().slice(0, 10) : null,
+      periodType: saved?.periodType ?? "custom",
     };
   });
 

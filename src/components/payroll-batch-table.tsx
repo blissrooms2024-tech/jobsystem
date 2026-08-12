@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/utils";
 import { addDays, firstOfMonth, lastOfMonth, todayISO } from "@/lib/pay-periods";
+import { PayslipView } from "@/components/payslip-view";
 
 type Row = {
   userId: string;
   name: string;
+  staffId: string | null;
   staffType: string | null;
+  icPassport: string | null;
   payType: string | null;
   payRate: string | null;
   bankName: string | null;
@@ -22,7 +25,14 @@ type Row = {
   payrollId: string | null;
   payrollCode: string | null;
   status: "draft" | "paid" | null;
+  issuedDate: string | null;
+  periodType: string;
 };
+
+function nowStamp(): string {
+  const my = new Date(Date.now() + 8 * 3600 * 1000);
+  return my.toISOString().slice(0, 19).replace("T", " ");
+}
 
 type PeriodType = "Day" | "Week" | "Month" | "Custom";
 
@@ -260,6 +270,7 @@ function PayrollRow({
   const [note, setNote] = useState(row.note);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const net =
     (Number(jobsPay) || 0) + (Number(baseSalary) || 0) + (Number(allowance) || 0) - (Number(deduction) || 0);
@@ -289,6 +300,7 @@ function PayrollRow({
         setError(typeof data.error === "string" ? data.error : "保存失败 Failed to save");
         return;
       }
+      setShowPreview(true);
       onSaved();
     });
   };
@@ -348,6 +360,13 @@ function PayrollRow({
               保存 Save
             </button>
           ) : null}
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-50"
+          >
+            {showPreview ? "隐藏预览 Hide preview" : "预览 Preview"}
+          </button>
           {row.payrollId ? (
             <>
               <Link
@@ -381,6 +400,35 @@ function PayrollRow({
           ) : null}
         </div>
       </div>
+
+      {showPreview ? (
+        <div className="mt-4">
+          <PayslipView
+            data={{
+              payrollCode: row.payrollCode ?? "DRAFT",
+              employeeName: row.name,
+              staffId: row.staffId,
+              staffType: row.staffType,
+              icPassport: row.icPassport,
+              bankName: row.bankName,
+              bankAccount: row.bankAccount,
+              periodStart,
+              periodEnd,
+              periodType: row.periodType,
+              issuedDate: row.issuedDate ?? todayISO(),
+              jobsCount: Number(jobsCount) || 0,
+              jobsPay,
+              baseSalary,
+              allowance,
+              deduction,
+              note,
+              status: isPaid ? "paid" : "draft",
+              paidAt: null,
+              generatedAt: nowStamp(),
+            }}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

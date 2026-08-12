@@ -10,48 +10,119 @@ const COMPANY = {
 };
 
 const styles = StyleSheet.create({
-  page: { padding: 32, fontSize: 11, fontFamily: "Helvetica" },
-  companyBlock: { textAlign: "center", marginBottom: 16, paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: "#222" },
+  page: { padding: 32, fontSize: 10, fontFamily: "Helvetica", color: "#222" },
+  companyBlock: { textAlign: "center", marginBottom: 10, paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: "#222" },
   companyName: { fontSize: 18, fontWeight: 700, letterSpacing: 1 },
   companyLine: { fontSize: 9, color: "#555" },
-  title: { fontSize: 15, fontWeight: 700, marginBottom: 2 },
-  subtitle: { fontSize: 10, color: "#666", marginBottom: 12 },
+  headRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 10 },
+  title: { fontSize: 15, fontWeight: 700 },
+  headRight: { textAlign: "right", fontSize: 9, color: "#333" },
+  infoGrid: { flexDirection: "row", marginBottom: 10 },
+  infoCol: { width: "50%" },
   infoRow: { flexDirection: "row", marginBottom: 3 },
-  infoLabel: { width: "22%", color: "#777", fontSize: 10 },
-  infoValue: { fontSize: 10 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-  label: { color: "#555" },
-  divider: { borderBottomWidth: 1, borderBottomColor: "#ddd", marginVertical: 10 },
-  totalRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, backgroundColor: "#161a2b", padding: 10 },
-  totalLabel: { fontSize: 13, fontWeight: 700, color: "#fff" },
-  totalValue: { fontSize: 13, fontWeight: 700, color: "#fff" },
-  words: { fontSize: 10, fontStyle: "italic", color: "#333", marginTop: 6 },
-  signRow: { flexDirection: "row", marginTop: 48 },
-  signBox: { width: "45%", borderTopWidth: 1, borderTopColor: "#999", paddingTop: 4, fontSize: 9, color: "#555" },
+  infoLabel: { width: 90, color: "#777", fontSize: 9 },
+  infoValue: { fontSize: 9, fontWeight: 700 },
+  table: { flexDirection: "row", borderWidth: 1, borderColor: "#ccc" },
+  tableCol: { width: "50%" },
+  tableColLeft: { borderRightWidth: 1, borderRightColor: "#ccc" },
+  tableHeadRow: { flexDirection: "row", justifyContent: "space-between", backgroundColor: "#f3f3f3", borderBottomWidth: 1, borderBottomColor: "#ccc", padding: 5 },
+  tableHeadText: { fontSize: 9, fontWeight: 700 },
+  tableRow: { flexDirection: "row", justifyContent: "space-between", padding: 5, borderBottomWidth: 1, borderBottomColor: "#eee" },
+  tableRowText: { fontSize: 9 },
+  tableTotalRow: { flexDirection: "row", justifyContent: "space-between", padding: 5, backgroundColor: "#f7f7f7" },
+  tableTotalText: { fontSize: 9, fontWeight: 700 },
+  netRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 10 },
+  netLabel: { fontSize: 13, fontWeight: 700, color: "#999" },
+  netValue: { fontSize: 13, fontWeight: 700, color: "#999" },
+  words: { fontSize: 9, fontStyle: "italic", color: "#333", marginTop: 4 },
+  paymentRow: { flexDirection: "row", alignItems: "center", marginTop: 6, fontSize: 9 },
+  paymentBadge: { marginLeft: 4, borderWidth: 1, borderColor: "#999", borderRadius: 8, paddingVertical: 1, paddingHorizontal: 8, fontSize: 8 },
+  divider: { borderBottomWidth: 1, borderBottomColor: "#ccc", marginTop: 24, marginBottom: 8 },
+  signRow: { flexDirection: "row", justifyContent: "space-between" },
+  signBox: { fontSize: 8, color: "#555" },
+  signName: { fontSize: 8, fontWeight: 700 },
+  footer: { marginTop: 16, fontSize: 8, color: "#999", textAlign: "center" },
 });
 
 export type PayslipData = {
   payrollCode: string;
   employeeName: string;
+  staffId: string | null;
   staffType: string | null;
   icPassport: string | null;
   bankName: string | null;
   bankAccount: string | null;
   periodStart: string;
   periodEnd: string;
+  periodType: string;
+  issuedDate: string;
   jobsCount: number;
   jobsPay: string;
   baseSalary: string;
   allowance: string;
   deduction: string;
   note: string | null;
+  status: "draft" | "paid";
   paidAt: string | null;
+  generatedAt: string;
 };
+
+function EarningsDeductionsTable({ data }: { data: PayslipData }) {
+  const gross = Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance);
+  return (
+    <View style={styles.table}>
+      <View style={[styles.tableCol, styles.tableColLeft]}>
+        <View style={styles.tableHeadRow}>
+          <Text style={styles.tableHeadText}>Earnings</Text>
+          <Text style={styles.tableHeadText}>RM</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}>Job pay ({data.jobsCount} jobs)</Text>
+          <Text style={styles.tableRowText}>{formatMoney(data.jobsPay)}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}>Basic salary</Text>
+          <Text style={styles.tableRowText}>{formatMoney(data.baseSalary)}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}>Allowance</Text>
+          <Text style={styles.tableRowText}>{formatMoney(data.allowance)}</Text>
+        </View>
+        <View style={styles.tableTotalRow}>
+          <Text style={styles.tableTotalText}>Gross Earnings</Text>
+          <Text style={styles.tableTotalText}>{formatMoney(gross)}</Text>
+        </View>
+      </View>
+      <View style={styles.tableCol}>
+        <View style={styles.tableHeadRow}>
+          <Text style={styles.tableHeadText}>Deductions</Text>
+          <Text style={styles.tableHeadText}>RM</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}>Deduction</Text>
+          <Text style={styles.tableRowText}>{formatMoney(data.deduction)}</Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}> </Text>
+          <Text style={styles.tableRowText}> </Text>
+        </View>
+        <View style={styles.tableRow}>
+          <Text style={styles.tableRowText}> </Text>
+          <Text style={styles.tableRowText}> </Text>
+        </View>
+        <View style={styles.tableTotalRow}>
+          <Text style={styles.tableTotalText}>Total Deductions</Text>
+          <Text style={styles.tableTotalText}>{formatMoney(data.deduction)}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function PayslipDocument({ data }: { data: PayslipData }) {
   const net =
     Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance) - Number(data.deduction);
-  const gross = Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance);
+  const periodTypeLabel = data.periodType === "month" ? "Month" : "Custom";
 
   return (
     <Document>
@@ -63,82 +134,83 @@ function PayslipDocument({ data }: { data: PayslipData }) {
           <Text style={styles.companyLine}>{COMPANY.contact}</Text>
         </View>
 
-        <Text style={styles.title}>PAYSLIP</Text>
-        <Text style={styles.subtitle}>
-          {data.payrollCode} · {data.periodStart} to {data.periodEnd}
-        </Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Name</Text>
-          <Text style={styles.infoValue}>{data.employeeName}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Position</Text>
-          <Text style={styles.infoValue}>{data.staffType ?? "-"}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>IC / Passport</Text>
-          <Text style={styles.infoValue}>{data.icPassport ?? "-"}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Bank</Text>
-          <Text style={styles.infoValue}>
-            {data.bankName ?? "-"} {data.bankAccount ? `· ${data.bankAccount}` : ""}
-          </Text>
+        <View style={styles.headRow}>
+          <Text style={styles.title}>PAYSLIP</Text>
+          <View style={styles.headRight}>
+            <Text>
+              Pay period: {data.periodStart} – {data.periodEnd}
+            </Text>
+            <Text>
+              Type: {periodTypeLabel}  Issued: {data.issuedDate}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={styles.infoGrid}>
+          <View style={styles.infoCol}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoValue}>{data.employeeName}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Staff ID</Text>
+              <Text style={styles.infoValue}>{data.staffId ?? "-"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Bank</Text>
+              <Text style={styles.infoValue}>{data.bankName ?? "-"}</Text>
+            </View>
+          </View>
+          <View style={styles.infoCol}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Position</Text>
+              <Text style={styles.infoValue}>{data.staffType ?? "-"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>IC / Passport</Text>
+              <Text style={styles.infoValue}>{data.icPassport ?? "-"}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Account No.</Text>
+              <Text style={styles.infoValue}>{data.bankAccount ?? "-"}</Text>
+            </View>
+          </View>
+        </View>
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Jobs pay ({data.jobsCount} jobs)</Text>
-          <Text>{formatMoney(data.jobsPay)}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Base salary</Text>
-          <Text>{formatMoney(data.baseSalary)}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Allowance</Text>
-          <Text>{formatMoney(data.allowance)}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Gross earnings</Text>
-          <Text>{formatMoney(gross)}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Deduction</Text>
-          <Text>-{formatMoney(data.deduction)}</Text>
-        </View>
+        <EarningsDeductionsTable data={data} />
 
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>NET PAY</Text>
-          <Text style={styles.totalValue}>{formatMoney(net)}</Text>
+        <View style={styles.netRow}>
+          <Text style={styles.netLabel}>NET PAY</Text>
+          <Text style={styles.netValue}>{formatMoney(net)}</Text>
         </View>
         <Text style={styles.words}>{amountInWords(net)}</Text>
 
+        <View style={styles.paymentRow}>
+          <Text>Payment:</Text>
+          <Text style={styles.paymentBadge}>{data.status === "paid" ? "PAID" : "DRAFT"}</Text>
+        </View>
+
         {data.note ? (
-          <View style={{ marginTop: 16 }}>
-            <Text style={styles.label}>Remarks</Text>
-            <Text>{data.note}</Text>
+          <View style={{ marginTop: 10 }}>
+            <Text style={{ fontSize: 9, color: "#777" }}>Remarks</Text>
+            <Text style={{ fontSize: 9 }}>{data.note}</Text>
           </View>
         ) : null}
 
-        <Text style={{ marginTop: 12, fontSize: 9, color: "#999" }}>
-          {data.paidAt ? `Paid on ${data.paidAt}` : "Draft — not yet paid"}
-        </Text>
-
+        <View style={styles.divider} />
         <View style={styles.signRow}>
-          <Text style={styles.signBox}>Authorised by (Employer){"\n"}{COMPANY.name}</Text>
-          <View style={{ width: "10%" }} />
-          <Text style={styles.signBox}>
-            Received by (Employee){"\n"}
-            {data.employeeName}
-            {data.icPassport ? `\nIC / Passport: ${data.icPassport}` : ""}
-          </Text>
+          <View>
+            <Text style={styles.signBox}>Authorised by (Employer)</Text>
+            <Text style={styles.signName}>{COMPANY.name}</Text>
+          </View>
+          <View>
+            <Text style={styles.signBox}>Received by (Employee)</Text>
+            <Text style={styles.signName}>{data.employeeName}</Text>
+          </View>
         </View>
 
-        <Text style={{ marginTop: 24, fontSize: 8, color: "#aaa", textAlign: "center" }}>
-          This is a computer-generated payslip.
+        <Text style={styles.footer}>
+          This is a computer-generated payslip. Generated on {data.generatedAt}.
         </Text>
       </Page>
     </Document>

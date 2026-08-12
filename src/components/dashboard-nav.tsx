@@ -26,25 +26,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/account", label: "我的账号 Account" },
 ];
 
-export function DashboardNav({
-  role,
-  orientation = "vertical",
-}: {
-  role: Role;
-  orientation?: "vertical" | "horizontal";
-}) {
+export function DashboardNav({ role }: { role: Role }) {
   const pathname = usePathname();
   const items = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
 
   return (
-    <nav
-      className={cn(
-        "flex gap-1",
-        orientation === "vertical"
-          ? "flex-col"
-          : "flex-row overflow-x-auto whitespace-nowrap",
-      )}
-    >
+    <nav className="flex flex-col gap-1">
       {items.map((item) => {
         const active =
           item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
