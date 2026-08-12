@@ -13,7 +13,7 @@ export async function signInWithCredentials(formData: FormData) {
     return { error: null };
   } catch (err) {
     if (err instanceof AuthError) {
-      return { error: "用户名或密码不正确 / Invalid username or password" };
+      return { error: { zh: "用户名或密码不正确", en: "Invalid username or password" } };
     }
     throw err;
   }

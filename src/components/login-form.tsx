@@ -3,12 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithCredentials } from "@/app/login/actions";
+import { Bi } from "@/components/bi";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ zh: string; en: string } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -29,7 +30,7 @@ export function LoginForm() {
     >
       <div className="space-y-1">
         <label htmlFor="username" className="text-sm font-medium">
-          用户名 / Username
+          <Bi zh="用户名" en="Username" />
         </label>
         <input
           id="username"
@@ -41,7 +42,7 @@ export function LoginForm() {
       </div>
       <div className="space-y-1">
         <label htmlFor="password" className="text-sm font-medium">
-          密码 / Password
+          <Bi zh="密码" en="Password" />
         </label>
         <input
           id="password"
@@ -54,7 +55,7 @@ export function LoginForm() {
       </div>
       {error ? (
         <p className="text-sm text-red-600" role="alert">
-          {error}
+          <Bi zh={error.zh} en={error.en} />
         </p>
       ) : null}
       <button
@@ -62,7 +63,7 @@ export function LoginForm() {
         disabled={isPending}
         className="w-full rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {isPending ? "登录中... / Signing in..." : "登录 / Sign in"}
+        {isPending ? <Bi zh="登录中..." en="Signing in..." /> : <Bi zh="登录" en="Sign in" />}
       </button>
     </form>
   );
