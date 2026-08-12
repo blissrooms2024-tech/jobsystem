@@ -2,10 +2,11 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 export function NewUnitForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
   const latRef = useRef<HTMLInputElement>(null);
   const lonRef = useRef<HTMLInputElement>(null);
@@ -13,7 +14,7 @@ export function NewUnitForm() {
   const grabHere = () => {
     setError(null);
     if (!navigator.geolocation) {
-      setError("此设备不支持定位 Geolocation not supported");
+      setError(<Bi zh="此设备不支持定位" en="Geolocation not supported" />);
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -21,7 +22,7 @@ export function NewUnitForm() {
         if (latRef.current) latRef.current.value = pos.coords.latitude.toFixed(6);
         if (lonRef.current) lonRef.current.value = pos.coords.longitude.toFixed(6);
       },
-      (err) => setError(err.message || "无法获取定位 Could not get location"),
+      (err) => setError(err.message || <Bi zh="无法获取定位" en="Could not get location" />),
       { enableHighAccuracy: true, timeout: 15000 },
     );
   };
@@ -39,7 +40,7 @@ export function NewUnitForm() {
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            setError("创建失败 Failed to create");
+            setError(<Bi zh="创建失败" en="Failed to create" />);
             return;
           }
           router.refresh();
@@ -60,7 +61,7 @@ export function NewUnitForm() {
         onClick={grabHere}
         className="col-span-2 rounded-md border border-neutral-300 px-4 py-2 text-sm hover:bg-neutral-50"
       >
-        📍 使用当前定位 Use my current location
+        📍 <Bi zh="使用当前定位" en="Use my current location" />
       </button>
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
       <button
@@ -68,7 +69,13 @@ export function NewUnitForm() {
         disabled={isPending}
         className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {isPending ? "创建中..." : "+ 新增单位 Add unit"}
+        {isPending ? (
+          "创建中..."
+        ) : (
+          <>
+            + <Bi zh="新增单位" en="Add unit" />
+          </>
+        )}
       </button>
       <style jsx>{`
         .input {

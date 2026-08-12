@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 export function NewJobTypeForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -24,7 +25,7 @@ export function NewJobTypeForm() {
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            setError("创建失败 Failed to create");
+            setError(<Bi zh="创建失败" en="Failed to create" />);
             return;
           }
           router.refresh();
@@ -52,7 +53,7 @@ export function NewJobTypeForm() {
         disabled={isPending}
         className="rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        + 新增 Add
+        + <Bi zh="新增" en="Add" />
       </button>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </form>

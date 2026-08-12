@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { UnitRow } from "@/components/unit-row";
 import { NewUnitForm } from "@/components/new-unit-form";
+import { Bi } from "@/components/bi";
 
 type UnitData = {
   id: string;
@@ -29,7 +30,9 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">单位 Units</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="单位" en="Units" />
+        </h1>
         <div className="flex items-center gap-2">
           <input
             type="search"
@@ -43,7 +46,13 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
             onClick={() => setShowAdd((v) => !v)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm font-medium text-white"
           >
-            {showAdd ? "取消 Cancel" : "+ 新增单位 Add unit"}
+            {showAdd ? (
+              <Bi zh="取消" en="Cancel" />
+            ) : (
+              <>
+                + <Bi zh="新增单位" en="Add unit" />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -58,11 +67,11 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="px-3 py-2">编号 Code</th>
-              <th className="px-3 py-2">名称 Name</th>
-              <th className="px-3 py-2">物业 Property</th>
-              <th className="px-3 py-2">坐标 Lat/Lon</th>
-              <th className="px-3 py-2">半径 Radius</th>
+              <th className="px-3 py-2"><Bi zh="编号" en="Code" /></th>
+              <th className="px-3 py-2"><Bi zh="名称" en="Name" /></th>
+              <th className="px-3 py-2"><Bi zh="物业" en="Property" /></th>
+              <th className="px-3 py-2"><Bi zh="坐标" en="Lat/Lon" /></th>
+              <th className="px-3 py-2"><Bi zh="半径" en="Radius" /></th>
               <th className="px-3 py-2"></th>
             </tr>
           </thead>
@@ -82,7 +91,9 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
           </tbody>
         </table>
         {filtered.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-neutral-500">没有符合的单位 No matching units</p>
+          <p className="px-3 py-4 text-sm text-neutral-500">
+            <Bi zh="没有符合的单位" en="No matching units" />
+          </p>
         ) : null}
       </div>
     </div>
