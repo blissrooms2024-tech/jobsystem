@@ -36,11 +36,15 @@ export async function POST(
   }
 
   const body = (await request.json()) as HandleUploadBody;
+  const tokenPresent = !!process.env.BLOB_READ_WRITE_TOKEN;
+  const tokenLength = process.env.BLOB_READ_WRITE_TOKEN?.length ?? 0;
+  console.log("photo-upload: BLOB_READ_WRITE_TOKEN present?", tokenPresent, "length", tokenLength);
 
   try {
     const jsonResponse = await handleUpload({
       body,
       request,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
       onBeforeGenerateToken: async (pathname) => {
         if (!pathname.startsWith(`jobs/${id}/`)) {
           throw new Error("Invalid upload path");
