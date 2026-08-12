@@ -21,8 +21,11 @@ type Member = {
   name: string;
 };
 
+type GroupSummary = { id: string; name: string };
+
 const POLL_MS = 4000;
 const RECALL_WINDOW_MS = 5 * 60 * 1000;
+const LONG_PRESS_MS = 450;
 const EMOJIS = ["😀", "😂", "😍", "👍", "🙏", "🎉", "😢", "😡", "❤️", "🔥", "👏", "🤔", "😅", "🙌", "💯", "✅"];
 
 /** Renders @Name mentions in bold — matched against the group's member names. */
@@ -68,11 +71,17 @@ export function ChatRoom({
   const [showEmoji, setShowEmoji] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [menuMessageId, setMenuMessageId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [forwardOpen, setForwardOpen] = useState(false);
+  const [forwardTargets, setForwardTargets] = useState<GroupSummary[] | null>(null);
+  const [copiedFlash, setCopiedFlash] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
+
+  const selectionMode = selectedIds.size > 0;
 
   const memberNames = useMemo(() => members.map((m) => m.name), [members]);
   const otherMembers = useMemo(
@@ -84,6 +93,21 @@ export function ChatRoom({
     const q = mentionQuery.toLowerCase();
     return otherMembers.filter((m) => m.name.toLowerCase().includes(q));
   }, [mentionQuery, otherMembers]);
+
+  // Which messages the current user is allowed to delete — own within the
+  // recall window, or anything at all if they're the group admin.
+  const deletableIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of messages) {
+      if (m.deleted) continue;
+      const mine = m.senderId === currentUserId;
+      if (isGroupAdmin || (mine && now - new Date(m.createdAt).getTime() < RECALL_WINDOW_MS)) {
+        set.add(m.id);
+      }
+    }
+    return set;
+  }, [messages, now, isGroupAdmin, currentUserId]);
+  const canDeleteSelection = selectionMode && Array.from(selectedIds).every((id) => deletableIds.has(id));
 
   useEffect(() => {
     const poll = async () => {
@@ -172,10 +196,24 @@ export function ChatRoom({
     }
   };
 
-  const startLongPress = (id: string, canDelete: boolean) => {
-    if (!canDelete) return;
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const startLongPress = (id: string) => {
+    longPressFired.current = false;
     cancelLongPress();
-    longPressTimer.current = setTimeout(() => setMenuMessageId(id), 450);
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      setSelectedIds((prev) => new Set(prev).add(id));
+    }, LONG_PRESS_MS);
   };
 
   const cancelLongPress = () => {
@@ -185,13 +223,65 @@ export function ChatRoom({
     }
   };
 
-  const deleteMessage = async (messageId: string) => {
-    const res = await fetch(`/api/chat/groups/${groupId}/messages/${messageId}`, { method: "DELETE" });
-    if (res.ok) {
-      setMessages((prev) =>
-        prev.map((m) => (m.id === messageId ? { ...m, body: null, attachmentUrl: null, deleted: true } : m)),
-      );
+  const onBubblePointerUp = (id: string) => {
+    cancelLongPress();
+    if (longPressFired.current) return; // long-press already started selection
+    if (selectionMode) toggleSelect(id);
+  };
+
+  const deleteSelected = async () => {
+    if (!canDeleteSelection) return;
+    const ids = Array.from(selectedIds);
+    await Promise.all(ids.map((id) => fetch(`/api/chat/groups/${groupId}/messages/${id}`, { method: "DELETE" })));
+    setMessages((prev) =>
+      prev.map((m) => (selectedIds.has(m.id) ? { ...m, body: null, attachmentUrl: null, deleted: true } : m)),
+    );
+    clearSelection();
+  };
+
+  const copySelected = async () => {
+    const ordered = messages.filter((m) => selectedIds.has(m.id) && !m.deleted);
+    const text = ordered
+      .map((m) => m.body || (m.attachmentUrl ? "[photo]" : ""))
+      .filter(Boolean)
+      .join("\n");
+    if (text && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedFlash(true);
+        setTimeout(() => setCopiedFlash(false), 1200);
+      } catch {
+        // clipboard access denied — nothing more we can do here
+      }
     }
+  };
+
+  const openForward = async () => {
+    setForwardOpen(true);
+    if (!forwardTargets) {
+      const res = await fetch("/api/chat/groups");
+      if (res.ok) {
+        const data = await res.json();
+        setForwardTargets(
+          (data.groups ?? []).filter((g: GroupSummary) => g.id !== groupId).map((g: GroupSummary) => ({ id: g.id, name: g.name })),
+        );
+      }
+    }
+  };
+
+  const forwardTo = async (targetGroupId: string) => {
+    const ordered = messages.filter((m) => selectedIds.has(m.id) && !m.deleted);
+    for (const m of ordered) {
+      await fetch(`/api/chat/groups/${targetGroupId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          m.attachmentUrl ? { attachmentUrl: m.attachmentUrl, body: m.body || undefined } : { body: m.body },
+        ),
+      });
+    }
+    setForwardOpen(false);
+    clearSelection();
   };
 
   const onDraftChange = (value: string) => {
@@ -222,110 +312,104 @@ export function ChatRoom({
   return (
     <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200">
       <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-1.5 text-xs text-neutral-500">
-        <span>
-          {members.length} <Bi zh="成员" en="members" />
-        </span>
-        {onlineCount !== null ? (
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            {onlineCount} <Bi zh="在线" en="online" />
-          </span>
-        ) : null}
+        {selectionMode ? (
+          <>
+            <button type="button" onClick={clearSelection} className="text-base leading-none text-neutral-600">
+              ×
+            </button>
+            <span className="font-medium text-neutral-700">
+              {copiedFlash ? <Bi zh="已复制" en="Copied" /> : <>{selectedIds.size} <Bi zh="已选" en="selected" /></>}
+            </span>
+            <div className="flex items-center gap-3 text-base">
+              <button type="button" onClick={copySelected} title={t("复制", "Copy")} aria-label={t("复制", "Copy")}>
+                📋
+              </button>
+              <button type="button" onClick={openForward} title={t("转发", "Forward")} aria-label={t("转发", "Forward")}>
+                ➡️
+              </button>
+              <button
+                type="button"
+                onClick={deleteSelected}
+                disabled={!canDeleteSelection}
+                title={t("删除", "Delete")}
+                aria-label={t("删除", "Delete")}
+                className="disabled:opacity-30"
+              >
+                🗑
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <span>
+              {members.length} <Bi zh="成员" en="members" />
+            </span>
+            {onlineCount !== null ? (
+              <span className="flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {onlineCount} <Bi zh="在线" en="online" />
+              </span>
+            ) : null}
+          </>
+        )}
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => {
           const mine = m.senderId === currentUserId;
-          const canDelete =
-            !m.deleted &&
-            (isGroupAdmin || (mine && now - new Date(m.createdAt).getTime() < RECALL_WINDOW_MS));
+          const selected = selectedIds.has(m.id);
           return (
-            <div key={m.id} className={mine ? "flex justify-end" : "flex justify-start"}>
-              <div className="relative max-w-[75%]">
-                <div
-                  onPointerDown={() => startLongPress(m.id, canDelete)}
-                  onPointerUp={cancelLongPress}
-                  onPointerLeave={cancelLongPress}
-                  onPointerCancel={cancelLongPress}
-                  onContextMenu={(e) => {
-                    if (canDelete) e.preventDefault();
-                  }}
-                  style={canDelete ? { WebkitTouchCallout: "none" } : undefined}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-sm",
-                    canDelete && "select-none",
-                    mine ? "bg-purple-700 text-white" : "bg-neutral-100 text-neutral-900",
-                  )}
-                >
-                  {mine ? null : <p className="mb-0.5 text-xs font-medium text-neutral-500">{m.senderName}</p>}
-                  {m.deleted ? (
-                    <p className="text-sm italic opacity-70">
-                      <Bi zh="此消息已删除" en="This message was deleted" />
-                    </p>
-                  ) : (
-                    <>
-                      {m.attachmentUrl ? (
-                        <a
-                          href={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy */}
-                          <img
-                            src={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
-                            alt=""
-                            className="mb-1 max-h-48 w-full rounded-md object-cover"
-                          />
-                        </a>
-                      ) : null}
-                      {m.body ? (
-                        <p className="whitespace-pre-wrap break-words">
-                          <MessageBody body={m.body} memberNames={memberNames} />
-                        </p>
-                      ) : null}
-                    </>
-                  )}
-                  <p className={mine ? "mt-1 text-[10px] text-purple-200" : "mt-1 text-[10px] text-neutral-400"}>
-                    {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
+            <div key={m.id} className={mine ? "flex items-center justify-end gap-1.5" : "flex items-center justify-start gap-1.5"}>
+              {selectionMode && !mine ? <SelectDot selected={selected} /> : null}
+              <div
+                onPointerDown={() => startLongPress(m.id)}
+                onPointerUp={() => onBubblePointerUp(m.id)}
+                onPointerLeave={cancelLongPress}
+                onPointerCancel={cancelLongPress}
+                onContextMenu={(e) => e.preventDefault()}
+                style={{ WebkitTouchCallout: "none" }}
+                className={cn(
+                  "max-w-[75%] rounded-lg px-3 py-2 text-sm select-none",
+                  selected && "ring-2 ring-purple-500",
+                  mine ? "bg-purple-700 text-white" : "bg-neutral-100 text-neutral-900",
+                )}
+              >
+                {mine ? null : <p className="mb-0.5 text-xs font-medium text-neutral-500">{m.senderName}</p>}
+                {m.deleted ? (
+                  <p className="text-sm italic opacity-70">
+                    <Bi zh="此消息已删除" en="This message was deleted" />
                   </p>
-                </div>
-                {menuMessageId === m.id ? (
-                  <div
-                    className={cn(
-                      "absolute bottom-full z-50 mb-1 w-44 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg",
-                      mine ? "right-0" : "left-0",
-                    )}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        deleteMessage(m.id);
-                        setMenuMessageId(null);
-                      }}
-                      className="block w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                    >
-                      🗑 {mine ? <Bi zh="撤回消息" en="Recall message" /> : <Bi zh="删除消息" en="Delete message" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMenuMessageId(null)}
-                      className="block w-full border-t border-neutral-100 px-3 py-2 text-left text-sm text-neutral-500 hover:bg-neutral-50"
-                    >
-                      <Bi zh="取消" en="Cancel" />
-                    </button>
-                  </div>
-                ) : null}
+                ) : (
+                  <>
+                    {m.attachmentUrl ? (
+                      <a
+                        href={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => selectionMode && e.preventDefault()}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy */}
+                        <img
+                          src={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                          alt=""
+                          className="mb-1 max-h-48 w-full rounded-md object-cover"
+                        />
+                      </a>
+                    ) : null}
+                    {m.body ? (
+                      <p className="whitespace-pre-wrap break-words">
+                        <MessageBody body={m.body} memberNames={memberNames} />
+                      </p>
+                    ) : null}
+                  </>
+                )}
+                <p className={mine ? "mt-1 text-[10px] text-purple-200" : "mt-1 text-[10px] text-neutral-400"}>
+                  {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
+                </p>
               </div>
+              {selectionMode && mine ? <SelectDot selected={selected} /> : null}
             </div>
           );
         })}
-        {menuMessageId ? (
-          <button
-            type="button"
-            aria-label={t("关闭菜单", "Close menu")}
-            onClick={() => setMenuMessageId(null)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-        ) : null}
         {messages.length === 0 ? (
           <p className="text-center text-sm text-neutral-400">
             <Bi zh="还没有消息，说点什么吧" en="No messages yet — say something" />
@@ -333,6 +417,9 @@ export function ChatRoom({
         ) : null}
         <div ref={bottomRef} />
       </div>
+      <p className="border-t border-neutral-100 px-3 py-1 text-center text-[10px] text-neutral-400">
+        <Bi zh="长按消息可以多选、复制、转发或删除" en="Long-press a message to select, copy, forward or delete" />
+      </p>
       <div className="relative border-t border-neutral-200 p-3">
         {mentionQuery !== null && mentionMatches.length > 0 ? (
           <div className="absolute bottom-full left-3 mb-1 max-h-40 w-56 overflow-y-auto rounded-md border border-neutral-200 bg-white shadow-lg">
@@ -420,6 +507,56 @@ export function ChatRoom({
           </button>
         </div>
       </div>
+
+      {forwardOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+          <div className="max-h-96 w-72 overflow-hidden rounded-lg bg-white shadow-xl">
+            <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-2">
+              <p className="text-sm font-medium">
+                <Bi zh="转发到..." en="Forward to..." />
+              </p>
+              <button type="button" onClick={() => setForwardOpen(false)} className="text-neutral-500">
+                ×
+              </button>
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+              {forwardTargets === null ? (
+                <p className="p-4 text-center text-sm text-neutral-400">
+                  <Bi zh="加载中..." en="Loading..." />
+                </p>
+              ) : forwardTargets.length === 0 ? (
+                <p className="p-4 text-center text-sm text-neutral-400">
+                  <Bi zh="没有其他群组" en="No other groups" />
+                </p>
+              ) : (
+                forwardTargets.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => forwardTo(g.id)}
+                    className="block w-full px-3 py-2.5 text-left text-sm hover:bg-purple-50"
+                  >
+                    {g.name}
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
+  );
+}
+
+function SelectDot({ selected }: { selected: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px]",
+        selected ? "border-purple-600 bg-purple-600 text-white" : "border-neutral-300 bg-white text-transparent",
+      )}
+    >
+      ✓
+    </span>
   );
 }
