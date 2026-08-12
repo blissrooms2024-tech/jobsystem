@@ -21,8 +21,9 @@ export default async function DashboardLayout({
       <ChatNotifier />
       <aside className="hidden w-56 shrink-0 flex-col border-r border-purple-100 bg-purple-50/40 p-4 sm:flex">
         <div className="mb-6">
-          <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>
-          <p className="text-xs text-neutral-500">
+          {/* eslint-disable-next-line @next/next/no-img-element -- static SVG in /public, no Image optimization needed */}
+          <img src="/logo.svg" alt="Bliss Rooms Properties Management" className="w-full" />
+          <p className="mt-1 text-center text-xs text-neutral-500">
             <Bi zh="任务系统" en="Job System" />
           </p>
         </div>
