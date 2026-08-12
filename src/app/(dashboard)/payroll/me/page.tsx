@@ -24,29 +24,39 @@ export default async function MyPayrollPage() {
           const net =
             Number(p.jobsPay) + Number(p.baseSalary) + Number(p.allowance) - Number(p.deduction);
           return (
-            <Link
+            <div
               key={p.id}
-              href={`/payroll/${p.id}`}
               className="flex items-center justify-between rounded-lg border border-neutral-200 p-4 hover:bg-neutral-50"
             >
-              <div>
+              <Link href={`/payroll/${p.id}`} className="flex-1">
                 <p className="font-medium">{p.payrollCode}</p>
                 <p className="text-xs text-neutral-500">
                   {p.periodStart} ~ {p.periodEnd}
                 </p>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">{formatMoney(net)}</p>
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    p.status === "paid" ? "text-emerald-700" : "text-amber-700",
-                  )}
+              </Link>
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="font-semibold">{formatMoney(net)}</p>
+                  <span
+                    className={cn(
+                      "text-xs font-medium",
+                      p.status === "paid" ? "text-emerald-700" : "text-amber-700",
+                    )}
+                  >
+                    {p.status === "paid" ? "已发放 Paid" : "草稿 Draft"}
+                  </span>
+                </div>
+                <a
+                  href={`/api/payroll/${p.id}/pdf`}
+                  title="下载 PDF Download PDF"
+                  aria-label="下载 PDF Download PDF"
+                  onClick={(e) => e.stopPropagation()}
+                  className="rounded-md border border-neutral-200 px-2 py-1.5 text-sm hover:bg-white"
                 >
-                  {p.status === "paid" ? "已发放 Paid" : "草稿 Draft"}
-                </span>
+                  ⬇️
+                </a>
               </div>
-            </Link>
+            </div>
           );
         })}
         {rows.length === 0 ? (
