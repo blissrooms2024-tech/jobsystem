@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatMoney, cn } from "@/lib/utils";
 import { DeletePayrollButton } from "@/components/delete-payroll-button";
+import { Bi } from "@/components/bi";
 
 type Row = {
   id: string;
@@ -63,12 +64,12 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="px-3 py-2">编号 Code</th>
-              <th className="px-3 py-2">员工 Employee</th>
-              <th className="px-3 py-2">周期 Period</th>
-              <th className="px-3 py-2">净额 Net</th>
-              <th className="px-3 py-2">状态 Status</th>
-              {isAdmin ? <th className="px-3 py-2">操作 Actions</th> : null}
+              <th className="px-3 py-2"><Bi zh="编号" en="Code" /></th>
+              <th className="px-3 py-2"><Bi zh="员工" en="Employee" /></th>
+              <th className="px-3 py-2"><Bi zh="周期" en="Period" /></th>
+              <th className="px-3 py-2"><Bi zh="净额" en="Net" /></th>
+              <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              {isAdmin ? <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th> : null}
             </tr>
           </thead>
           <tbody>
@@ -94,7 +95,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
                           : "bg-amber-100 text-amber-800",
                       )}
                     >
-                      {r.status === "paid" ? "已发放 Paid" : "草稿 Draft"}
+                      <Bi zh={r.status === "paid" ? "已发放" : "草稿"} en={r.status === "paid" ? "Paid" : "Draft"} />
                     </span>
                   </td>
                   {isAdmin ? (
@@ -108,7 +109,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={isAdmin ? 6 : 5} className="px-3 py-6 text-center text-neutral-400">
-                  没有符合的工资单 No matching payslips
+                  <Bi zh="没有符合的工资单" en="No matching payslips" />
                 </td>
               </tr>
             ) : null}
