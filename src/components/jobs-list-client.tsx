@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney, cn } from "@/lib/utils";
 import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
 import { JobRowActions } from "@/components/job-row-actions";
+import { Bi } from "@/components/bi";
 
 type Row = {
   id: string;
@@ -50,13 +51,13 @@ export function JobsListClient({
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="px-3 py-2">日期 Date</th>
-              <th className="px-3 py-2">标题 Title</th>
-              {isAdmin ? <th className="px-3 py-2">负责人 Assignee</th> : null}
-              <th className="px-3 py-2">单位 Unit</th>
-              <th className="px-3 py-2">状态 Status</th>
-              <th className="px-3 py-2">工资 Pay</th>
-              {isAdmin ? <th className="px-3 py-2">操作 Actions</th> : null}
+              <th className="px-3 py-2"><Bi zh="日期" en="Date" /></th>
+              <th className="px-3 py-2"><Bi zh="标题" en="Title" /></th>
+              {isAdmin ? <th className="px-3 py-2"><Bi zh="负责人" en="Assignee" /></th> : null}
+              <th className="px-3 py-2"><Bi zh="单位" en="Unit" /></th>
+              <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              <th className="px-3 py-2"><Bi zh="工资" en="Pay" /></th>
+              {isAdmin ? <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th> : null}
             </tr>
           </thead>
           <tbody>
@@ -76,7 +77,7 @@ export function JobsListClient({
                 <td className="px-3 py-2">{row.unitName ?? "-"}</td>
                 <td className="px-3 py-2">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", JOB_STATUS_STYLE[row.status])}>
-                    {JOB_STATUS_LABEL[row.status]}
+                    <Bi zh={JOB_STATUS_LABEL[row.status].zh} en={JOB_STATUS_LABEL[row.status].en} />
                   </span>
                 </td>
                 <td className="px-3 py-2">{formatMoney(row.pay)}</td>
@@ -90,7 +91,7 @@ export function JobsListClient({
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={isAdmin ? 7 : 5} className="px-3 py-6 text-center text-neutral-400">
-                  没有符合的任务 No matching jobs
+                  <Bi zh="没有符合的任务" en="No matching jobs" />
                 </td>
               </tr>
             ) : null}

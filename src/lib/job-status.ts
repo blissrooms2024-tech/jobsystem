@@ -1,9 +1,9 @@
-export const JOB_STATUS_LABEL: Record<string, string> = {
-  assigned: "待完成 Assigned",
-  in_progress: "打卡中 In progress",
-  completed: "已完成 Completed",
-  cancelled: "已取消 Cancelled",
-  missed: "错过 Missed",
+export const JOB_STATUS_LABEL: Record<string, { zh: string; en: string }> = {
+  assigned: { zh: "待完成", en: "Assigned" },
+  in_progress: { zh: "打卡中", en: "In progress" },
+  completed: { zh: "已完成", en: "Completed" },
+  cancelled: { zh: "已取消", en: "Cancelled" },
+  missed: { zh: "错过", en: "Missed" },
 };
 
 export const JOB_STATUS_STYLE: Record<string, string> = {

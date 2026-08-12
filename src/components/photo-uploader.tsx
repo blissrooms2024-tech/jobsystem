@@ -5,11 +5,12 @@ import { upload } from "@vercel/blob/client";
 import { useRouter } from "next/navigation";
 import type { PhotoKind } from "@/lib/photos";
 import { tryGetPosition, watermarkImage } from "@/lib/watermark";
+import { Bi } from "@/components/bi";
 
-const KIND_LABEL: Record<PhotoKind, string> = {
-  photo: "任务照片 Photo",
-  before: "清洁前 Before",
-  after: "清洁后 After",
+const KIND_LABEL: Record<PhotoKind, { zh: string; en: string }> = {
+  photo: { zh: "任务照片", en: "Photo" },
+  before: { zh: "清洁前", en: "Before" },
+  after: { zh: "清洁后", en: "After" },
 };
 
 export function PhotoUploader({
@@ -32,7 +33,7 @@ export function PhotoUploader({
       try {
         const pos = await tryGetPosition();
         const lines = [
-          `${context?.jobTitle ?? "Bliss Rooms"} · ${KIND_LABEL[kind]}${context?.unitName ? ` · ${context.unitName}` : ""}`,
+          `${context?.jobTitle ?? "Bliss Rooms"} · ${KIND_LABEL[kind].zh} ${KIND_LABEL[kind].en}${context?.unitName ? ` · ${context.unitName}` : ""}`,
           new Date().toLocaleString(),
           ...(pos ? [`GPS ${pos.coords.latitude.toFixed(5)},${pos.coords.longitude.toFixed(5)}`] : []),
           ...(context?.staffName ? [context.staffName] : []),
@@ -63,7 +64,9 @@ export function PhotoUploader({
 
   return (
     <div className="space-y-1">
-      <label className="block text-xs font-medium text-neutral-600">{KIND_LABEL[kind]}</label>
+      <label className="block text-xs font-medium text-neutral-600">
+        <Bi zh={KIND_LABEL[kind].zh} en={KIND_LABEL[kind].en} />
+      </label>
       <input
         ref={inputRef}
         type="file"
@@ -76,7 +79,11 @@ export function PhotoUploader({
         }}
         className="block w-full text-sm"
       />
-      {isPending ? <p className="text-xs text-neutral-400">上传中... Uploading...</p> : null}
+      {isPending ? (
+        <p className="text-xs text-neutral-400">
+          <Bi zh="上传中..." en="Uploading..." />
+        </p>
+      ) : null}
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );

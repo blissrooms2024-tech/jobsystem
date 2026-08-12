@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { jobs, users } from "@/db/schema";
 import { myToday } from "@/lib/job-timing";
 import { cn } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 
 const DOT_COLOR: Record<string, string> = {
   assigned: "bg-amber-500",
@@ -72,7 +73,9 @@ export default async function JobsCalendarPage({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">日历 Calendar</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="日历" en="Calendar" />
+        </h1>
         <div className="flex items-center gap-2 text-sm">
           <Link href={`/jobs/calendar?month=${addMonths(month, -1)}`} className="rounded-md border border-neutral-300 px-2 py-1">
             ‹

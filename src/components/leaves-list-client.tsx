@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -10,11 +11,11 @@ const STATUS_STYLE: Record<string, string> = {
   rejected: "bg-red-100 text-red-800",
   cancelled: "bg-neutral-200 text-neutral-600",
 };
-const STATUS_LABEL: Record<string, string> = {
-  pending: "待审批 Pending",
-  approved: "已批准 Approved",
-  rejected: "已拒绝 Rejected",
-  cancelled: "已取消 Cancelled",
+const STATUS_LABEL: Record<string, { zh: string; en: string }> = {
+  pending: { zh: "待审批", en: "Pending" },
+  approved: { zh: "已批准", en: "Approved" },
+  rejected: { zh: "已拒绝", en: "Rejected" },
+  cancelled: { zh: "已取消", en: "Cancelled" },
 };
 
 type Row = {
@@ -53,11 +54,11 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
         <table className="w-full min-w-[560px] text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              {isAdmin ? <th className="px-3 py-2">员工 Employee</th> : null}
-              <th className="px-3 py-2">类型 Type</th>
-              <th className="px-3 py-2">日期 Dates</th>
-              <th className="px-3 py-2">天数 Days</th>
-              <th className="px-3 py-2">状态 Status</th>
+              {isAdmin ? <th className="px-3 py-2"><Bi zh="员工" en="Employee" /></th> : null}
+              <th className="px-3 py-2"><Bi zh="类型" en="Type" /></th>
+              <th className="px-3 py-2"><Bi zh="日期" en="Dates" /></th>
+              <th className="px-3 py-2"><Bi zh="天数" en="Days" /></th>
+              <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
             </tr>
           </thead>
           <tbody>
@@ -79,7 +80,7 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
                 <td className="px-3 py-2">{r.days}</td>
                 <td className="px-3 py-2">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", STATUS_STYLE[r.status])}>
-                    {STATUS_LABEL[r.status]}
+                    <Bi zh={STATUS_LABEL[r.status].zh} en={STATUS_LABEL[r.status].en} />
                   </span>
                 </td>
               </tr>
@@ -87,7 +88,7 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={isAdmin ? 5 : 4} className="px-3 py-6 text-center text-neutral-400">
-                  没有符合的请假记录 No matching leave requests
+                  <Bi zh="没有符合的请假记录" en="No matching leave requests" />
                 </td>
               </tr>
             ) : null}

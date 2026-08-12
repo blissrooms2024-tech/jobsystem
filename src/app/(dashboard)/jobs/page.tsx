@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { myToday } from "@/lib/job-timing";
 import { JobsListClient } from "@/components/jobs-list-client";
+import { Bi } from "@/components/bi";
 
 function addMonths(monthStr: string, delta: number) {
   const [y, m] = monthStr.split("-").map(Number);
@@ -78,10 +79,13 @@ export default async function JobsPage({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">
-          任务 Jobs
+          <Bi zh="任务" en="Jobs" />
           {date ? (
             <span className="ml-2 text-sm font-normal text-neutral-500">
-              {date} <Link href="/jobs" className="underline">清除 clear</Link>
+              {date}{" "}
+              <Link href="/jobs" className="underline">
+                <Bi zh="清除" en="clear" />
+              </Link>
             </span>
           ) : null}
         </h1>
@@ -90,7 +94,7 @@ export default async function JobsPage({
             href="/jobs/new"
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white"
           >
-            + 新任务 New job
+            + <Bi zh="新任务" en="New job" />
           </Link>
         ) : null}
       </div>
@@ -103,7 +107,7 @@ export default async function JobsPage({
           >
             ‹
           </Link>
-          <span className="font-medium">{showAll ? "全部 All" : month}</span>
+          <span className="font-medium">{showAll ? <Bi zh="全部" en="All" /> : month}</span>
           <Link
             href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}`}
             className="rounded-md border border-neutral-300 px-2 py-1"
@@ -115,11 +119,11 @@ export default async function JobsPage({
               href={`/jobs?month=all${status ? `&status=${status}` : ""}`}
               className="ml-1 text-xs text-neutral-500 underline"
             >
-              查看全部 Show all time
+              <Bi zh="查看全部" en="Show all time" />
             </Link>
           ) : (
             <Link href="/jobs" className="ml-1 text-xs text-neutral-500 underline">
-              只看本月 Back to this month
+              <Bi zh="只看本月" en="Back to this month" />
             </Link>
           )}
         </div>
@@ -137,7 +141,7 @@ export default async function JobsPage({
                 : "bg-neutral-100 text-neutral-700",
             )}
           >
-            {s ? JOB_STATUS_LABEL[s] : "全部 All"}
+            {s ? <Bi zh={JOB_STATUS_LABEL[s].zh} en={JOB_STATUS_LABEL[s].en} /> : <Bi zh="全部" en="All" />}
           </Link>
         ))}
       </div>

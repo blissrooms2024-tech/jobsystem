@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { jobTypes, units, users } from "@/db/schema";
 import { NewJobForm } from "@/components/new-job-form";
 import { myToday, maxSchedulableDate } from "@/lib/job-timing";
+import { Bi } from "@/components/bi";
 
 export default async function NewJobPage() {
   const session = await auth();
@@ -18,7 +19,9 @@ export default async function NewJobPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-lg font-semibold">新任务 New job</h1>
+      <h1 className="text-lg font-semibold">
+        <Bi zh="新任务" en="New job" />
+      </h1>
       <NewJobForm
         units={unitRows.map((u) => ({ id: u.id, label: u.unitName }))}
         jobTypes={jobTypeRows.map((jt) => ({ id: jt.id, label: jt.typeName, pay: jt.pay }))}

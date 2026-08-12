@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 type Option = { id: string; label: string };
 
@@ -58,15 +59,17 @@ export function NewJobForm({
         });
       }}
     >
-      <Field label="标题 Title">
+      <Field labelZh="标题" labelEn="Title">
         <input name="title" required className="input" />
       </Field>
-      <Field label="说明 Description">
+      <Field labelZh="说明" labelEn="Description">
         <textarea name="description" className="input" rows={3} />
       </Field>
-      <Field label="工种 Job type">
+      <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" className="input">
-          <option value="">-- 选择 select --</option>
+          <option value="">
+            -- <Bi zh="选择" en="select" /> --
+          </option>
           {jobTypes.map((jt) => (
             <option key={jt.id} value={jt.id}>
               {jt.label} (RM {jt.pay})
@@ -74,9 +77,11 @@ export function NewJobForm({
           ))}
         </select>
       </Field>
-      <Field label="单位 Unit">
+      <Field labelZh="单位" labelEn="Unit">
         <select name="unitId" className="input">
-          <option value="">-- 选择 select --</option>
+          <option value="">
+            -- <Bi zh="选择" en="select" /> --
+          </option>
           {units.map((u) => (
             <option key={u.id} value={u.id}>
               {u.label}
@@ -84,9 +89,11 @@ export function NewJobForm({
           ))}
         </select>
       </Field>
-      <Field label="负责人 Assign to">
+      <Field labelZh="负责人" labelEn="Assign to">
         <select name="assignedTo" required className="input">
-          <option value="">-- 选择 select --</option>
+          <option value="">
+            -- <Bi zh="选择" en="select" /> --
+          </option>
           {employees.map((e) => (
             <option key={e.id} value={e.id}>
               {e.label}
@@ -95,28 +102,32 @@ export function NewJobForm({
         </select>
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="日期 Date">
+        <Field labelZh="日期" labelEn="Date">
           <input type="date" name="schedDate" required min={minDate} max={maxDate} className="input" />
         </Field>
-        <Field label="重复直到（可选）Repeat until (optional)">
+        <Field labelZh="重复直到（可选）" labelEn="Repeat until (optional)">
           <input type="date" name="repeatUntil" min={minDate} max={maxDate} className="input" />
         </Field>
       </div>
       <p className="-mt-2 text-xs text-neutral-500">
-        填了&ldquo;重复直到&rdquo;，就会从上面的日期开始，每天都建一份一样的任务，直到这个日期为止（同一个人、同一个单位）。
-        <br />
-        Fill in &quot;Repeat until&quot; to create the same job every day from the start date through that date (same
-        assignee, same unit).
+        <Bi
+          zh={
+            '填了"重复直到"，就会从上面的日期开始，每天都建一份一样的任务，直到这个日期为止（同一个人、同一个单位）。'
+          }
+          en={
+            'Fill in "Repeat until" to create the same job every day from the start date through that date (same assignee, same unit).'
+          }
+        />
       </p>
       <div className="grid grid-cols-2 gap-3">
-        <Field label="开始时间 Start">
+        <Field labelZh="开始时间" labelEn="Start">
           <input type="time" name="startTime" className="input" />
         </Field>
-        <Field label="结束时间 End">
+        <Field labelZh="结束时间" labelEn="End">
           <input type="time" name="endTime" className="input" />
         </Field>
       </div>
-      <Field label="备注 Notes">
+      <Field labelZh="备注" labelEn="Notes">
         <textarea name="notes" className="input" rows={2} />
       </Field>
 
@@ -127,7 +138,7 @@ export function NewJobForm({
         disabled={isPending}
         className="rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {isPending ? "创建中... Creating..." : "创建任务 Create job"}
+        {isPending ? <Bi zh="创建中..." en="Creating..." /> : <Bi zh="创建任务" en="Create job" />}
       </button>
 
       <style jsx>{`
@@ -143,10 +154,20 @@ export function NewJobForm({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  labelZh,
+  labelEn,
+  children,
+}: {
+  labelZh: string;
+  labelEn: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium">{label}</label>
+      <label className="text-sm font-medium">
+        <Bi zh={labelZh} en={labelEn} />
+      </label>
       {children}
     </div>
   );
