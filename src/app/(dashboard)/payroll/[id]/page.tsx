@@ -8,6 +8,7 @@ import { PayrollEditForm } from "@/components/payroll-edit-form";
 import { MarkPaidButton } from "@/components/mark-paid-button";
 import { UnpayButton } from "@/components/unpay-button";
 import { ResendPayslipButton } from "@/components/resend-payslip-button";
+import { DeletePayrollButton } from "@/components/delete-payroll-button";
 
 export default async function PayrollDetailPage({
   params,
@@ -88,6 +89,9 @@ export default async function PayrollDetailPage({
           {isAdmin && p.status === "draft" ? <MarkPaidButton payrollId={p.id} /> : null}
           {isAdmin && p.status === "paid" ? <ResendPayslipButton payrollId={p.id} /> : null}
           {isAdmin && p.status === "paid" ? <UnpayButton payrollId={p.id} /> : null}
+          {isAdmin && p.status === "draft" ? (
+            <DeletePayrollButton payrollId={p.id} redirectTo="/payroll" />
+          ) : null}
         </div>
       </div>
     </div>

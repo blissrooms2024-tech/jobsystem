@@ -42,3 +42,26 @@ export async function PATCH(
 
   return NextResponse.json({ payroll: updated });
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRole("boss", "admin");
+  if ("error" in auth) return auth.error;
+
+  const { id } = await params;
+  const [existing] = await db.select().from(payroll).where(eq(payroll.id, id)).limit(1);
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+  if (existing.status === "paid") {
+    return NextResponse.json(
+      { error: "已发放的工资单不能删除，请先撤销发放 Unpay it first before deleting" },
+      { status: 409 },
+    );
+  }
+
+  await db.delete(payroll).where(eq(payroll.id, id));
+  return NextResponse.json({ ok: true });
+}
