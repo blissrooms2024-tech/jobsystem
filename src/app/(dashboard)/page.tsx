@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, leaves, payroll } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
+import { Bi } from "@/components/bi";
 
 function startOfMonth() {
   const d = new Date();
@@ -58,10 +59,20 @@ async function getAdminStats() {
   return { ...jobStats, ...payrollStats, pendingLeaves: leaveStats?.pending ?? 0 };
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({
+  labelZh,
+  labelEn,
+  value,
+}: {
+  labelZh: string;
+  labelEn: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-lg border border-neutral-200 p-4">
-      <p className="text-xs text-neutral-500">{label}</p>
+      <p className="text-xs text-neutral-500">
+        <Bi zh={labelZh} en={labelEn} />
+      </p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
     </div>
   );
@@ -75,7 +86,7 @@ export default async function DashboardHomePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-lg font-semibold">
-        欢迎, {user.name} Welcome
+        <Bi zh="欢迎" en="Welcome" />, {user.name}
       </h1>
 
       {isAdmin ? (
@@ -91,14 +102,14 @@ async function AdminOverview() {
   const stats = await getAdminStats();
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-      <StatCard label="今日任务 Today's jobs" value={stats.todayJobs} />
-      <StatCard label="待处理任务 Open jobs" value={stats.openJobs} />
-      <StatCard label="打卡中 In progress" value={stats.inProgressJobs} />
-      <StatCard label="错过任务 Missed jobs" value={stats.missedJobs} />
-      <StatCard label="待发放工资单 Draft payroll" value={stats.draftCount} />
-      <StatCard label="草稿总额 Draft total" value={formatMoney(stats.draftTotal)} />
-      <StatCard label="本月已发放 Paid this month" value={formatMoney(stats.paidThisMonthTotal)} />
-      <StatCard label="待批请假 Pending leaves" value={stats.pendingLeaves} />
+      <StatCard labelZh="今日任务" labelEn="Today's jobs" value={stats.todayJobs} />
+      <StatCard labelZh="待处理任务" labelEn="Open jobs" value={stats.openJobs} />
+      <StatCard labelZh="打卡中" labelEn="In progress" value={stats.inProgressJobs} />
+      <StatCard labelZh="错过任务" labelEn="Missed jobs" value={stats.missedJobs} />
+      <StatCard labelZh="待发放工资单" labelEn="Draft payroll" value={stats.draftCount} />
+      <StatCard labelZh="草稿总额" labelEn="Draft total" value={formatMoney(stats.draftTotal)} />
+      <StatCard labelZh="本月已发放" labelEn="Paid this month" value={formatMoney(stats.paidThisMonthTotal)} />
+      <StatCard labelZh="待批请假" labelEn="Pending leaves" value={stats.pendingLeaves} />
     </div>
   );
 }
@@ -107,10 +118,10 @@ async function EmployeeOverview({ userId }: { userId: string }) {
   const stats = await getEmployeeStats(userId);
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <StatCard label="本月已完成 Completed (month)" value={stats.completed ?? 0} />
-      <StatCard label="待完成 Assigned" value={stats.assigned ?? 0} />
-      <StatCard label="错过 Missed" value={stats.missed ?? 0} />
-      <StatCard label="待批请假 Pending leave" value={stats.pendingLeave} />
+      <StatCard labelZh="本月已完成" labelEn="Completed (month)" value={stats.completed ?? 0} />
+      <StatCard labelZh="待完成" labelEn="Assigned" value={stats.assigned ?? 0} />
+      <StatCard labelZh="错过" labelEn="Missed" value={stats.missed ?? 0} />
+      <StatCard labelZh="待批请假" labelEn="Pending leave" value={stats.pendingLeave} />
     </div>
   );
 }
