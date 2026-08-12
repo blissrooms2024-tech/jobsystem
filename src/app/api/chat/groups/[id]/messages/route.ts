@@ -28,10 +28,12 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const rows = await db
+  const rawRows = await db
     .select({
       id: chatMessages.id,
       body: chatMessages.body,
+      attachmentUrl: chatMessages.attachmentUrl,
+      deletedAt: chatMessages.deletedAt,
       createdAt: chatMessages.createdAt,
       senderId: chatMessages.senderId,
       senderName: users.name,
@@ -41,6 +43,18 @@ export async function GET(
     .where(eq(chatMessages.groupId, id))
     .orderBy(asc(chatMessages.createdAt))
     .limit(200);
+
+  // Deleted messages keep their row (so the thread doesn't jump around) but
+  // the client only ever sees a "deleted" placeholder, never the content.
+  const rows = rawRows.map((m) => ({
+    id: m.id,
+    body: m.deletedAt ? null : m.body,
+    attachmentUrl: m.deletedAt ? null : m.attachmentUrl,
+    deleted: !!m.deletedAt,
+    createdAt: m.createdAt,
+    senderId: m.senderId,
+    senderName: m.senderName,
+  }));
 
   // "Online" is just "seen in the last 60s" via the periodic presence
   // heartbeat — good enough for a small team, no websocket session tracking.
@@ -60,7 +74,14 @@ export async function GET(
   return NextResponse.json({ messages: rows, onlineCount: onlineRows.length });
 }
 
-const bodySchema = z.object({ body: z.string().min(1).max(2000) });
+const bodySchema = z
+  .object({
+    body: z.string().max(2000).optional(),
+    attachmentUrl: z.string().url().optional(),
+  })
+  .refine((data) => (data.body && data.body.trim().length > 0) || data.attachmentUrl, {
+    message: "消息不能为空 Message can't be empty",
+  });
 
 export async function POST(
   request: Request,
@@ -84,7 +105,12 @@ export async function POST(
 
   const [row] = await db
     .insert(chatMessages)
-    .values({ groupId: id, senderId: session.user.id, body: parsed.data.body })
+    .values({
+      groupId: id,
+      senderId: session.user.id,
+      body: parsed.data.body?.trim() || "",
+      attachmentUrl: parsed.data.attachmentUrl,
+    })
     .returning();
 
   // Sending a message also counts as having read up to that point.

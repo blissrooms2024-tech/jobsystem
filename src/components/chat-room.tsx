@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
 type Message = {
   id: string;
-  body: string;
+  body: string | null;
+  attachmentUrl: string | null;
+  deleted: boolean;
   createdAt: string;
   senderId: string;
   senderName: string;
@@ -18,6 +21,8 @@ type Member = {
 };
 
 const POLL_MS = 4000;
+const RECALL_WINDOW_MS = 5 * 60 * 1000;
+const EMOJIS = ["😀", "😂", "😍", "👍", "🙏", "🎉", "😢", "😡", "❤️", "🔥", "👏", "🤔", "😅", "🙌", "💯", "✅"];
 
 /** Renders @Name mentions in bold — matched against the group's member names. */
 function MessageBody({ body, memberNames }: { body: string; memberNames: string[] }) {
@@ -42,11 +47,13 @@ function MessageBody({ body, memberNames }: { body: string; memberNames: string[
 export function ChatRoom({
   groupId,
   currentUserId,
+  isGroupAdmin,
   initialMessages,
   members,
 }: {
   groupId: string;
   currentUserId: string;
+  isGroupAdmin: boolean;
   initialMessages: Message[];
   members: Member[];
 }) {
@@ -56,9 +63,13 @@ export function ChatRoom({
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const memberNames = useMemo(() => members.map((m) => m.name), [members]);
   const otherMembers = useMemo(
@@ -70,6 +81,14 @@ export function ChatRoom({
     const q = mentionQuery.toLowerCase();
     return otherMembers.filter((m) => m.name.toLowerCase().includes(q));
   }, [mentionQuery, otherMembers]);
+
+  const refresh = async () => {
+    const res = await fetch(`/api/chat/groups/${groupId}/messages`);
+    if (!res.ok) return;
+    const data = await res.json();
+    setMessages(data.messages);
+    if (typeof data.onlineCount === "number") setOnlineCount(data.onlineCount);
+  };
 
   useEffect(() => {
     const poll = async () => {
@@ -88,6 +107,11 @@ export function ChatRoom({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const send = async () => {
     const body = draft.trim();
     if (!body || sending) return;
@@ -99,19 +123,36 @@ export function ChatRoom({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ body }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      setMessages((prev) => [...prev, { ...data.message, senderName: "" }]);
-      // Refetch immediately for the correct senderName (and any messages
-      // that landed from others while this request was in flight).
-      const refreshed = await fetch(`/api/chat/groups/${groupId}/messages`);
-      if (refreshed.ok) {
-        const refreshedData = await refreshed.json();
-        setMessages(refreshedData.messages);
-        if (typeof refreshedData.onlineCount === "number") setOnlineCount(refreshedData.onlineCount);
-      }
-    }
+    if (res.ok) await refresh();
     setSending(false);
+  };
+
+  const sendPhoto = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const blob = await upload(`chat/${groupId}/${Date.now()}-${file.name}`, file, {
+        access: "private",
+        handleUploadUrl: `/api/chat/groups/${groupId}/photo-upload`,
+      });
+      const res = await fetch(`/api/chat/groups/${groupId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attachmentUrl: blob.url }),
+      });
+      if (res.ok) await refresh();
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    const res = await fetch(`/api/chat/groups/${groupId}/messages/${messageId}`, { method: "DELETE" });
+    if (res.ok) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, body: null, attachmentUrl: null, deleted: true } : m)),
+      );
+    }
   };
 
   const onDraftChange = (value: string) => {
@@ -132,6 +173,13 @@ export function ChatRoom({
     textareaRef.current?.focus();
   };
 
+  const insertEmoji = (emoji: string) => {
+    const cursor = textareaRef.current?.selectionStart ?? draft.length;
+    setDraft(draft.slice(0, cursor) + emoji + draft.slice(cursor));
+    setShowEmoji(false);
+    textareaRef.current?.focus();
+  };
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-neutral-200">
       <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-1.5 text-xs text-neutral-500">
@@ -148,22 +196,68 @@ export function ChatRoom({
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => {
           const mine = m.senderId === currentUserId;
+          const canDelete =
+            !m.deleted &&
+            (isGroupAdmin || (mine && now - new Date(m.createdAt).getTime() < RECALL_WINDOW_MS));
           return (
             <div key={m.id} className={mine ? "flex justify-end" : "flex justify-start"}>
-              <div
-                className={
-                  mine
-                    ? "max-w-[75%] rounded-lg bg-purple-700 px-3 py-2 text-sm text-white"
-                    : "max-w-[75%] rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-900"
-                }
-              >
-                {mine ? null : <p className="mb-0.5 text-xs font-medium text-neutral-500">{m.senderName}</p>}
-                <p className="whitespace-pre-wrap break-words">
-                  <MessageBody body={m.body} memberNames={memberNames} />
-                </p>
-                <p className={mine ? "mt-1 text-[10px] text-purple-200" : "mt-1 text-[10px] text-neutral-400"}>
-                  {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
-                </p>
+              <div className="group max-w-[75%]">
+                <div
+                  className={
+                    mine
+                      ? "rounded-lg bg-purple-700 px-3 py-2 text-sm text-white"
+                      : "rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-900"
+                  }
+                >
+                  {mine ? null : <p className="mb-0.5 text-xs font-medium text-neutral-500">{m.senderName}</p>}
+                  {m.deleted ? (
+                    <p className="text-sm italic opacity-70">
+                      <Bi zh="此消息已删除" en="This message was deleted" />
+                    </p>
+                  ) : (
+                    <>
+                      {m.attachmentUrl ? (
+                        <a
+                          href={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy */}
+                          <img
+                            src={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                            alt=""
+                            className="mb-1 max-h-48 w-full rounded-md object-cover"
+                          />
+                        </a>
+                      ) : null}
+                      {m.body ? (
+                        <p className="whitespace-pre-wrap break-words">
+                          <MessageBody body={m.body} memberNames={memberNames} />
+                        </p>
+                      ) : null}
+                    </>
+                  )}
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <p className={mine ? "text-[10px] text-purple-200" : "text-[10px] text-neutral-400"}>
+                      {new Date(m.createdAt).toLocaleString("en-MY", { timeZone: "Asia/Kuala_Lumpur" })}
+                    </p>
+                    {canDelete ? (
+                      <button
+                        type="button"
+                        onClick={() => deleteMessage(m.id)}
+                        title={t("撤回", "Recall")}
+                        aria-label={t("撤回", "Recall")}
+                        className={
+                          mine
+                            ? "text-[10px] text-purple-200 opacity-0 hover:underline group-hover:opacity-100"
+                            : "text-[10px] text-neutral-400 opacity-0 hover:underline group-hover:opacity-100"
+                        }
+                      >
+                        🗑
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
               </div>
             </div>
           );
@@ -190,11 +284,56 @@ export function ChatRoom({
             ))}
           </div>
         ) : null}
-        <div className="flex gap-2">
+        {showEmoji ? (
+          <div className="absolute bottom-full left-3 mb-1 grid w-64 grid-cols-8 gap-1 rounded-md border border-neutral-200 bg-white p-2 shadow-lg">
+            {EMOJIS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => insertEmoji(e)}
+                className="rounded p-1 text-lg hover:bg-neutral-100"
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex items-end gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            disabled={uploadingPhoto}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) sendPhoto(file);
+            }}
+            className="hidden"
+          />
+          <button
+            type="button"
+            disabled={uploadingPhoto}
+            onClick={() => fileInputRef.current?.click()}
+            title={t("发送照片", "Send photo")}
+            aria-label={t("发送照片", "Send photo")}
+            className="shrink-0 rounded-md border border-neutral-300 px-2.5 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
+          >
+            {uploadingPhoto ? "…" : "📷"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowEmoji((v) => !v)}
+            title={t("表情", "Emoji")}
+            aria-label={t("表情", "Emoji")}
+            className="shrink-0 rounded-md border border-neutral-300 px-2.5 py-2 text-sm hover:bg-neutral-50"
+          >
+            😀
+          </button>
           <textarea
             ref={textareaRef}
             value={draft}
             onChange={(e) => onDraftChange(e.target.value)}
+            onFocus={() => setShowEmoji(false)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey && mentionQuery === null) {
                 e.preventDefault();
@@ -211,7 +350,7 @@ export function ChatRoom({
             type="button"
             onClick={send}
             disabled={sending || !draft.trim()}
-            className="rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+            className="shrink-0 rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
           >
             <Bi zh="发送" en="Send" />
           </button>
