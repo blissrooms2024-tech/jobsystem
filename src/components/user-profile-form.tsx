@@ -16,6 +16,7 @@ type Props = {
   bankAccount: string | null;
   payRate: string | null;
   needCheckin: boolean;
+  donePhotos: boolean;
 };
 
 export function UserProfileForm(props: Props) {
@@ -43,6 +44,7 @@ export function UserProfileForm(props: Props) {
             bankAccount: String(formData.get("bankAccount") || ""),
             payRate: String(formData.get("payRate") || "") || undefined,
             needCheckin: formData.get("needCheckin") === "on",
+            donePhotos: formData.get("donePhotos") === "on",
           };
           const res = await fetch(`/api/users/${props.userId}`, {
             method: "PATCH",
@@ -105,6 +107,10 @@ export function UserProfileForm(props: Props) {
       <label className="col-span-2 flex items-center gap-2 text-sm">
         <input type="checkbox" name="needCheckin" defaultChecked={props.needCheckin} />
         需要 GPS 打卡 Requires GPS check-in
+      </label>
+      <label className="col-span-2 flex items-center gap-2 text-sm">
+        <input type="checkbox" name="donePhotos" defaultChecked={props.donePhotos} />
+        需要上传完成照片 Requires completion photos
       </label>
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}

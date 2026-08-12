@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { units } from "@/db/schema";
 import { NewUnitForm } from "@/components/new-unit-form";
+import { UnitRow } from "@/components/unit-row";
 
 export default async function UnitsPage() {
   const rows = await db.select().from(units);
@@ -18,19 +19,21 @@ export default async function UnitsPage() {
               <th className="px-3 py-2">物业 Property</th>
               <th className="px-3 py-2">坐标 Lat/Lon</th>
               <th className="px-3 py-2">半径 Radius</th>
+              <th className="px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((u) => (
-              <tr key={u.id} className="border-t border-neutral-100">
-                <td className="px-3 py-2">{u.unitCode}</td>
-                <td className="px-3 py-2">{u.unitName}</td>
-                <td className="px-3 py-2">{u.property}</td>
-                <td className="px-3 py-2">
-                  {u.lat}, {u.lon}
-                </td>
-                <td className="px-3 py-2">{u.radiusM}m</td>
-              </tr>
+              <UnitRow
+                key={u.id}
+                id={u.id}
+                unitCode={u.unitCode}
+                unitName={u.unitName}
+                property={u.property}
+                lat={u.lat}
+                lon={u.lon}
+                radiusM={u.radiusM}
+              />
             ))}
           </tbody>
         </table>

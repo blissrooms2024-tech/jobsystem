@@ -44,6 +44,7 @@ export default async function UserDetailPage({
           bankAccount={user.bankAccount}
           payRate={user.payRate}
           needCheckin={user.needCheckin}
+          donePhotos={user.donePhotos}
         />
       ) : (
         <dl className="grid max-w-2xl grid-cols-2 gap-3 text-sm">
