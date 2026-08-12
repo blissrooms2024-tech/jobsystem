@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { ChangePasswordForm } from "@/components/change-password-form";
 import { MyProfileForm } from "@/components/my-profile-form";
+import { Bi } from "@/components/bi";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -14,18 +15,22 @@ export default async function AccountPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-lg font-semibold">我的账号 My account</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="我的账号" en="My account" />
+        </h1>
         <p className="text-sm text-neutral-500">{user.name} · {user.username}</p>
       </div>
       {user.mustChangePassword ? (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          请先修改初始密码 Please change your temporary password.
+          <Bi zh="请先修改初始密码" en="Please change your temporary password." />
         </p>
       ) : null}
 
       {me ? (
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold">我的资料 My details</h2>
+          <h2 className="text-sm font-semibold">
+            <Bi zh="我的资料" en="My details" />
+          </h2>
           <MyProfileForm
             phone={me.phone}
             icPassport={me.icPassport}
@@ -39,7 +44,9 @@ export default async function AccountPage() {
       ) : null}
 
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold">修改密码 Change password</h2>
+        <h2 className="text-sm font-semibold">
+          <Bi zh="修改密码" en="Change password" />
+        </h2>
         <ChangePasswordForm />
       </div>
     </div>

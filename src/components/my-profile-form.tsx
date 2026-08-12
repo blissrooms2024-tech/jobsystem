@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Bi } from "@/components/bi";
 
 type Props = {
   phone: string | null;
@@ -15,7 +16,7 @@ type Props = {
 
 export function MyProfileForm(props: Props) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -41,7 +42,7 @@ export function MyProfileForm(props: Props) {
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            setError("保存失败 Failed to save");
+            setError(<Bi zh="保存失败" en="Failed to save" />);
             return;
           }
           setSaved(true);
@@ -50,43 +51,47 @@ export function MyProfileForm(props: Props) {
       }}
     >
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">电话 Phone</span>
+        <span className="font-medium"><Bi zh="电话" en="Phone" /></span>
         <input name="phone" defaultValue={props.phone ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">IC / 护照 IC/Passport</span>
+        <span className="font-medium"><Bi zh="IC / 护照" en="IC / Passport" /></span>
         <input name="icPassport" defaultValue={props.icPassport ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm">
-        <span className="font-medium">地址 Address</span>
+        <span className="font-medium"><Bi zh="地址" en="Address" /></span>
         <textarea name="address" defaultValue={props.address ?? ""} rows={2} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">邮箱 Email</span>
+        <span className="font-medium"><Bi zh="邮箱" en="Email" /></span>
         <input name="email" type="email" defaultValue={props.email ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">紧急联系人 Emergency contact</span>
+        <span className="font-medium"><Bi zh="紧急联系人" en="Emergency contact" /></span>
         <input name="emergencyContact" defaultValue={props.emergencyContact ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">银行 Bank name</span>
+        <span className="font-medium"><Bi zh="银行" en="Bank name" /></span>
         <input name="bankName" defaultValue={props.bankName ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">银行账号 Bank account</span>
+        <span className="font-medium"><Bi zh="银行账号" en="Bank account" /></span>
         <input name="bankAccount" defaultValue={props.bankAccount ?? ""} className="input" />
       </label>
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
-      {saved ? <p className="col-span-2 text-sm text-emerald-700">已保存 Saved</p> : null}
+      {saved ? (
+        <p className="col-span-2 text-sm text-emerald-700">
+          <Bi zh="已保存" en="Saved" />
+        </p>
+      ) : null}
 
       <button
         type="submit"
         disabled={isPending}
         className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {isPending ? "保存中... Saving..." : "保存 Save"}
+        {isPending ? <Bi zh="保存中..." en="Saving..." /> : <Bi zh="保存" en="Save" />}
       </button>
 
       <style jsx>{`

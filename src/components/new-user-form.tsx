@@ -3,10 +3,11 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
+import { Bi } from "@/components/bi";
 
 export function NewUserForm() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [created, setCreated] = useState<{ username: string; tempPassword: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const needCheckinRef = useRef<HTMLInputElement>(null);
@@ -26,13 +27,15 @@ export function NewUserForm() {
       {created ? (
         <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-900">
           <p>
-            已创建账号 <strong>{created.username}</strong>，临时密码 Temp password:{" "}
+            <Bi zh="已创建账号" en="Account created:" /> <strong>{created.username}</strong>,{" "}
+            <Bi zh="临时密码" en="Temp password" />:{" "}
             <code className="rounded bg-white px-1.5 py-0.5">{created.tempPassword}</code>
           </p>
           <p className="mt-1 text-xs text-emerald-700">
-            请把此密码告知员工，首次登录后系统会要求修改。此密码不会再次显示。
-            <br />
-            Give this to the employee now — it will not be shown again. They must change it on first login.
+            <Bi
+              zh="请把此密码告知员工，首次登录后系统会要求修改。此密码不会再次显示。"
+              en="Give this to the employee now — it will not be shown again. They must change it on first login."
+            />
           </p>
         </div>
       ) : null}
@@ -59,7 +62,7 @@ export function NewUserForm() {
               body: JSON.stringify(payload),
             });
             if (!res.ok) {
-              setError("创建失败 Failed to create");
+              setError(<Bi zh="创建失败" en="Failed to create" />);
               return;
             }
             const data = await res.json();
@@ -95,11 +98,11 @@ export function NewUserForm() {
         <input name="payRate" type="number" step="0.01" placeholder="单价 Pay rate" className="input" />
         <label className="col-span-2 flex items-center gap-2 text-sm">
           <input ref={needCheckinRef} type="checkbox" name="needCheckin" defaultChecked />
-          需要 GPS 打卡 Requires GPS check-in
+          <Bi zh="需要 GPS 打卡" en="Requires GPS check-in" />
         </label>
         <label className="col-span-2 flex items-center gap-2 text-sm">
           <input ref={donePhotosRef} type="checkbox" name="donePhotos" />
-          不打卡时，需要上传完成照片 Requires a completion photo (no check-in staff)
+          <Bi zh="不打卡时，需要上传完成照片" en="Requires a completion photo (no check-in staff)" />
         </label>
         {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
         <button
@@ -107,7 +110,13 @@ export function NewUserForm() {
           disabled={isPending}
           className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
         >
-          {isPending ? "创建中..." : "+ 新增员工 Add employee"}
+          {isPending ? (
+            "创建中..."
+          ) : (
+            <>
+              + <Bi zh="新增员工" en="Add employee" />
+            </>
+          )}
         </button>
         <style jsx>{`
           .input {
