@@ -21,7 +21,7 @@ function jobEmailHtml(title: string, lines: string[], jobId: string) {
   return `
     <p>${title}</p>
     <ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>
-    ${link ? `<p><a href="${link}">查看任务详情 View job</a></p>` : ""}
+    ${link ? `<p><a href="${link}">View job</a></p>` : ""}
   `;
 }
 
@@ -56,12 +56,12 @@ export async function runReminders() {
     if (!assignee.email) continue;
     await sendMail({
       to: assignee.email,
-      subject: `明天有任务安排：${job.title} Reminder: job tomorrow`,
-      html: jobEmailHtml(`${assignee.name}，你好，明天有一个任务安排：`, [
-        `任务 Job: ${job.title}`,
-        `日期 Date: ${job.schedDate}`,
-        unit ? `地点 Location: ${unit.unitName}` : "",
-        job.startTime ? `开始时间 Start: ${job.startTime}` : "",
+      subject: `Reminder: job tomorrow — ${job.title}`,
+      html: jobEmailHtml(`Hi ${assignee.name}, you have a job scheduled tomorrow:`, [
+        `Job: ${job.title}`,
+        `Date: ${job.schedDate}`,
+        unit ? `Location: ${unit.unitName}` : "",
+        job.startTime ? `Start: ${job.startTime}` : "",
       ].filter(Boolean), job.id),
     });
     await db
@@ -94,11 +94,11 @@ export async function runReminders() {
 
     await sendMail({
       to: assignee.email,
-      subject: `任务即将开始：${job.title} Reminder: job starting soon`,
-      html: jobEmailHtml(`${assignee.name}，你好，这个任务快开始了：`, [
-        `任务 Job: ${job.title}`,
-        `开始时间 Start: ${job.startTime}`,
-        unit ? `地点 Location: ${unit.unitName}` : "",
+      subject: `Reminder: job starting soon — ${job.title}`,
+      html: jobEmailHtml(`Hi ${assignee.name}, this job is starting soon:`, [
+        `Job: ${job.title}`,
+        `Start: ${job.startTime}`,
+        unit ? `Location: ${unit.unitName}` : "",
       ].filter(Boolean), job.id),
     });
     await db
