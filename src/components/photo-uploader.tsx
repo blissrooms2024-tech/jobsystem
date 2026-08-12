@@ -77,13 +77,20 @@ export function PhotoUploader({
           const file = e.target.files?.[0];
           if (file) handleFile(file);
         }}
-        className="block w-full text-sm"
+        className="hidden"
       />
-      {isPending ? (
-        <p className="text-xs text-neutral-400">
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => inputRef.current?.click()}
+        className="w-full rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+      >
+        {isPending ? (
           <Bi zh="上传中..." en="Uploading..." />
-        </p>
-      ) : null}
+        ) : (
+          <Bi zh="📷 选择照片上传" en="📷 Choose photo to upload" />
+        )}
+      </button>
       {error ? <p className="text-xs text-red-600">{error}</p> : null}
     </div>
   );
