@@ -1,21 +1,37 @@
 import Link from "next/link";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
-import { formatMoney, cn } from "@/lib/utils";
-import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
-import { JobRowActions } from "@/components/job-row-actions";
+import { cn } from "@/lib/utils";
+import { JOB_STATUS_LABEL } from "@/lib/job-status";
+import { myToday } from "@/lib/job-timing";
+import { JobsListClient } from "@/components/jobs-list-client";
+
+function addMonths(monthStr: string, delta: number) {
+  const [y, m] = monthStr.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; date?: string }>;
+  searchParams: Promise<{ status?: string; date?: string; month?: string }>;
 }) {
   const session = await auth();
   const user = session!.user;
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
-  const { status, date } = await searchParams;
+  const { status, date, month: monthParam } = await searchParams;
+
+  // A specific-day link (e.g. from the calendar) always wins over the month
+  // filter. Otherwise, default to the current month — showing every job
+  // ever created was unusably long.
+  const showAll = monthParam === "all";
+  const month =
+    !date && !showAll && monthParam && /^\d{4}-\d{2}$/.test(monthParam)
+      ? monthParam
+      : myToday().slice(0, 7);
 
   const conditions = [];
   if (!isAdmin) {
@@ -31,7 +47,14 @@ export default async function JobsPage({
     conditions.push(
       eq(jobs.status, status as "assigned" | "in_progress" | "completed" | "cancelled" | "missed"),
     );
-  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) conditions.push(eq(jobs.schedDate, date));
+  if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    conditions.push(eq(jobs.schedDate, date));
+  } else if (!showAll) {
+    const [y, m] = month.split("-").map(Number);
+    const monthStart = `${month}-01`;
+    const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+    conditions.push(gte(jobs.schedDate, monthStart), lte(jobs.schedDate, monthEnd));
+  }
 
   const rows = await db
     .select({
@@ -49,7 +72,7 @@ export default async function JobsPage({
     .leftJoin(users, eq(jobs.assignedTo, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(desc(jobs.schedDate))
-    .limit(200);
+    .limit(500);
 
   return (
     <div className="space-y-4">
@@ -72,11 +95,41 @@ export default async function JobsPage({
         ) : null}
       </div>
 
-      <div className="flex gap-2 text-sm">
+      {!date ? (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <Link
+            href={`/jobs?month=${addMonths(month, -1)}${status ? `&status=${status}` : ""}`}
+            className="rounded-md border border-neutral-300 px-2 py-1"
+          >
+            ‹
+          </Link>
+          <span className="font-medium">{showAll ? "全部 All" : month}</span>
+          <Link
+            href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}`}
+            className="rounded-md border border-neutral-300 px-2 py-1"
+          >
+            ›
+          </Link>
+          {!showAll ? (
+            <Link
+              href={`/jobs?month=all${status ? `&status=${status}` : ""}`}
+              className="ml-1 text-xs text-neutral-500 underline"
+            >
+              查看全部 Show all time
+            </Link>
+          ) : (
+            <Link href="/jobs" className="ml-1 text-xs text-neutral-500 underline">
+              只看本月 Back to this month
+            </Link>
+          )}
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap gap-2 text-sm">
         {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => (
           <Link
             key={s || "all"}
-            href={s ? `/jobs?status=${s}` : "/jobs"}
+            href={s ? `/jobs?status=${s}${showAll ? "&month=all" : `&month=${month}`}` : showAll ? "/jobs?month=all" : `/jobs?month=${month}`}
             className={cn(
               "rounded-full px-3 py-1",
               (status || "") === s
@@ -89,66 +142,11 @@ export default async function JobsPage({
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="bg-neutral-50 text-neutral-500">
-            <tr>
-              <th className="px-3 py-2">日期 Date</th>
-              <th className="px-3 py-2">标题 Title</th>
-              {isAdmin ? <th className="px-3 py-2">负责人 Assignee</th> : null}
-              <th className="px-3 py-2">单位 Unit</th>
-              <th className="px-3 py-2">状态 Status</th>
-              <th className="px-3 py-2">工资 Pay</th>
-              {isAdmin ? <th className="px-3 py-2">操作 Actions</th> : null}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.id} className="border-t border-neutral-100 hover:bg-neutral-50">
-                <td className="px-3 py-2">
-                  <Link href={`/jobs/${row.id}`} className="block">
-                    {row.schedDate}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">
-                  <Link href={`/jobs/${row.id}`} className="block font-medium">
-                    {row.title}
-                  </Link>
-                </td>
-                {isAdmin ? <td className="px-3 py-2">{row.assigneeName ?? "-"}</td> : null}
-                <td className="px-3 py-2">{row.unitName ?? "-"}</td>
-                <td className="px-3 py-2">
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-xs font-medium",
-                      JOB_STATUS_STYLE[row.status],
-                    )}
-                  >
-                    {JOB_STATUS_LABEL[row.status]}
-                  </span>
-                </td>
-                <td className="px-3 py-2">{formatMoney(row.pay)}</td>
-                {isAdmin ? (
-                  <td className="px-3 py-2">
-                    <JobRowActions
-                      jobId={row.id}
-                      status={row.status}
-                      canDelete={user.role === "boss" || user.role === "admin"}
-                    />
-                  </td>
-                ) : null}
-              </tr>
-            ))}
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={isAdmin ? 6 : 4} className="px-3 py-6 text-center text-neutral-400">
-                  暂无任务 No jobs
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
+      <JobsListClient
+        rows={rows}
+        isAdmin={isAdmin}
+        canDelete={user.role === "boss" || user.role === "admin"}
+      />
     </div>
   );
 }
