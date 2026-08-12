@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 135" role="img" aria-label="Bliss Rooms Properties Management">
+  <g fill="none" stroke="#b8935a" stroke-width="2.2" stroke-linecap="round">
+    <line x1="170" y1="10" x2="110" y2="58" />
+    <line x1="170" y1="10" x2="230" y2="58" />
+    <line x1="128" y1="46" x2="128" y2="82" />
+    <line x1="149" y1="50" x2="149" y2="82" />
+    <line x1="170" y1="54" x2="170" y2="82" />
+    <line x1="191" y1="50" x2="191" y2="82" />
+    <line x1="212" y1="46" x2="212" y2="82" />
+  </g>
+  <rect x="106" y="54" width="8" height="8" fill="#b8935a" transform="rotate(45 110 58)" />
+  <rect x="226" y="54" width="8" height="8" fill="#b8935a" transform="rotate(45 230 58)" />
+  <text x="170" y="109" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="27" letter-spacing="4" fill="#262626">BLISS&#160;&#160;|&#160;&#160;ROOMS</text>
+  <text x="170" y="125" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="10" letter-spacing="3" fill="#b8935a">PROPERTIES MANAGEMENT</text>
+</svg>

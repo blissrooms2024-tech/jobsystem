@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, renderToBuffer } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Svg, Line, Rect, renderToBuffer } from "@react-pdf/renderer";
 import { formatMoney } from "@/lib/utils";
 import { amountInWords } from "@/lib/amount-words";
 
@@ -11,6 +11,9 @@ const COMPANY = {
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: "Helvetica", color: "#222" },
+  logoWrap: { alignItems: "center", marginBottom: 4 },
+  logoWordmark: { fontFamily: "Times-Bold", fontSize: 15, letterSpacing: 2, color: "#262626" },
+  logoSubtitle: { fontFamily: "Helvetica", fontSize: 7, letterSpacing: 2, color: "#b8935a", marginTop: 2 },
   companyBlock: { textAlign: "center", marginBottom: 10, paddingBottom: 8, borderBottomWidth: 2, borderBottomColor: "#222" },
   companyName: { fontSize: 18, fontWeight: 700, letterSpacing: 1 },
   companyLine: { fontSize: 9, color: "#555" },
@@ -119,6 +122,26 @@ function EarningsDeductionsTable({ data }: { data: PayslipData }) {
   );
 }
 
+function LogoMark() {
+  return (
+    <View style={styles.logoWrap}>
+      <Svg width={54} height={29} viewBox="90 0 170 90">
+        <Line x1={170} y1={10} x2={110} y2={58} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={170} y1={10} x2={230} y2={58} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={128} y1={46} x2={128} y2={82} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={149} y1={50} x2={149} y2={82} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={170} y1={54} x2={170} y2={82} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={191} y1={50} x2={191} y2={82} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Line x1={212} y1={46} x2={212} y2={82} stroke="#b8935a" strokeWidth={3} strokeLinecap="round" />
+        <Rect x={106} y={54} width={8} height={8} fill="#b8935a" transform="rotate(45, 110, 58)" />
+        <Rect x={226} y={54} width={8} height={8} fill="#b8935a" transform="rotate(45, 230, 58)" />
+      </Svg>
+      <Text style={styles.logoWordmark}>BLISS   |   ROOMS</Text>
+      <Text style={styles.logoSubtitle}>PROPERTIES MANAGEMENT</Text>
+    </View>
+  );
+}
+
 function PayslipDocument({ data }: { data: PayslipData }) {
   const net =
     Number(data.jobsPay) + Number(data.baseSalary) + Number(data.allowance) - Number(data.deduction);
@@ -127,6 +150,7 @@ function PayslipDocument({ data }: { data: PayslipData }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
+        <LogoMark />
         <View style={styles.companyBlock}>
           <Text style={styles.companyName}>{COMPANY.name}</Text>
           <Text style={styles.companyLine}>{COMPANY.reg}</Text>

@@ -28,6 +28,8 @@ export function PayslipView({ data }: { data: PayslipData }) {
   return (
     <div className="rounded-lg border border-neutral-200 p-6">
       <div className="mb-4 border-b-2 border-neutral-800 pb-3 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element -- static SVG in /public, no Image optimization needed */}
+        <img src="/logo.svg" alt="Bliss Rooms Properties Management" className="mx-auto mb-2 h-14 w-auto" />
         <p className="text-lg font-bold tracking-wide">{COMPANY.name}</p>
         <p className="text-xs text-neutral-500">{COMPANY.reg}</p>
         <p className="text-xs text-neutral-500">{COMPANY.address}</p>
