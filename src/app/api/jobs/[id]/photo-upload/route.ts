@@ -58,6 +58,7 @@ export async function POST(
     });
     return NextResponse.json(jsonResponse);
   } catch (error) {
+    console.error("photo-upload token generation failed", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Upload failed" },
       { status: 400 },
