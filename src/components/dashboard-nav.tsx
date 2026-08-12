@@ -14,7 +14,7 @@ type NavItem = {
   roles?: Role[];
 };
 
-const ADMIN_ROLES: Role[] = ["boss", "admin", "supervisor"];
+const ADMIN_ROLES: Role[] = ["boss", "admin"];
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/", zh: "总览", en: "Dashboard" },
@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/payroll/me", zh: "我的工资", en: "My Payslips", roles: ["employee", "supervisor"] },
   { href: "/leaves", zh: "请假", en: "Leaves" },
   { href: "/chat", zh: "聊天", en: "Chat" },
+  { href: "/team", zh: "我的下属", en: "My Team", roles: ["supervisor"] },
   { href: "/users", zh: "员工", en: "Users", roles: ADMIN_ROLES },
   { href: "/units", zh: "单位", en: "Units", roles: ADMIN_ROLES },
   { href: "/job-types", zh: "工种", en: "Job Types", roles: ADMIN_ROLES },

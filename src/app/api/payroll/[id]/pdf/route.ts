@@ -22,7 +22,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const isAdmin = ["boss", "admin", "supervisor"].includes(session.user.role);
+  const isAdmin = ["boss", "admin"].includes(session.user.role);
   const isOwner = existing.userId === session.user.id;
   if (!isAdmin && !isOwner) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });

@@ -27,7 +27,7 @@ const bodySchema = z.object({
 // admin may hand-adjust jobsCount/jobsPay away from the live total); job
 // records only get linked to this payslip later, when it's marked Paid.
 export async function POST(request: Request) {
-  const auth = await requireRole("boss", "admin", "supervisor");
+  const auth = await requireRole("boss", "admin");
   if ("error" in auth) return auth.error;
 
   const parsed = bodySchema.safeParse(await request.json());

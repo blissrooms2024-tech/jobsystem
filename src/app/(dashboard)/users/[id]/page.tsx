@@ -12,7 +12,7 @@ export default async function UserDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!["boss", "admin", "supervisor"].includes(session!.user.role)) notFound();
+  if (!["boss", "admin"].includes(session!.user.role)) notFound();
 
   const { id } = await params;
   const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);

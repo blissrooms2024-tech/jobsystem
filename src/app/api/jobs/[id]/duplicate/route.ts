@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { jobs } from "@/db/schema";
+import { jobs, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { generateJobCode } from "@/lib/codes";
 import { datesBetween } from "@/lib/job-timing";
@@ -29,6 +29,20 @@ export async function POST(
 
   const [source] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
   if (!source) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (auth.session.user.role === "supervisor") {
+    const [assignee] = source.assignedTo
+      ? await db.select().from(users).where(eq(users.id, source.assignedTo)).limit(1)
+      : [];
+    const isOwnTeam =
+      source.assignedTo === auth.session.user.id || assignee?.supervisorId === auth.session.user.id;
+    if (!isOwnTeam) {
+      return NextResponse.json(
+        { error: "只能重复自己团队的任务 You can only duplicate your own team's jobs" },
+        { status: 403 },
+      );
+    }
+  }
 
   const dates = parsed.data.untilDate
     ? datesBetween(parsed.data.schedDate, parsed.data.untilDate)

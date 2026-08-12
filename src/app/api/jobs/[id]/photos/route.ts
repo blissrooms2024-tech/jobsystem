@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { jobs } from "@/db/schema";
+import { jobs, users } from "@/db/schema";
 import { parsePhotos, photoEntrySchema } from "@/lib/photos";
 
 const bodySchema = z.object({
@@ -32,8 +32,13 @@ export async function POST(
   }
 
   const isOwner = job.assignedTo === session.user.id;
-  const isAdmin = ["boss", "admin", "supervisor"].includes(session.user.role);
-  if (!isOwner && !isAdmin) {
+  const isFullAdmin = ["boss", "admin"].includes(session.user.role);
+  let isOwnTeam = false;
+  if (!isOwner && !isFullAdmin && session.user.role === "supervisor" && job.assignedTo) {
+    const [assignee] = await db.select().from(users).where(eq(users.id, job.assignedTo)).limit(1);
+    isOwnTeam = assignee?.supervisorId === session.user.id;
+  }
+  if (!isOwner && !isFullAdmin && !isOwnTeam) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

@@ -9,7 +9,7 @@ import { Bi } from "@/components/bi";
 
 export default async function PayrollListPage() {
   const session = await auth();
-  const isAdmin = ["boss", "admin", "supervisor"].includes(session!.user.role);
+  const isAdmin = ["boss", "admin"].includes(session!.user.role);
 
   const rows = await db
     .select({
