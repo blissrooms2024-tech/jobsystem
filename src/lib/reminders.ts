@@ -1,13 +1,10 @@
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
 import { sendMail } from "@/lib/mailer";
+import { jobEndInstant, jobStartInstant, myToday } from "@/lib/job-timing";
 
 const MY_TZ_OFFSET = "+08:00"; // Malaysia is fixed UTC+8, no DST
-
-function myToday(): string {
-  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-}
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(`${dateStr}T00:00:00${MY_TZ_OFFSET}`);
@@ -49,7 +46,7 @@ export async function runReminders() {
     .where(
       and(
         eq(jobs.schedDate, tomorrow),
-        eq(jobs.status, "assigned"),
+        inArray(jobs.status, ["assigned", "in_progress"]),
         eq(jobs.advanceReminded, false),
         isNotNull(users.email),
       ),
@@ -82,7 +79,7 @@ export async function runReminders() {
     .where(
       and(
         eq(jobs.schedDate, today),
-        eq(jobs.status, "assigned"),
+        inArray(jobs.status, ["assigned", "in_progress"]),
         eq(jobs.startReminded, false),
         isNotNull(users.email),
         isNotNull(jobs.startTime),
@@ -92,8 +89,7 @@ export async function runReminders() {
   const now = Date.now();
   for (const { job, assignee, unit } of startCandidates) {
     if (!assignee.email || !job.startTime) continue;
-    const startInstant = new Date(`${job.schedDate}T${job.startTime}${MY_TZ_OFFSET}`).getTime();
-    const minutesUntilStart = (startInstant - now) / 60000;
+    const minutesUntilStart = (jobStartInstant(job.schedDate, job.startTime) - now) / 60000;
     if (minutesUntilStart < 0 || minutesUntilStart > 65) continue;
 
     await sendMail({
@@ -113,4 +109,28 @@ export async function runReminders() {
   }
 
   return { advanceSent, startSent };
+}
+
+/**
+ * Mirrors the legacy hourly sweep: any Assigned/In-progress job whose window
+ * has already ended gets auto-marked Missed, so a forgotten check-in doesn't
+ * just sit open forever. Reopened jobs are exempt (admin already vouched for
+ * late completion).
+ */
+export async function sweepMissedJobs() {
+  const candidates = await db
+    .select()
+    .from(jobs)
+    .where(and(inArray(jobs.status, ["assigned", "in_progress"]), eq(jobs.reopened, false)));
+
+  const now = Date.now();
+  let missed = 0;
+  for (const job of candidates) {
+    const end = jobEndInstant(job.schedDate, job.endTime);
+    if (now > end) {
+      await db.update(jobs).set({ status: "missed" }).where(eq(jobs.id, job.id));
+      missed++;
+    }
+  }
+  return missed;
 }

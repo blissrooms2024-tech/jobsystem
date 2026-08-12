@@ -1,21 +1,10 @@
 import Link from "next/link";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
 import { formatMoney, cn } from "@/lib/utils";
-
-const STATUS_LABEL: Record<string, string> = {
-  assigned: "待完成 Assigned",
-  completed: "已完成 Completed",
-  missed: "错过 Missed",
-};
-
-const STATUS_STYLE: Record<string, string> = {
-  assigned: "bg-amber-100 text-amber-800",
-  completed: "bg-emerald-100 text-emerald-800",
-  missed: "bg-red-100 text-red-800",
-};
+import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
 
 export default async function JobsPage({
   searchParams,
@@ -28,8 +17,19 @@ export default async function JobsPage({
   const { status } = await searchParams;
 
   const conditions = [];
-  if (!isAdmin) conditions.push(eq(jobs.assignedTo, user.id));
-  if (status) conditions.push(eq(jobs.status, status as "assigned" | "completed" | "missed"));
+  if (!isAdmin) {
+    conditions.push(eq(jobs.assignedTo, user.id));
+  } else if (user.role === "supervisor") {
+    const subordinates = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.supervisorId, user.id));
+    conditions.push(inArray(jobs.assignedTo, [user.id, ...subordinates.map((s) => s.id)]));
+  }
+  if (status)
+    conditions.push(
+      eq(jobs.status, status as "assigned" | "in_progress" | "completed" | "cancelled" | "missed"),
+    );
 
   const rows = await db
     .select({
@@ -64,7 +64,7 @@ export default async function JobsPage({
       </div>
 
       <div className="flex gap-2 text-sm">
-        {["", "assigned", "completed", "missed"].map((s) => (
+        {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => (
           <Link
             key={s || "all"}
             href={s ? `/jobs?status=${s}` : "/jobs"}
@@ -75,7 +75,7 @@ export default async function JobsPage({
                 : "bg-neutral-100 text-neutral-700",
             )}
           >
-            {s ? STATUS_LABEL[s] : "全部 All"}
+            {s ? JOB_STATUS_LABEL[s] : "全部 All"}
           </Link>
         ))}
       </div>
@@ -111,10 +111,10 @@ export default async function JobsPage({
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-xs font-medium",
-                      STATUS_STYLE[row.status],
+                      JOB_STATUS_STYLE[row.status],
                     )}
                   >
-                    {STATUS_LABEL[row.status]}
+                    {JOB_STATUS_LABEL[row.status]}
                   </span>
                 </td>
                 <td className="px-3 py-2">{formatMoney(row.pay)}</td>

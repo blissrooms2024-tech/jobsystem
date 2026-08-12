@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { leaves, users } from "@/db/schema";
@@ -9,17 +9,33 @@ const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
   approved: "bg-emerald-100 text-emerald-800",
   rejected: "bg-red-100 text-red-800",
+  cancelled: "bg-neutral-200 text-neutral-600",
 };
 const STATUS_LABEL: Record<string, string> = {
   pending: "待审批 Pending",
   approved: "已批准 Approved",
   rejected: "已拒绝 Rejected",
+  cancelled: "已取消 Cancelled",
 };
 
 export default async function LeavesPage() {
   const session = await auth();
   const user = session!.user;
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
+
+  let scope;
+  if (!isAdmin) {
+    scope = eq(leaves.userId, user.id);
+  } else if (user.role === "supervisor") {
+    const subordinates = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.supervisorId, user.id));
+    scope = inArray(
+      leaves.userId,
+      subordinates.map((s) => s.id),
+    );
+  }
 
   const rows = await db
     .select({
@@ -34,7 +50,7 @@ export default async function LeavesPage() {
     })
     .from(leaves)
     .innerJoin(users, eq(leaves.userId, users.id))
-    .where(isAdmin ? undefined : eq(leaves.userId, user.id))
+    .where(scope)
     .orderBy(desc(leaves.createdAt))
     .limit(200);
 

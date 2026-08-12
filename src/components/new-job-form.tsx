@@ -9,10 +9,14 @@ export function NewJobForm({
   units,
   jobTypes,
   employees,
+  minDate,
+  maxDate,
 }: {
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
+  minDate: string;
+  maxDate: string;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -40,12 +44,12 @@ export function NewJobForm({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           });
+          const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            setError("创建失败 Failed to create job");
+            setError(typeof data.error === "string" ? data.error : "创建失败 Failed to create job");
             return;
           }
-          const { job } = await res.json();
-          router.push(`/jobs/${job.id}`);
+          router.push(`/jobs/${data.job.id}`);
         });
       }}
     >
@@ -87,7 +91,7 @@ export function NewJobForm({
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="日期 Date">
-          <input type="date" name="schedDate" required className="input" />
+          <input type="date" name="schedDate" required min={minDate} max={maxDate} className="input" />
         </Field>
         <Field label="开始时间 Start">
           <input type="time" name="startTime" className="input" />

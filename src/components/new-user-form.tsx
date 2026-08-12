@@ -1,13 +1,25 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 
 export function NewUserForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ username: string; tempPassword: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const needCheckinRef = useRef<HTMLInputElement>(null);
+  const donePhotosRef = useRef<HTMLInputElement>(null);
+
+  const onStaffTypeChange = (value: string) => {
+    // Matches the legacy system: typing "Posting Agent" auto-switches this
+    // employee to no-checkin + 3 completion photos (still editable after).
+    if (value.trim().toLowerCase() === "posting agent") {
+      if (needCheckinRef.current) needCheckinRef.current.checked = false;
+      if (donePhotosRef.current && !donePhotosRef.current.value) donePhotosRef.current.value = "3";
+    }
+  };
 
   return (
     <div className="max-w-lg space-y-3">
@@ -38,6 +50,7 @@ export function NewUserForm() {
               phone: String(formData.get("phone") || "") || undefined,
               payRate: String(formData.get("payRate") || "") || undefined,
               needCheckin: formData.get("needCheckin") === "on",
+              donePhotos: String(formData.get("donePhotos") || "0"),
             };
             const res = await fetch("/api/users", {
               method: "POST",
@@ -64,16 +77,35 @@ export function NewUserForm() {
           <option value="admin">Admin</option>
           <option value="boss">Boss</option>
         </select>
-        <select name="staffType" className="input" defaultValue="">
-          <option value="">-- Staff type --</option>
-          <option value="posting_agent">Posting Agent</option>
-          <option value="cleaner">Cleaner</option>
-        </select>
+        <input
+          name="staffType"
+          list="staffTypeSuggestions"
+          placeholder="工种 Staff type"
+          className="input"
+          onChange={(e) => onStaffTypeChange(e.target.value)}
+        />
+        <datalist id="staffTypeSuggestions">
+          {STAFF_TYPE_SUGGESTIONS.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
         <input name="phone" placeholder="电话 Phone" className="input" />
         <input name="payRate" type="number" step="0.01" placeholder="单价 Pay rate" className="input" />
         <label className="col-span-2 flex items-center gap-2 text-sm">
-          <input type="checkbox" name="needCheckin" defaultChecked />
+          <input ref={needCheckinRef} type="checkbox" name="needCheckin" defaultChecked />
           需要 GPS 打卡 Requires GPS check-in
+        </label>
+        <label className="col-span-2 space-y-1 text-sm">
+          <span>不打卡时，完成任务需要几张照片 Photos required to mark done (no check-in staff)</span>
+          <input
+            ref={donePhotosRef}
+            name="donePhotos"
+            type="number"
+            min={0}
+            max={10}
+            defaultValue={0}
+            className="input"
+          />
         </label>
         {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
         <button

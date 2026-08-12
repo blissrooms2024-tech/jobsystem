@@ -58,19 +58,17 @@ function money(value: unknown): string {
   return (Number.isFinite(n) ? n : 0).toFixed(2);
 }
 
-const STAFF_TYPE_MAP: Record<string, "posting_agent" | "cleaner"> = {
-  "Posting Agent": "posting_agent",
-  Cleaner: "cleaner",
-};
 const ROLE_MAP: Record<string, "boss" | "admin" | "supervisor" | "employee"> = {
   Boss: "boss",
   Admin: "admin",
   Supervisor: "supervisor",
   Employee: "employee",
 };
-const STATUS_MAP: Record<string, "assigned" | "completed" | "missed"> = {
+const STATUS_MAP: Record<string, "assigned" | "in_progress" | "completed" | "cancelled" | "missed"> = {
   Assigned: "assigned",
+  "In Progress": "in_progress",
   Completed: "completed",
+  Cancelled: "cancelled",
   Missed: "missed",
 };
 const PAYROLL_STATUS_MAP: Record<string, "draft" | "paid"> = {
@@ -108,7 +106,7 @@ export async function runMigration(db: Db, filePath: string) {
       role: ROLE_MAP[String(row.Role)] ?? "employee",
       phone: row.Phone != null ? String(row.Phone) : null,
       active: Boolean(row.Active),
-      staffType: row.StaffType ? STAFF_TYPE_MAP[String(row.StaffType)] : null,
+      staffType: row.StaffType != null ? String(row.StaffType) : null,
       icPassport: row.IcPassport != null ? String(row.IcPassport) : null,
       address: row.Address != null ? String(row.Address) : null,
       email: row.Email != null ? String(row.Email) : null,
@@ -118,7 +116,7 @@ export async function runMigration(db: Db, filePath: string) {
       payType: row.PayType === "PerJob" ? ("per_job" as const) : ("base" as const),
       payRate: row.PayRate != null ? money(row.PayRate) : null,
       needCheckin: row.NeedCheckin == null ? true : Boolean(row.NeedCheckin),
-      donePhotos: row.DonePhotos == null ? true : Boolean(row.DonePhotos),
+      donePhotos: Number(row.DonePhotos) || 0,
     };
 
     let id: string;

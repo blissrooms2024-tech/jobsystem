@@ -36,6 +36,7 @@ async function getAdminStats() {
     .select({
       todayJobs: sql<number>`count(*) filter (where ${jobs.schedDate} = ${today})`,
       openJobs: sql<number>`count(*) filter (where ${jobs.status} = 'assigned')`,
+      inProgressJobs: sql<number>`count(*) filter (where ${jobs.status} = 'in_progress')`,
       missedJobs: sql<number>`count(*) filter (where ${jobs.status} = 'missed')`,
     })
     .from(jobs);
@@ -90,6 +91,7 @@ async function AdminOverview() {
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
       <StatCard label="今日任务 Today's jobs" value={stats.todayJobs} />
       <StatCard label="待处理任务 Open jobs" value={stats.openJobs} />
+      <StatCard label="打卡中 In progress" value={stats.inProgressJobs} />
       <StatCard label="错过任务 Missed jobs" value={stats.missedJobs} />
       <StatCard label="待发放工资单 Draft payroll" value={stats.draftCount} />
       <StatCard label="草稿总额 Draft total" value={formatMoney(stats.draftTotal)} />

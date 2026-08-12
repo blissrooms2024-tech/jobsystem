@@ -23,16 +23,13 @@ export const roleEnum = pgEnum("role", [
   "employee",
 ]);
 
-export const staffTypeEnum = pgEnum("staff_type", [
-  "posting_agent",
-  "cleaner",
-]);
-
 export const payTypeEnum = pgEnum("pay_type", ["per_job", "base"]);
 
 export const jobStatusEnum = pgEnum("job_status", [
   "assigned",
+  "in_progress",
   "completed",
+  "cancelled",
   "missed",
 ]);
 
@@ -44,6 +41,7 @@ export const leaveStatusEnum = pgEnum("leave_status", [
   "pending",
   "approved",
   "rejected",
+  "cancelled",
 ]);
 
 export const users = pgTable(
@@ -61,7 +59,10 @@ export const users = pgTable(
     supervisorId: uuid("supervisor_id"),
     phone: varchar("phone", { length: 30 }),
     active: boolean("active").notNull().default(true),
-    staffType: staffTypeEnum("staff_type"),
+    // Free text (not an enum) — the legacy system let admins type any staff
+    // type with autocomplete suggestions (Cleaner, Posting Agent, Room Agent,
+    // Maintenance, Electrician, ...), not a fixed closed list.
+    staffType: text("staff_type"),
     icPassport: varchar("ic_passport", { length: 50 }),
     address: text("address"),
     email: varchar("email", { length: 255 }),
@@ -71,7 +72,9 @@ export const users = pgTable(
     payType: payTypeEnum("pay_type").default("per_job"),
     payRate: numeric("pay_rate", { precision: 10, scale: 2 }),
     needCheckin: boolean("need_checkin").notNull().default(true),
-    donePhotos: boolean("done_photos").notNull().default(true),
+    // Photos required to mark a no-checkin job "done" (0 = none required).
+    // Matches the legacy system exactly — this was always a count, not a flag.
+    donePhotos: integer("done_photos").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

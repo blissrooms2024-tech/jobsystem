@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/db";
-import { jobTypes, jobs, units } from "@/db/schema";
+import { jobTypes, jobs, units, users } from "@/db/schema";
 import { generateJobCode } from "@/lib/codes";
 import { requireRole } from "@/lib/api-auth";
+import { assertSchedulableDate } from "@/lib/job-timing";
 import { eq } from "drizzle-orm";
 
 const bodySchema = z.object({
@@ -27,6 +28,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
   const data = parsed.data;
+
+  try {
+    assertSchedulableDate(data.schedDate);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Invalid date" },
+      { status: 400 },
+    );
+  }
+
+  // Supervisors may only assign jobs to their own subordinates (or themselves).
+  if (auth.session.user.role === "supervisor") {
+    const [target] = await db.select().from(users).where(eq(users.id, data.assignedTo)).limit(1);
+    const isSelf = data.assignedTo === auth.session.user.id;
+    const isOwnSubordinate = target?.supervisorId === auth.session.user.id;
+    if (!isSelf && !isOwnSubordinate) {
+      return NextResponse.json(
+        { error: "只能分配给自己团队的员工 You can only assign jobs to your own team" },
+        { status: 403 },
+      );
+    }
+  }
 
   let pay = "0";
   let property: string | null = null;

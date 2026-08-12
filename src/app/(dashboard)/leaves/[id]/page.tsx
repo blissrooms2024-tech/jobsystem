@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { leaves, users } from "@/db/schema";
 import { LeaveReviewActions } from "@/components/leave-review-actions";
+import { CancelMyLeaveButton } from "@/components/cancel-my-leave-button";
 
 export default async function LeaveDetailPage({
   params,
@@ -25,9 +26,13 @@ export default async function LeaveDetailPage({
 
   const isAdmin = ["boss", "admin", "supervisor"].includes(currentUser.role);
   const isOwner = row.leave.userId === currentUser.id;
-  if (!isAdmin && !isOwner) notFound();
+  const isOwnTeam =
+    currentUser.role !== "supervisor" || isOwner || row.employee.supervisorId === currentUser.id;
+  if ((!isAdmin && !isOwner) || !isOwnTeam) notFound();
 
   const l = row.leave;
+  const canReview = isAdmin && !isOwner && (l.status === "pending" || l.status === "approved");
+  const canCancelOwn = isOwner && (l.status === "pending" || l.status === "approved");
 
   return (
     <div className="max-w-lg space-y-6">
@@ -52,7 +57,8 @@ export default async function LeaveDetailPage({
         {l.reviewNote ? <p className="mt-1 text-sm text-neutral-600">备注: {l.reviewNote}</p> : null}
       </div>
 
-      {isAdmin && l.status === "pending" ? <LeaveReviewActions leaveId={l.id} /> : null}
+      {canReview ? <LeaveReviewActions leaveId={l.id} status={l.status} /> : null}
+      {canCancelOwn ? <CancelMyLeaveButton leaveId={l.id} /> : null}
     </div>
   );
 }
