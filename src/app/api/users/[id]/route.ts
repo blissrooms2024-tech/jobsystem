@@ -19,6 +19,7 @@ const bodySchema = z.object({
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),
   needCheckin: z.boolean().optional(),
+  donePhotos: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -53,6 +54,7 @@ export async function PATCH(
       ...(data.bankName !== undefined ? { bankName: data.bankName || null } : {}),
       ...(data.bankAccount !== undefined ? { bankAccount: data.bankAccount || null } : {}),
       ...(data.needCheckin !== undefined ? { needCheckin: data.needCheckin } : {}),
+      ...(data.donePhotos !== undefined ? { donePhotos: data.donePhotos } : {}),
     })
     .where(eq(users.id, id))
     .returning();

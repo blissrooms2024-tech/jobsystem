@@ -1,0 +1,18 @@
+name: Job reminders
+
+on:
+  schedule:
+    # Every 30 minutes. GitHub Actions cron can lag a few minutes under load,
+    # which is fine here — the reminder window itself is ~65 minutes wide.
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call reminder endpoint
+        run: |
+          curl -sS -f \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            "${{ vars.APP_URL }}/api/cron/reminders"
