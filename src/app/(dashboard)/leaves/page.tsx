@@ -60,7 +60,7 @@ export default async function LeavesPage() {
         <h1 className="text-lg font-semibold">请假 Leaves</h1>
         <Link
           href="/leaves/new"
-          className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white"
+          className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white"
         >
           + 申请请假 Request leave
         </Link>

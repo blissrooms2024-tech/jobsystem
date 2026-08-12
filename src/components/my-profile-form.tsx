@@ -84,7 +84,7 @@ export function MyProfileForm(props: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="col-span-2 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+        className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
         {isPending ? "保存中... Saving..." : "保存 Save"}
       </button>

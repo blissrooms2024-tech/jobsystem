@@ -65,7 +65,7 @@ export default async function JobsPage({
         {isAdmin ? (
           <Link
             href="/jobs/new"
-            className="rounded-md bg-neutral-900 px-3 py-2 text-sm font-medium text-white"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white"
           >
             + 新任务 New job
           </Link>
@@ -80,7 +80,7 @@ export default async function JobsPage({
             className={cn(
               "rounded-full px-3 py-1",
               (status || "") === s
-                ? "bg-neutral-900 text-white"
+                ? "bg-purple-700 hover:bg-purple-800 text-white"
                 : "bg-neutral-100 text-neutral-700",
             )}
           >

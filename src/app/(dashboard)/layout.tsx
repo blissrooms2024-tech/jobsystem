@@ -12,9 +12,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-neutral-200 p-4 sm:flex">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-purple-100 bg-purple-50/40 p-4 sm:flex">
         <div className="mb-6">
-          <p className="text-sm font-semibold">Bliss Rooms</p>
+          <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>
           <p className="text-xs text-neutral-500">Job System</p>
         </div>
         <DashboardNav role={user.role} />

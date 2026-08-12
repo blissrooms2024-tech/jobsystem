@@ -102,7 +102,7 @@ export function UnitRow(props: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-md bg-neutral-900 px-2 py-1 text-xs text-white disabled:opacity-60"
+            className="rounded-md bg-purple-700 hover:bg-purple-800 px-2 py-1 text-xs text-white disabled:opacity-60"
           >
             保存
           </button>

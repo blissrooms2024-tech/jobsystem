@@ -103,7 +103,7 @@ export default async function JobsCalendarPage({
                 key={dateStr}
                 className={cn(
                   "flex aspect-square flex-col items-center justify-start rounded-md border border-neutral-100 p-1 text-xs hover:bg-neutral-50",
-                  dateStr === today && "border-neutral-900",
+                  dateStr === today && "border-purple-700",
                 )}
               >
                 <span>{day}</span>
