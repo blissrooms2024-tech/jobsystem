@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { UserProfileForm } from "@/components/user-profile-form";
+import { Bi } from "@/components/bi";
 
 export default async function UserDetailPage({
   params,
@@ -26,7 +27,7 @@ export default async function UserDetailPage({
         <h1 className="text-lg font-semibold">{user.name}</h1>
         <p className="text-sm text-neutral-500">
           {user.username} · <span className="capitalize">{user.role}</span> ·{" "}
-          {user.active ? "在职 Active" : "停用 Inactive"}
+          <Bi zh={user.active ? "在职" : "停用"} en={user.active ? "Active" : "Inactive"} />
         </p>
       </div>
 
@@ -49,25 +50,37 @@ export default async function UserDetailPage({
         />
       ) : (
         <dl className="grid max-w-2xl grid-cols-2 gap-3 text-sm">
-          <Field label="员工编号 Staff ID" value={user.staffId} />
-          <Field label="电话 Phone" value={user.phone} />
-          <Field label="类型 Staff type" value={user.staffType} />
-          <Field label="IC / 护照" value={user.icPassport} />
-          <Field label="邮箱 Email" value={user.email} />
-          <Field label="地址 Address" value={user.address} full />
-          <Field label="紧急联系人 Emergency" value={user.emergencyContact} full />
-          <Field label="银行 Bank" value={user.bankName} />
-          <Field label="银行账号 Account" value={user.bankAccount} />
+          <Field labelZh="员工编号" labelEn="Staff ID" value={user.staffId} />
+          <Field labelZh="电话" labelEn="Phone" value={user.phone} />
+          <Field labelZh="类型" labelEn="Staff type" value={user.staffType} />
+          <Field labelZh="IC / 护照" labelEn="IC / Passport" value={user.icPassport} />
+          <Field labelZh="邮箱" labelEn="Email" value={user.email} />
+          <Field labelZh="地址" labelEn="Address" value={user.address} full />
+          <Field labelZh="紧急联系人" labelEn="Emergency" value={user.emergencyContact} full />
+          <Field labelZh="银行" labelEn="Bank" value={user.bankName} />
+          <Field labelZh="银行账号" labelEn="Account" value={user.bankAccount} />
         </dl>
       )}
     </div>
   );
 }
 
-function Field({ label, value, full }: { label: string; value: string | null; full?: boolean }) {
+function Field({
+  labelZh,
+  labelEn,
+  value,
+  full,
+}: {
+  labelZh: string;
+  labelEn: string;
+  value: string | null;
+  full?: boolean;
+}) {
   return (
     <div className={full ? "col-span-2" : undefined}>
-      <dt className="text-xs text-neutral-400">{label}</dt>
+      <dt className="text-xs text-neutral-400">
+        <Bi zh={labelZh} en={labelEn} />
+      </dt>
       <dd className="font-medium">{value || "-"}</dd>
     </div>
   );

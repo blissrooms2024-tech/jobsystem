@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Bi } from "@/components/bi";
 
 export function UserRow({
   id,
@@ -65,7 +66,7 @@ export function UserRow({
               : "rounded-full bg-neutral-200 px-2 py-0.5 text-xs font-medium text-neutral-600"
           }
         >
-          {active ? "在职 Active" : "停用 Inactive"}
+          <Bi zh={active ? "在职" : "停用"} en={active ? "Active" : "Inactive"} />
         </button>
       </td>
       <td className="whitespace-nowrap px-3 py-1.5">

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { UserRow } from "@/components/user-row";
 import { NewUserForm } from "@/components/new-user-form";
+import { Bi } from "@/components/bi";
 
 type UserData = {
   id: string;
@@ -36,7 +37,9 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold">员工 Users</h1>
+        <h1 className="text-lg font-semibold">
+          <Bi zh="员工" en="Users" />
+        </h1>
         <div className="flex items-center gap-2">
           <input
             type="search"
@@ -50,7 +53,13 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
             onClick={() => setShowAdd((v) => !v)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm font-medium text-white"
           >
-            {showAdd ? "取消 Cancel" : "+ 新增员工 Add employee"}
+            {showAdd ? (
+              <Bi zh="取消" en="Cancel" />
+            ) : (
+              <>
+                + <Bi zh="新增员工" en="Add employee" />
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -65,13 +74,13 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="px-3 py-2">姓名 Name</th>
-              <th className="px-3 py-2">员工编号 Staff ID</th>
-              <th className="px-3 py-2">类型 Staff type</th>
-              <th className="px-3 py-2">电话 Phone</th>
-              <th className="px-3 py-2">银行资料 Bank</th>
-              <th className="px-3 py-2">状态 Status</th>
-              <th className="px-3 py-2">操作 Actions</th>
+              <th className="px-3 py-2"><Bi zh="姓名" en="Name" /></th>
+              <th className="px-3 py-2"><Bi zh="员工编号" en="Staff ID" /></th>
+              <th className="px-3 py-2"><Bi zh="类型" en="Staff type" /></th>
+              <th className="px-3 py-2"><Bi zh="电话" en="Phone" /></th>
+              <th className="px-3 py-2"><Bi zh="银行资料" en="Bank" /></th>
+              <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
             </tr>
           </thead>
           <tbody>
@@ -92,7 +101,9 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
           </tbody>
         </table>
         {filtered.length === 0 ? (
-          <p className="px-3 py-4 text-sm text-neutral-500">没有符合的员工 No matching employees</p>
+          <p className="px-3 py-4 text-sm text-neutral-500">
+            <Bi zh="没有符合的员工" en="No matching employees" />
+          </p>
         ) : null}
       </div>
     </div>

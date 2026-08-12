@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
+import { Bi } from "@/components/bi";
 
 type Props = {
   userId: string;
@@ -23,7 +24,7 @@ type Props = {
 
 export function UserProfileForm(props: Props) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<React.ReactNode>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -55,7 +56,7 @@ export function UserProfileForm(props: Props) {
             body: JSON.stringify(payload),
           });
           if (!res.ok) {
-            setError("保存失败 Failed to save");
+            setError(<Bi zh="保存失败" en="Failed to save" />);
             return;
           }
           setSaved(true);
@@ -64,19 +65,19 @@ export function UserProfileForm(props: Props) {
       }}
     >
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">姓名 Name</span>
+        <span className="font-medium"><Bi zh="姓名" en="Name" /></span>
         <input name="name" defaultValue={props.name} required className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">员工编号 Staff ID</span>
+        <span className="font-medium"><Bi zh="员工编号" en="Staff ID" /></span>
         <input name="staffId" defaultValue={props.staffId ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">电话 Phone</span>
+        <span className="font-medium"><Bi zh="电话" en="Phone" /></span>
         <input name="phone" defaultValue={props.phone ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">工种 Staff type</span>
+        <span className="font-medium"><Bi zh="工种" en="Staff type" /></span>
         <input name="staffType" list="staffTypeSuggestions" defaultValue={props.staffType ?? ""} className="input" />
         <datalist id="staffTypeSuggestions">
           {STAFF_TYPE_SUGGESTIONS.map((t) => (
@@ -85,51 +86,55 @@ export function UserProfileForm(props: Props) {
         </datalist>
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">单价 Pay rate</span>
+        <span className="font-medium"><Bi zh="单价" en="Pay rate" /></span>
         <input name="payRate" type="number" step="0.01" defaultValue={props.payRate ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">IC / 护照 IC/Passport</span>
+        <span className="font-medium"><Bi zh="IC / 护照" en="IC / Passport" /></span>
         <input name="icPassport" defaultValue={props.icPassport ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">邮箱 Email</span>
+        <span className="font-medium"><Bi zh="邮箱" en="Email" /></span>
         <input name="email" type="email" defaultValue={props.email ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm">
-        <span className="font-medium">地址 Address</span>
+        <span className="font-medium"><Bi zh="地址" en="Address" /></span>
         <textarea name="address" defaultValue={props.address ?? ""} rows={2} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm">
-        <span className="font-medium">紧急联系人 Emergency contact</span>
+        <span className="font-medium"><Bi zh="紧急联系人" en="Emergency contact" /></span>
         <input name="emergencyContact" defaultValue={props.emergencyContact ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">银行 Bank name</span>
+        <span className="font-medium"><Bi zh="银行" en="Bank name" /></span>
         <input name="bankName" defaultValue={props.bankName ?? ""} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
-        <span className="font-medium">银行账号 Bank account</span>
+        <span className="font-medium"><Bi zh="银行账号" en="Bank account" /></span>
         <input name="bankAccount" defaultValue={props.bankAccount ?? ""} className="input" />
       </label>
       <label className="col-span-2 flex items-center gap-2 text-sm">
         <input type="checkbox" name="needCheckin" defaultChecked={props.needCheckin} />
-        需要 GPS 打卡 Requires GPS check-in
+        <Bi zh="需要 GPS 打卡" en="Requires GPS check-in" />
       </label>
       <label className="col-span-2 flex items-center gap-2 text-sm">
         <input type="checkbox" name="donePhotos" defaultChecked={props.donePhotos > 0} />
-        不打卡时，需要上传完成照片 Requires a completion photo (no check-in staff)
+        <Bi zh="不打卡时，需要上传完成照片" en="Requires a completion photo (no check-in staff)" />
       </label>
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
-      {saved ? <p className="col-span-2 text-sm text-emerald-700">已保存 Saved</p> : null}
+      {saved ? (
+        <p className="col-span-2 text-sm text-emerald-700">
+          <Bi zh="已保存" en="Saved" />
+        </p>
+      ) : null}
 
       <button
         type="submit"
         disabled={isPending}
         className="col-span-2 rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
       >
-        {isPending ? "保存中... Saving..." : "保存 Save"}
+        {isPending ? <Bi zh="保存中..." en="Saving..." /> : <Bi zh="保存" en="Save" />}
       </button>
 
       <style jsx>{`
