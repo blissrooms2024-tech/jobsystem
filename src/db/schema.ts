@@ -69,6 +69,11 @@ export const users = pgTable(
     mustChangePassword: boolean("must_change_password")
       .notNull()
       .default(false),
+    // Brute-force protection: increments on each wrong password, resets on
+    // success. Locked out for LOCKOUT_MS (see auth.ts) once the threshold
+    // is hit, rather than failing every attempt against bcrypt forever.
+    failedLoginAttempts: integer("failed_login_attempts").notNull().default(0),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }),
     role: roleEnum("role").notNull().default("employee"),
     supervisorId: uuid("supervisor_id"),
     phone: varchar("phone", { length: 30 }),
