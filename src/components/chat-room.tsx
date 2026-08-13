@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
+import { Camera, Check, Copy, Forward, Mic, Send, Smile, Trash2, X } from "lucide-react";
 import { Bi } from "@/components/bi";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/use-lang";
@@ -102,11 +103,17 @@ export function ChatRoom({
   const [forwardOpen, setForwardOpen] = useState(false);
   const [forwardTargets, setForwardTargets] = useState<GroupSummary[] | null>(null);
   const [copiedFlash, setCopiedFlash] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectionMode = selectedIds.size > 0;
 
@@ -158,6 +165,13 @@ export function ChatRoom({
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    };
+  }, []);
+
   const send = async () => {
     const body = draft.trim();
     if (!body || sending) return;
@@ -190,6 +204,29 @@ export function ChatRoom({
     setSending(false);
   };
 
+  const postAttachment = async (attachmentUrl: string) => {
+    const res = await fetch(`/api/chat/groups/${groupId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ attachmentUrl }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: data.message.id,
+          body: data.message.body,
+          attachmentUrl: data.message.attachmentUrl ?? null,
+          deleted: false,
+          createdAt: data.message.createdAt,
+          senderId: data.message.senderId,
+          senderName: "",
+        },
+      ]);
+    }
+  };
+
   const sendPhoto = async (file: File) => {
     setUploadingPhoto(true);
     try {
@@ -197,30 +234,67 @@ export function ChatRoom({
         access: "private",
         handleUploadUrl: `/api/chat/groups/${groupId}/photo-upload`,
       });
-      const res = await fetch(`/api/chat/groups/${groupId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attachmentUrl: blob.url }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: data.message.id,
-            body: data.message.body,
-            attachmentUrl: data.message.attachmentUrl ?? null,
-            deleted: false,
-            createdAt: data.message.createdAt,
-            senderId: data.message.senderId,
-            senderName: "",
-          },
-        ]);
-      }
+      await postAttachment(blob.url);
     } finally {
       setUploadingPhoto(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setRecording(true);
+      setRecordingSeconds(0);
+      recordingIntervalRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000);
+    } catch {
+      // mic permission denied or unsupported — nothing to record
+    }
+  };
+
+  const stopRecording = (shouldSend: boolean) => {
+    const recorder = mediaRecorderRef.current;
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    if (!recorder) {
+      setRecording(false);
+      return;
+    }
+    recorder.onstop = async () => {
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      if (shouldSend && audioChunksRef.current.length > 0) {
+        // Different browsers pick different recording containers (Chrome/
+        // Firefox: webm, Safari: mp4) — use whatever the recorder actually
+        // produced rather than assuming webm everywhere.
+        const mimeType = mediaRecorderRef.current?.mimeType || "audio/webm";
+        const ext = mimeType.includes("mp4") ? "m4a" : mimeType.includes("ogg") ? "ogg" : "webm";
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        setUploadingPhoto(true);
+        try {
+          const uploaded = await upload(`chat/${groupId}/voice-${Date.now()}.${ext}`, blob, {
+            access: "private",
+            contentType: mimeType,
+            handleUploadUrl: `/api/chat/groups/${groupId}/photo-upload`,
+          });
+          await postAttachment(uploaded.url);
+        } finally {
+          setUploadingPhoto(false);
+        }
+      }
+      setRecording(false);
+    };
+    recorder.stop();
   };
 
   const clearSelection = () => setSelectedIds(new Set());
@@ -276,7 +350,7 @@ export function ChatRoom({
   const copySelected = async () => {
     const ordered = messages.filter((m) => selectedIds.has(m.id) && !m.deleted);
     const text = ordered
-      .map((m) => m.body || (m.attachmentUrl ? "[photo]" : ""))
+      .map((m) => m.body || (m.attachmentUrl ? (m.attachmentUrl.includes("/voice-") ? "[voice]" : "[photo]") : ""))
       .filter(Boolean)
       .join("\n");
     if (!text) return;
@@ -345,18 +419,18 @@ export function ChatRoom({
       <div className="flex items-center justify-between border-b border-neutral-200 px-3 py-1.5 text-xs text-neutral-500">
         {selectionMode ? (
           <>
-            <button type="button" onClick={clearSelection} className="text-base leading-none text-neutral-600">
-              ×
+            <button type="button" onClick={clearSelection} className="text-neutral-600 hover:text-neutral-900">
+              <X size={16} />
             </button>
             <span className="font-medium text-neutral-700">
               {copiedFlash ? <Bi zh="已复制" en="Copied" /> : <>{selectedIds.size} <Bi zh="已选" en="selected" /></>}
             </span>
-            <div className="flex items-center gap-3 text-base">
-              <button type="button" onClick={copySelected} title={t("复制", "Copy")} aria-label={t("复制", "Copy")}>
-                📋
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={copySelected} title={t("复制", "Copy")} aria-label={t("复制", "Copy")} className="text-neutral-600 hover:text-purple-700">
+                <Copy size={16} />
               </button>
-              <button type="button" onClick={openForward} title={t("转发", "Forward")} aria-label={t("转发", "Forward")}>
-                ➡️
+              <button type="button" onClick={openForward} title={t("转发", "Forward")} aria-label={t("转发", "Forward")} className="text-neutral-600 hover:text-purple-700">
+                <Forward size={16} />
               </button>
               <button
                 type="button"
@@ -364,9 +438,9 @@ export function ChatRoom({
                 disabled={!canDeleteSelection}
                 title={t("删除", "Delete")}
                 aria-label={t("删除", "Delete")}
-                className="disabled:opacity-30"
+                className="text-red-600 hover:text-red-700 disabled:opacity-30"
               >
-                🗑
+                <Trash2 size={16} />
               </button>
             </div>
           </>
@@ -413,19 +487,27 @@ export function ChatRoom({
                 ) : (
                   <>
                     {m.attachmentUrl ? (
-                      <a
-                        href={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => selectionMode && e.preventDefault()}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy */}
-                        <img
+                      m.attachmentUrl.includes("/voice-") ? (
+                        <audio
+                          controls
                           src={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
-                          alt=""
-                          className="mb-1 max-h-48 w-full rounded-md object-cover"
+                          className="mb-1 h-10 w-56 max-w-full"
                         />
-                      </a>
+                      ) : (
+                        <a
+                          href={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => selectionMode && e.preventDefault()}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy */}
+                          <img
+                            src={`/api/chat/groups/${groupId}/photo?url=${encodeURIComponent(m.attachmentUrl)}`}
+                            alt=""
+                            className="mb-1 max-h-48 w-full rounded-md object-cover"
+                          />
+                        </a>
+                      )
                     ) : null}
                     {m.body ? (
                       <p className="whitespace-pre-wrap break-words">
@@ -493,50 +575,95 @@ export function ChatRoom({
             }}
             className="hidden"
           />
-          <button
-            type="button"
-            disabled={uploadingPhoto}
-            onClick={() => fileInputRef.current?.click()}
-            title={t("发送照片", "Send photo")}
-            aria-label={t("发送照片", "Send photo")}
-            className="shrink-0 rounded-md border border-neutral-300 px-2.5 py-2 text-sm hover:bg-neutral-50 disabled:opacity-50"
-          >
-            {uploadingPhoto ? "…" : "📷"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowEmoji((v) => !v)}
-            title={t("表情", "Emoji")}
-            aria-label={t("表情", "Emoji")}
-            className="shrink-0 rounded-md border border-neutral-300 px-2.5 py-2 text-sm hover:bg-neutral-50"
-          >
-            😀
-          </button>
-          <textarea
-            ref={textareaRef}
-            value={draft}
-            onChange={(e) => onDraftChange(e.target.value)}
-            onFocus={() => setShowEmoji(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey && mentionQuery === null) {
-                e.preventDefault();
-                send();
-              } else if (e.key === "Escape") {
-                setMentionQuery(null);
-              }
-            }}
-            rows={1}
-            placeholder={t("输入消息... 输入 @ 可以提及成员", "Type a message... type @ to mention someone")}
-            className="flex-1 resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
-          <button
-            type="button"
-            onClick={send}
-            disabled={sending || !draft.trim()}
-            className="shrink-0 rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
-          >
-            <Bi zh="发送" en="Send" />
-          </button>
+          {recording ? (
+            <div className="flex flex-1 items-center gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-red-600" />
+              <span className="tabular-nums">
+                {String(Math.floor(recordingSeconds / 60)).padStart(2, "0")}:{String(recordingSeconds % 60).padStart(2, "0")}
+              </span>
+              <span className="flex-1 text-xs text-red-500">
+                <Bi zh="录音中..." en="Recording..." />
+              </span>
+              <button
+                type="button"
+                onClick={() => stopRecording(false)}
+                title={t("取消", "Cancel")}
+                aria-label={t("取消", "Cancel")}
+                className="text-red-500 hover:text-red-700"
+              >
+                <X size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => stopRecording(true)}
+                title={t("发送", "Send")}
+                aria-label={t("发送", "Send")}
+                className="text-red-600 hover:text-red-800"
+              >
+                <Check size={18} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={uploadingPhoto}
+                onClick={() => fileInputRef.current?.click()}
+                title={t("发送照片", "Send photo")}
+                aria-label={t("发送照片", "Send photo")}
+                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
+              >
+                <Camera size={18} />
+              </button>
+              <button
+                type="button"
+                disabled={uploadingPhoto}
+                onClick={startRecording}
+                title={t("语音消息", "Voice message")}
+                aria-label={t("语音消息", "Voice message")}
+                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
+              >
+                <Mic size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowEmoji((v) => !v)}
+                title={t("表情", "Emoji")}
+                aria-label={t("表情", "Emoji")}
+                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700"
+              >
+                <Smile size={18} />
+              </button>
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(e) => onDraftChange(e.target.value)}
+                onFocus={() => setShowEmoji(false)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey && mentionQuery === null) {
+                    e.preventDefault();
+                    send();
+                  } else if (e.key === "Escape") {
+                    setMentionQuery(null);
+                  }
+                }}
+                rows={1}
+                placeholder={t("输入消息... 输入 @ 可以提及成员", "Type a message... type @ to mention someone")}
+                className="flex-1 resize-none rounded-md border border-neutral-300 px-3 py-2 text-sm"
+              />
+              <button
+                type="button"
+                onClick={send}
+                disabled={sending || !draft.trim()}
+                title={t("发送", "Send")}
+                aria-label={t("发送", "Send")}
+                className="flex shrink-0 items-center gap-1.5 rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white hover:bg-purple-800 disabled:opacity-50"
+              >
+                <Send size={14} />
+                <Bi zh="发送" en="Send" />
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -547,8 +674,8 @@ export function ChatRoom({
               <p className="text-sm font-medium">
                 <Bi zh="转发到..." en="Forward to..." />
               </p>
-              <button type="button" onClick={() => setForwardOpen(false)} className="text-neutral-500">
-                ×
+              <button type="button" onClick={() => setForwardOpen(false)} className="text-neutral-500 hover:text-neutral-700">
+                <X size={16} />
               </button>
             </div>
             <div className="max-h-80 overflow-y-auto">
@@ -584,11 +711,11 @@ function SelectDot({ selected }: { selected: boolean }) {
   return (
     <span
       className={cn(
-        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px]",
+        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
         selected ? "border-purple-600 bg-purple-600 text-white" : "border-neutral-300 bg-white text-transparent",
       )}
     >
-      ✓
+      <Check size={12} strokeWidth={3} />
     </span>
   );
 }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { Settings } from "lucide-react";
 import { and, asc, eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -57,9 +58,9 @@ export default async function ChatGroupPage({
         {isGroupAdmin ? (
           <Link
             href={`/chat/${id}/settings`}
-            className="rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+            className="flex items-center gap-1 rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
           >
-            ⚙️ <Bi zh="设置" en="Settings" />
+            <Settings size={14} /> <Bi zh="设置" en="Settings" />
           </Link>
         ) : null}
       </div>

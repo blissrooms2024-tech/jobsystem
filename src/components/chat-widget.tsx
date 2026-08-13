@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowLeft, MessageCircle, X } from "lucide-react";
 import { ChatRoom } from "@/components/chat-room";
 import { Bi } from "@/components/bi";
 import { useUnreadCount } from "@/lib/use-unread";
@@ -85,16 +86,16 @@ export function ChatWidget({ currentUserId }: { currentUserId: string }) {
           <div className="flex items-center justify-between border-b border-neutral-200 bg-purple-900 px-3 py-2 text-white">
             <div className="flex items-center gap-2">
               {activeGroupId ? (
-                <button type="button" onClick={backToList} className="text-lg leading-none hover:opacity-80">
-                  ←
+                <button type="button" onClick={backToList} className="hover:opacity-80">
+                  <ArrowLeft size={18} />
                 </button>
               ) : null}
               <p className="truncate text-sm font-medium">
                 {activeGroupId ? (conversation?.groupName ?? "…") : t("聊天", "Chat")}
               </p>
             </div>
-            <button type="button" onClick={() => setOpen(false)} className="text-lg leading-none hover:opacity-80">
-              ×
+            <button type="button" onClick={() => setOpen(false)} className="hover:opacity-80">
+              <X size={18} />
             </button>
           </div>
 
@@ -156,11 +157,11 @@ export function ChatWidget({ currentUserId }: { currentUserId: string }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-purple-700 text-2xl text-white shadow-lg hover:bg-purple-800"
+        className="relative flex h-14 w-14 items-center justify-center rounded-full bg-purple-700 text-white shadow-lg hover:bg-purple-800"
         title={t("聊天", "Chat")}
         aria-label={t("聊天", "Chat")}
       >
-        💬
+        <MessageCircle size={24} />
         {!open && unread > 0 ? (
           <span className="absolute -top-1 -right-1 rounded-full bg-red-600 px-1.5 py-0.5 text-xs font-bold text-white">
             {unread > 99 ? "99+" : unread}

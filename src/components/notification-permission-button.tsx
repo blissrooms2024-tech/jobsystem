@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useSyncExternalStore } from "react";
+import { Bell } from "lucide-react";
 import { useLang } from "@/lib/use-lang";
 
 // No native "permissionchange" event to subscribe to across browsers — this
@@ -31,9 +32,9 @@ export function NotificationPermissionButton() {
         await Notification.requestPermission();
         setDismissed(true);
       }}
-      className="rounded-md border border-neutral-300 px-3 py-1.5 text-xs hover:bg-neutral-50"
+      className="flex items-center gap-1.5 rounded-md border border-neutral-300 px-3 py-1.5 text-xs hover:bg-neutral-50"
     >
-      🔔 {lang === "en" ? "Enable notifications" : "开启通知"}
+      <Bell size={14} /> {lang === "en" ? "Enable notifications" : "开启通知"}
     </button>
   );
 }

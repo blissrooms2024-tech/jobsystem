@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { X } from "lucide-react";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
@@ -133,9 +134,9 @@ export function GroupSettingsForm({
                 onClick={() => removeMember(m.id)}
                 title={t("移除", "Remove")}
                 aria-label={t("移除", "Remove")}
-                className="rounded px-2 py-0.5 text-xs text-red-600 hover:bg-red-50 disabled:opacity-50"
+                className="rounded p-1 text-red-600 hover:bg-red-50 disabled:opacity-50"
               >
-                ✕
+                <X size={14} />
               </button>
             </div>
           ))}
