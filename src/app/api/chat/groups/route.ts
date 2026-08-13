@@ -13,7 +13,11 @@ export async function GET() {
   }
 
   const memberships = await db
-    .select({ groupId: chatGroupMembers.groupId, lastReadAt: chatGroupMembers.lastReadAt })
+    .select({
+      groupId: chatGroupMembers.groupId,
+      lastReadAt: chatGroupMembers.lastReadAt,
+      clearedAt: chatGroupMembers.clearedAt,
+    })
     .from(chatGroupMembers)
     .where(eq(chatGroupMembers.userId, session.user.id));
   const groupIds = memberships.map((m) => m.groupId);
@@ -21,6 +25,7 @@ export async function GET() {
     return NextResponse.json({ groups: [] });
   }
   const lastReadByGroup = new Map(memberships.map((m) => [m.groupId, m.lastReadAt]));
+  const clearedByGroup = new Map(memberships.map((m) => [m.groupId, m.clearedAt]));
 
   const groups = await db
     .select()
@@ -43,6 +48,8 @@ export async function GET() {
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
   const unreadByGroup = new Map<string, number>();
   for (const m of recentMessages) {
+    const clearedAt = clearedByGroup.get(m.groupId);
+    if (clearedAt && m.createdAt <= clearedAt) continue;
     if (!lastByGroup.has(m.groupId)) {
       const preview = m.deletedAt
         ? "此消息已删除"

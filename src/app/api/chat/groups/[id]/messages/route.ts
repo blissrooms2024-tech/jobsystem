@@ -5,13 +5,13 @@ import { db } from "@/db";
 import { chatGroupMembers, chatMessages, users } from "@/db/schema";
 import { auth } from "@/auth";
 
-async function isMember(groupId: string, userId: string) {
+async function getMembership(groupId: string, userId: string) {
   const [membership] = await db
     .select()
     .from(chatGroupMembers)
     .where(and(eq(chatGroupMembers.groupId, groupId), eq(chatGroupMembers.userId, userId)))
     .limit(1);
-  return !!membership;
+  return membership ?? null;
 }
 
 export async function GET(
@@ -24,7 +24,8 @@ export async function GET(
   }
 
   const { id } = await params;
-  if (!(await isMember(id, session.user.id))) {
+  const membership = await getMembership(id, session.user.id);
+  if (!membership) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -40,7 +41,11 @@ export async function GET(
     })
     .from(chatMessages)
     .innerJoin(users, eq(chatMessages.senderId, users.id))
-    .where(eq(chatMessages.groupId, id))
+    .where(
+      membership.clearedAt
+        ? and(eq(chatMessages.groupId, id), gt(chatMessages.createdAt, membership.clearedAt))
+        : eq(chatMessages.groupId, id),
+    )
     .orderBy(asc(chatMessages.createdAt))
     .limit(200);
 
@@ -93,7 +98,7 @@ export async function POST(
   }
 
   const { id } = await params;
-  if (!(await isMember(id, session.user.id))) {
+  if (!(await getMembership(id, session.user.id))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

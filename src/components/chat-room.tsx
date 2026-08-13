@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
-import { Camera, Check, Copy, Forward, Mic, Send, Smile, Trash2, X } from "lucide-react";
+import { Camera, Check, Copy, Eraser, Forward, Mic, Send, Smile, Trash2, X } from "lucide-react";
 import { Bi } from "@/components/bi";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/use-lang";
@@ -297,6 +297,21 @@ export function ChatRoom({
     recorder.stop();
   };
 
+  const clearChat = async () => {
+    if (
+      !confirm(
+        t(
+          "清空聊天记录？只会清空您自己看到的记录，其他人还是看得到。",
+          "Clear this chat? This only clears it from your own view — other members still see the full history.",
+        ),
+      )
+    ) {
+      return;
+    }
+    const res = await fetch(`/api/chat/groups/${groupId}/clear`, { method: "POST" });
+    if (res.ok) setMessages([]);
+  };
+
   const clearSelection = () => setSelectedIds(new Set());
 
   const toggleSelect = (id: string) => {
@@ -459,12 +474,23 @@ export function ChatRoom({
             <span>
               {members.length} <Bi zh="成员" en="members" />
             </span>
-            {onlineCount !== null ? (
-              <span className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                {onlineCount} <Bi zh="在线" en="online" />
-              </span>
-            ) : null}
+            <div className="flex items-center gap-3">
+              {onlineCount !== null ? (
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  {onlineCount} <Bi zh="在线" en="online" />
+                </span>
+              ) : null}
+              <button
+                type="button"
+                onClick={clearChat}
+                title={t("清空聊天记录", "Clear chat")}
+                aria-label={t("清空聊天记录", "Clear chat")}
+                className="text-neutral-400 hover:text-red-600"
+              >
+                <Eraser size={14} />
+              </button>
+            </div>
           </>
         )}
       </div>
