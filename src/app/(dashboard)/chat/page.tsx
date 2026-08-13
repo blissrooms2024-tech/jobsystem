@@ -13,11 +13,16 @@ export default async function ChatPage() {
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
 
   const memberships = await db
-    .select({ groupId: chatGroupMembers.groupId, lastReadAt: chatGroupMembers.lastReadAt })
+    .select({
+      groupId: chatGroupMembers.groupId,
+      lastReadAt: chatGroupMembers.lastReadAt,
+      clearedAt: chatGroupMembers.clearedAt,
+    })
     .from(chatGroupMembers)
     .where(eq(chatGroupMembers.userId, user.id));
   const groupIds = memberships.map((m) => m.groupId);
   const lastReadByGroup = new Map(memberships.map((m) => [m.groupId, m.lastReadAt]));
+  const clearedByGroup = new Map(memberships.map((m) => [m.groupId, m.clearedAt]));
 
   const groups = groupIds.length
     ? await db.select().from(chatGroups).where(inArray(chatGroups.id, groupIds)).orderBy(desc(chatGroups.createdAt))
@@ -39,6 +44,8 @@ export default async function ChatPage() {
     : [];
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
   for (const m of recentMessages) {
+    const clearedAt = clearedByGroup.get(m.groupId);
+    if (clearedAt && m.createdAt <= clearedAt) continue;
     if (!lastByGroup.has(m.groupId)) {
       const preview = m.deletedAt
         ? "此消息已删除"

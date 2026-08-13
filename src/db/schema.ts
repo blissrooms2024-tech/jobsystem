@@ -276,6 +276,10 @@ export const chatGroupMembers = pgTable(
     lastReadAt: timestamp("last_read_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    // Set when this member clears the chat (WhatsApp-style — local to them
+    // only). Messages at/before this point are hidden from their view;
+    // other members still see full history.
+    clearedAt: timestamp("cleared_at", { withTimezone: true }),
   },
   (t) => [uniqueIndex("chat_group_members_group_user_idx").on(t.groupId, t.userId)],
 );

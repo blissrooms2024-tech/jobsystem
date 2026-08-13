@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Settings } from "lucide-react";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { chatGroups, chatGroupMembers, chatMessages, users } from "@/db/schema";
@@ -39,7 +39,11 @@ export default async function ChatGroupPage({
     })
     .from(chatMessages)
     .innerJoin(users, eq(chatMessages.senderId, users.id))
-    .where(eq(chatMessages.groupId, id))
+    .where(
+      membership.clearedAt
+        ? and(eq(chatMessages.groupId, id), gt(chatMessages.createdAt, membership.clearedAt))
+        : eq(chatMessages.groupId, id),
+    )
     .orderBy(asc(chatMessages.createdAt))
     .limit(200);
 
