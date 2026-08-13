@@ -36,7 +36,18 @@ export async function POST(
           throw new Error("Invalid upload path");
         }
         return {
-          allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/gif"],
+          allowedContentTypes: [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/heic",
+            "image/gif",
+            // Voice messages — container varies by browser's MediaRecorder support.
+            "audio/webm",
+            "audio/webm;codecs=opus",
+            "audio/mp4",
+            "audio/ogg",
+          ],
           maximumSizeInBytes: 15 * 1024 * 1024,
           addRandomSuffix: true,
         };

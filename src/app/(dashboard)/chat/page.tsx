@@ -40,7 +40,13 @@ export default async function ChatPage() {
   const lastByGroup = new Map<string, { body: string; createdAt: Date }>();
   for (const m of recentMessages) {
     if (!lastByGroup.has(m.groupId)) {
-      const preview = m.deletedAt ? "此消息已删除" : m.attachmentUrl && !m.body ? "[照片]" : m.body;
+      const preview = m.deletedAt
+        ? "此消息已删除"
+        : m.attachmentUrl && !m.body
+          ? m.attachmentUrl.includes("/voice-")
+            ? "[语音]"
+            : "[照片]"
+          : m.body;
       lastByGroup.set(m.groupId, { body: preview, createdAt: m.createdAt });
     }
   }

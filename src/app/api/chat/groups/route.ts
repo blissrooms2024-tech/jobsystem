@@ -44,7 +44,13 @@ export async function GET() {
   const unreadByGroup = new Map<string, number>();
   for (const m of recentMessages) {
     if (!lastByGroup.has(m.groupId)) {
-      const preview = m.deletedAt ? "此消息已删除" : m.attachmentUrl && !m.body ? "[照片]" : m.body;
+      const preview = m.deletedAt
+        ? "此消息已删除"
+        : m.attachmentUrl && !m.body
+          ? m.attachmentUrl.includes("/voice-")
+            ? "[语音]"
+            : "[照片]"
+          : m.body;
       lastByGroup.set(m.groupId, { body: preview, createdAt: m.createdAt });
     }
     const lastRead = lastReadByGroup.get(m.groupId);
