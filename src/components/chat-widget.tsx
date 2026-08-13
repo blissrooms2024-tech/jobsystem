@@ -82,7 +82,7 @@ export function ChatWidget({ currentUserId }: { currentUserId: string }) {
   return (
     <div className="fixed right-6 bottom-6 z-50 hidden sm:block">
       {open ? (
-        <div className="mb-3 flex h-[28rem] w-80 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl">
+        <div className="mb-3 flex h-[28rem] w-96 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-xl">
           <div className="flex items-center justify-between border-b border-neutral-200 bg-purple-900 px-3 py-2 text-white">
             <div className="flex items-center gap-2">
               {activeGroupId ? (
