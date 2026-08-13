@@ -28,6 +28,33 @@ const RECALL_WINDOW_MS = 5 * 60 * 1000;
 const LONG_PRESS_MS = 450;
 const EMOJIS = ["😀", "😂", "😍", "👍", "🙏", "🎉", "😢", "😡", "❤️", "🔥", "👏", "🤔", "😅", "🙌", "💯", "✅"];
 
+/** Tries the modern Clipboard API first, falls back to a hidden-textarea
+ * execCommand copy for browsers/contexts where that's blocked or absent. */
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // fall through to legacy fallback
+  }
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return ok;
+  } catch {
+    return false;
+  }
+}
+
 /** Renders @Name mentions in bold — matched against the group's member names. */
 function MessageBody({ body, memberNames }: { body: string; memberNames: string[] }) {
   if (memberNames.length === 0) return <>{body}</>;
@@ -208,9 +235,11 @@ export function ChatRoom({
   };
 
   const startLongPress = (id: string) => {
-    longPressFired.current = false;
     cancelLongPress();
     longPressTimer.current = setTimeout(() => {
+      // The browser still fires a synthetic click when the finger/mouse
+      // lifts after this — swallow exactly that one so it doesn't
+      // immediately toggle the selection we just started back off.
       longPressFired.current = true;
       setSelectedIds((prev) => new Set(prev).add(id));
     }, LONG_PRESS_MS);
@@ -223,9 +252,14 @@ export function ChatRoom({
     }
   };
 
-  const onBubblePointerUp = (id: string) => {
-    cancelLongPress();
-    if (longPressFired.current) return; // long-press already started selection
+  // Plain click handles every toggle after the first long-press (including
+  // selecting a 2nd, 3rd, ... message) — far more reliable across devices
+  // than trying to pair up pointerdown/pointerup ourselves.
+  const onBubbleClick = (id: string) => {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
     if (selectionMode) toggleSelect(id);
   };
 
@@ -245,14 +279,11 @@ export function ChatRoom({
       .map((m) => m.body || (m.attachmentUrl ? "[photo]" : ""))
       .filter(Boolean)
       .join("\n");
-    if (text && navigator.clipboard) {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopiedFlash(true);
-        setTimeout(() => setCopiedFlash(false), 1200);
-      } catch {
-        // clipboard access denied — nothing more we can do here
-      }
+    if (!text) return;
+    const ok = await copyTextToClipboard(text);
+    if (ok) {
+      setCopiedFlash(true);
+      setTimeout(() => setCopiedFlash(false), 1200);
     }
   };
 
@@ -362,9 +393,10 @@ export function ChatRoom({
               {selectionMode && !mine ? <SelectDot selected={selected} /> : null}
               <div
                 onPointerDown={() => startLongPress(m.id)}
-                onPointerUp={() => onBubblePointerUp(m.id)}
+                onPointerUp={cancelLongPress}
                 onPointerLeave={cancelLongPress}
                 onPointerCancel={cancelLongPress}
+                onClick={() => onBubbleClick(m.id)}
                 onContextMenu={(e) => e.preventDefault()}
                 style={{ WebkitTouchCallout: "none" }}
                 className={cn(
