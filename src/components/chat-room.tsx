@@ -463,18 +463,24 @@ export function ChatRoom({
           const mine = m.senderId === currentUserId;
           const selected = selectedIds.has(m.id);
           return (
-            <div key={m.id} className={mine ? "flex items-center justify-end gap-1.5" : "flex items-center justify-start gap-1.5"}>
+            <div
+              key={m.id}
+              onPointerDown={() => startLongPress(m.id)}
+              onPointerUp={cancelLongPress}
+              onPointerLeave={cancelLongPress}
+              onPointerCancel={cancelLongPress}
+              onClick={() => onBubbleClick(m.id)}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ WebkitTouchCallout: "none" }}
+              className={cn(
+                "flex cursor-pointer items-center gap-1.5 select-none",
+                mine ? "justify-end" : "justify-start",
+              )}
+            >
               {selectionMode && !mine ? <SelectDot selected={selected} /> : null}
               <div
-                onPointerDown={() => startLongPress(m.id)}
-                onPointerUp={cancelLongPress}
-                onPointerLeave={cancelLongPress}
-                onPointerCancel={cancelLongPress}
-                onClick={() => onBubbleClick(m.id)}
-                onContextMenu={(e) => e.preventDefault()}
-                style={{ WebkitTouchCallout: "none" }}
                 className={cn(
-                  "max-w-[75%] rounded-lg px-3 py-2 text-sm select-none",
+                  "max-w-[75%] rounded-lg px-3 py-2 text-sm",
                   selected && "ring-2 ring-purple-500",
                   mine ? "bg-purple-700 text-white" : "bg-neutral-100 text-neutral-900",
                 )}
@@ -611,9 +617,9 @@ export function ChatRoom({
                 onClick={() => fileInputRef.current?.click()}
                 title={t("发送照片", "Send photo")}
                 aria-label={t("发送照片", "Send photo")}
-                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
+                className="shrink-0 rounded-md border border-neutral-300 p-1.5 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
               >
-                <Camera size={18} />
+                <Camera size={15} />
               </button>
               <button
                 type="button"
@@ -621,18 +627,18 @@ export function ChatRoom({
                 onClick={startRecording}
                 title={t("语音消息", "Voice message")}
                 aria-label={t("语音消息", "Voice message")}
-                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
+                className="shrink-0 rounded-md border border-neutral-300 p-1.5 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700 disabled:opacity-50"
               >
-                <Mic size={18} />
+                <Mic size={15} />
               </button>
               <button
                 type="button"
                 onClick={() => setShowEmoji((v) => !v)}
                 title={t("表情", "Emoji")}
                 aria-label={t("表情", "Emoji")}
-                className="shrink-0 rounded-md border border-neutral-300 p-2 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700"
+                className="shrink-0 rounded-md border border-neutral-300 p-1.5 text-neutral-600 hover:bg-neutral-50 hover:text-purple-700"
               >
-                <Smile size={18} />
+                <Smile size={15} />
               </button>
               <textarea
                 ref={textareaRef}
