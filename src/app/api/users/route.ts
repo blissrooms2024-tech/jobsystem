@@ -56,6 +56,6 @@ export async function POST(request: Request) {
 
   // Temp password is only ever returned here, in the create response — it is
   // never stored in plaintext or logged, and the account must change it on
-  // first login (mustChangePassword).
-  return NextResponse.json({ user: created, tempPassword }, { status: 201 });
+  // first login (mustChangePassword). passwordHash never leaves the server.
+  return NextResponse.json({ user: { ...created, passwordHash: undefined }, tempPassword }, { status: 201 });
 }
