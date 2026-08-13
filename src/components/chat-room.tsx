@@ -423,7 +423,13 @@ export function ChatRoom({
               <X size={16} />
             </button>
             <span className="font-medium text-neutral-700">
-              {copiedFlash ? <Bi zh="已复制" en="Copied" /> : <>{selectedIds.size} <Bi zh="已选" en="selected" /></>}
+              {copiedFlash ? (
+                <Bi zh="已复制" en="Copied" />
+              ) : !canDeleteSelection ? (
+                <Bi zh="包含无权限删除的消息" en="Includes messages you can't delete" />
+              ) : (
+                <>{selectedIds.size} <Bi zh="已选" en="selected" /></>
+              )}
             </span>
             <div className="flex items-center gap-3">
               <button type="button" onClick={copySelected} title={t("复制", "Copy")} aria-label={t("复制", "Copy")} className="text-neutral-600 hover:text-purple-700">
@@ -436,7 +442,11 @@ export function ChatRoom({
                 type="button"
                 onClick={deleteSelected}
                 disabled={!canDeleteSelection}
-                title={t("删除", "Delete")}
+                title={
+                  canDeleteSelection
+                    ? t("删除", "Delete")
+                    : t("只能删除自己 5 分钟内的消息，或您是群管理员", "You can only delete your own messages within 5 minutes, or if you're the group admin")
+                }
                 aria-label={t("删除", "Delete")}
                 className="text-red-600 hover:text-red-700 disabled:opacity-30"
               >
