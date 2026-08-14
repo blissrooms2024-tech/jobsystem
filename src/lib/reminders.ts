@@ -3,9 +3,8 @@ import { db } from "@/db";
 import { appSettings, jobs, units, users } from "@/db/schema";
 import { sendMail } from "@/lib/mailer";
 import { appUrl } from "@/lib/app-url";
+import { ADMIN_NOTIFY_EMAIL } from "@/lib/admin-notify";
 import { jobEndInstant, jobStartInstant, myToday } from "@/lib/job-timing";
-
-const PAYROLL_ADMIN_EMAIL = "blissrooms2024@gmail.com";
 
 const MY_TZ_OFFSET = "+08:00"; // Malaysia is fixed UTC+8, no DST
 
@@ -150,7 +149,7 @@ export async function runReminders() {
 
 /**
  * Payroll is paid out every Tuesday before 12pm, so admin needs it settled
- * by Monday. Nudges PAYROLL_ADMIN_EMAIL once, the first time this runs on a
+ * by Monday. Nudges ADMIN_NOTIFY_EMAIL once, the first time this runs on a
  * Monday each week — idempotent via appSettings so a cron firing every
  * ~30 min doesn't send it repeatedly the same day.
  */
@@ -168,7 +167,7 @@ export async function sendPayrollReminder() {
 
   const link = appUrl();
   await sendMail({
-    to: PAYROLL_ADMIN_EMAIL,
+    to: ADMIN_NOTIFY_EMAIL,
     subject: "Payroll reminder — settle today, payout is tomorrow before 12pm",
     html: `
       <p>Reminder: payroll is paid out every Tuesday before 12pm.</p>
@@ -227,12 +226,33 @@ export async function sweepInactiveUsers() {
     .where(and(eq(users.active, true), inArray(users.role, ["employee", "supervisor"])));
 
   let deactivated = 0;
+  const deactivatedNames: string[] = [];
   for (const u of candidates) {
     const lastActivity = u.lastSeenAt ?? u.createdAt;
     if (lastActivity < cutoff) {
       await db.update(users).set({ active: false }).where(eq(users.id, u.id));
       deactivated++;
+      deactivatedNames.push(`${u.staffId ?? u.userCode} · ${u.name}`);
     }
   }
+
+  if (deactivatedNames.length > 0) {
+    try {
+      const link = appUrl();
+      await sendMail({
+        to: ADMIN_NOTIFY_EMAIL,
+        subject: `${deactivatedNames.length} employee(s) auto-deactivated for inactivity`,
+        html: `
+          <p>These accounts haven't opened the app in ${INACTIVITY_DAYS}+ days and were automatically set to Inactive:</p>
+          <ul>${deactivatedNames.map((n) => `<li>${n}</li>`).join("")}</ul>
+          <p>If this was expected (e.g. resigned staff), no action needed. Otherwise, reactivate them from the Users page.</p>
+          ${link ? `<p><a href="${link}/users">Go to Users</a></p>` : ""}
+        `,
+      });
+    } catch (err) {
+      console.error("Failed to notify admin of auto-deactivations", err);
+    }
+  }
+
   return deactivated;
 }
