@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useLang } from "@/lib/use-lang";
 
 export function JobRowActions({
@@ -44,6 +46,14 @@ export function JobRowActions({
 
   return (
     <div className="flex flex-wrap items-center gap-1">
+      <Link
+        href={`/jobs/${jobId}/edit`}
+        title={t("编辑", "Edit")}
+        aria-label={t("编辑", "Edit")}
+        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+      >
+        <Pencil size={14} />
+      </Link>
       {status !== "completed" && status !== "cancelled" ? (
         <button
           type="button"
