@@ -33,7 +33,7 @@ export function UserRow({
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
   const [resetInfo, setResetInfo] = useState<{ tempPassword: string; emailSent: boolean } | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<{ zh: string; en: string } | null>(null);
 
   return (
     <tr
@@ -115,7 +115,10 @@ export function UserRow({
                 const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
                 if (!res.ok) {
                   const data = await res.json().catch(() => ({}));
-                  setDeleteError(typeof data.error === "string" ? data.error : t("删除失败", "Failed to delete"));
+                  setDeleteError({
+                    zh: typeof data.errorZh === "string" ? data.errorZh : "删除失败",
+                    en: typeof data.errorEn === "string" ? data.errorEn : "Failed to delete",
+                  });
                   return;
                 }
                 router.refresh();
@@ -140,7 +143,11 @@ export function UserRow({
             </span>
           </p>
         ) : null}
-        {deleteError ? <p className="mt-1 text-xs text-red-600">{deleteError}</p> : null}
+        {deleteError ? (
+          <p className="mt-1 max-w-[200px] text-xs whitespace-normal text-red-600">
+            <Bi zh={deleteError.zh} en={deleteError.en} />
+          </p>
+        ) : null}
       </td>
     </tr>
   );
