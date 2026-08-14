@@ -13,6 +13,7 @@ const bodySchema = z.object({
   emergencyContact: z.string().optional(),
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),
+  fbProfileLink: z.string().optional(),
 });
 
 // Self-service profile editing — any logged-in user can update their own
@@ -43,6 +44,7 @@ export async function PATCH(request: Request) {
         : {}),
       ...(data.bankName !== undefined ? { bankName: data.bankName || null } : {}),
       ...(data.bankAccount !== undefined ? { bankAccount: data.bankAccount || null } : {}),
+      ...(data.fbProfileLink !== undefined ? { fbProfileLink: data.fbProfileLink || null } : {}),
     })
     .where(eq(users.id, session.user.id))
     .returning();

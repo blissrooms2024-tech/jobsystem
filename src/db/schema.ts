@@ -88,6 +88,9 @@ export const users = pgTable(
     emergencyContact: text("emergency_contact"),
     bankName: varchar("bank_name", { length: 100 }),
     bankAccount: varchar("bank_account", { length: 50 }),
+    // Posting Agents post updates on their personal FB profile — admins
+    // need the link on file to check the posts actually went up.
+    fbProfileLink: text("fb_profile_link"),
     payType: payTypeEnum("pay_type").default("per_job"),
     payRate: numeric("pay_rate", { precision: 10, scale: 2 }),
     needCheckin: boolean("need_checkin").notNull().default(true),

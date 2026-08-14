@@ -39,6 +39,8 @@ export default async function AccountPage() {
             emergencyContact={me.emergencyContact}
             bankName={me.bankName}
             bankAccount={me.bankAccount}
+            staffType={me.staffType}
+            fbProfileLink={me.fbProfileLink}
           />
         </div>
       ) : null}

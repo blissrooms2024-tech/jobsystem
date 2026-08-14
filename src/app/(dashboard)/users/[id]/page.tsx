@@ -44,6 +44,7 @@ export default async function UserDetailPage({
           emergencyContact={user.emergencyContact}
           bankName={user.bankName}
           bankAccount={user.bankAccount}
+          fbProfileLink={user.fbProfileLink}
           payRate={user.payRate}
           needCheckin={user.needCheckin}
           donePhotos={user.donePhotos}
@@ -59,6 +60,18 @@ export default async function UserDetailPage({
           <Field labelZh="紧急联系人" labelEn="Emergency" value={user.emergencyContact} full />
           <Field labelZh="银行" labelEn="Bank" value={user.bankName} />
           <Field labelZh="银行账号" labelEn="Account" value={user.bankAccount} />
+          {user.fbProfileLink ? (
+            <div className="col-span-2">
+              <dt className="text-xs text-neutral-400">
+                <Bi zh="Facebook 主页链接" en="Facebook profile link" />
+              </dt>
+              <dd className="font-medium">
+                <a href={user.fbProfileLink} target="_blank" rel="noreferrer" className="text-purple-700 hover:underline">
+                  {user.fbProfileLink}
+                </a>
+              </dd>
+            </div>
+          ) : null}
         </dl>
       )}
     </div>
