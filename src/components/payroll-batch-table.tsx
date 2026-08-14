@@ -198,7 +198,7 @@ export function PayrollBatchTable() {
               <option value="">全部 All employees</option>
               {rows?.map((r) => (
                 <option key={r.userId} value={r.userId}>
-                  {r.name}
+                  {r.staffId ? `${r.staffId} · ` : ""}{r.name}
                 </option>
               ))}
             </select>
@@ -336,7 +336,10 @@ function PayrollRow({
     <div className="rounded-lg border border-neutral-200 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="font-medium">{row.name}</p>
+          <p className="font-medium">
+            {row.staffId ? <span className="text-xs font-normal text-neutral-400">{row.staffId}</span> : null}{" "}
+            {row.name}
+          </p>
           <p className="text-xs text-neutral-400">
             {row.staffType ?? "-"} · {row.payType === "base" ? "Monthly" : "PerJob"}
             {row.payrollCode ? ` · ${row.payrollCode}` : ""}

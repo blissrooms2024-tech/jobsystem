@@ -23,7 +23,7 @@ export default async function UserDetailPage({
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs text-neutral-400">{user.userCode}</p>
+        <p className="text-xs text-neutral-400">{user.staffId ?? user.userCode}</p>
         <h1 className="text-lg font-semibold">{user.name}</h1>
         <p className="text-sm text-neutral-500">
           {user.username} · <span className="capitalize">{user.role}</span> ·{" "}

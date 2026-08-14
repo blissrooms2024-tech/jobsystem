@@ -8,6 +8,7 @@ import { users } from "@/db/schema";
 import { nextUserCode } from "@/lib/user-code";
 import { sendMail } from "@/lib/mailer";
 import { appUrl } from "@/lib/app-url";
+import { ADMIN_NOTIFY_EMAIL } from "@/lib/admin-notify";
 
 const bodySchema = z.object({
   name: z.string().min(1, "请填写姓名 Please enter your name"),
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
   try {
     const link = appUrl();
     await sendMail({
-      to: "blissrooms2024@gmail.com",
+      to: ADMIN_NOTIFY_EMAIL,
       subject: "New employee signup request — approval needed",
       html: `
         <p>${data.name} (${data.username}) just requested an account on the Bliss Rooms Job System.</p>
