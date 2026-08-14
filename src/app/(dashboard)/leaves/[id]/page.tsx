@@ -39,7 +39,12 @@ export default async function LeaveDetailPage({
     <div className="max-w-lg space-y-6">
       <div>
         <p className="text-xs text-neutral-400">{l.leaveCode}</p>
-        <h1 className="text-lg font-semibold">{row.employee.name} · {l.type}</h1>
+        <h1 className="text-lg font-semibold">
+          <span className="text-sm font-normal text-neutral-400">
+            {row.employee.staffId ?? row.employee.userCode}
+          </span>{" "}
+          {row.employee.name} · {l.type}
+        </h1>
         <p className="text-sm text-neutral-500">
           {l.startDate} ~ {l.endDate} ({l.days} <Bi zh="天" en="days" />)
         </p>

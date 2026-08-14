@@ -12,6 +12,8 @@ type Row = {
   id: string;
   payrollCode: string;
   employeeName: string;
+  employeeStaffId: string | null;
+  employeeUserCode: string;
   periodStart: string;
   periodEnd: string;
   jobsPay: string;
@@ -36,7 +38,11 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (month && r.periodStart.slice(0, 7) !== month) return false;
-      if (search && !r.employeeName.toLowerCase().includes(search.toLowerCase())) return false;
+      if (
+        search &&
+        ![r.employeeName, r.employeeStaffId].filter(Boolean).some((v) => String(v).toLowerCase().includes(search.toLowerCase()))
+      )
+        return false;
       return true;
     });
   }, [rows, search, month]);
@@ -92,7 +98,10 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
                       {r.payrollCode}
                     </Link>
                   </td>
-                  <td className="px-3 py-2">{r.employeeName}</td>
+                  <td className="px-3 py-2">
+                    <span className="text-xs text-neutral-400">{r.employeeStaffId ?? r.employeeUserCode}</span>{" "}
+                    {r.employeeName}
+                  </td>
                   <td className="px-3 py-2">
                     {r.periodStart} ~ {r.periodEnd}
                   </td>

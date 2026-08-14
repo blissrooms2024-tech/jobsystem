@@ -68,6 +68,8 @@ export default async function JobsPage({
       pay: jobs.pay,
       unitName: units.unitName,
       assigneeName: users.name,
+      assigneeStaffId: users.staffId,
+      assigneeUserCode: users.userCode,
     })
     .from(jobs)
     .leftJoin(units, eq(jobs.unitId, units.id))

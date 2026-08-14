@@ -35,6 +35,8 @@ export default async function LeavesPage() {
       days: leaves.days,
       status: leaves.status,
       employeeName: users.name,
+      employeeStaffId: users.staffId,
+      employeeUserCode: users.userCode,
     })
     .from(leaves)
     .innerJoin(users, eq(leaves.userId, users.id))
