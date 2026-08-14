@@ -53,7 +53,11 @@ export default async function DashboardLayout({
         </div>
         <DashboardNav role={user.role} />
       </aside>
-      <div className="flex min-h-screen flex-1 flex-col">
+      {/* min-w-0 is required here — without it, a flex child containing a
+          wide element (like a table with min-w-[...]) forces this whole
+          column wider than the viewport instead of scrolling internally,
+          pushing the sidebar/page off to the side. */}
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between bg-white px-4 py-3 sm:bg-purple-900 sm:px-6">
           <MobileNav role={user.role} />
           <div className="ml-auto flex items-center gap-3">
@@ -82,7 +86,7 @@ export default async function DashboardLayout({
         {/* Extra bottom padding on desktop so the floating chat launcher
             (fixed bottom-right) never sits on top of the last row's action
             buttons in a long table. */}
-        <main className="flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-24">
+        <main className="min-w-0 flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-24">
           {blockForIncompleteProfile ? (
             <div className="max-w-2xl space-y-4">
               <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
