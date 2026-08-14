@@ -46,14 +46,14 @@ export function JobRowActions({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-1">
+    <div className="flex flex-nowrap items-center gap-0.5">
       <Link
         href={`/jobs/${jobId}/edit`}
         title={t("编辑", "Edit")}
         aria-label={t("编辑", "Edit")}
-        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+        className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-neutral-50"
       >
-        <Pencil size={14} />
+        <Pencil size={12} />
       </Link>
       {status !== "completed" && status !== "cancelled" ? (
         <button
@@ -64,7 +64,7 @@ export function JobRowActions({
           onClick={() => {
             if (confirm("取消这个任务？")) call("POST", "/cancel");
           }}
-          className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+          className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-neutral-50"
         >
           🚫
         </button>
@@ -78,7 +78,7 @@ export function JobRowActions({
           onClick={() => {
             if (confirm("重开这个任务？")) call("POST", "/reopen");
           }}
-          className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+          className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-neutral-50"
         >
           ↩️
         </button>
@@ -92,7 +92,7 @@ export function JobRowActions({
         }}
         title={t("复制到明天", "Duplicate to tomorrow")}
         aria-label={t("复制到明天", "Duplicate to tomorrow")}
-        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+        className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-neutral-50"
       >
         📋
       </button>
@@ -105,7 +105,7 @@ export function JobRowActions({
           onClick={() => {
             if (confirm("删除这个任务？此操作无法撤销。")) call("DELETE", "");
           }}
-          className="rounded-md border border-red-200 px-1.5 py-1 text-sm text-red-700 hover:bg-red-50"
+          className="rounded-md border border-red-200 px-1 py-0.5 text-xs text-red-700 hover:bg-red-50"
         >
           🗑️
         </button>
