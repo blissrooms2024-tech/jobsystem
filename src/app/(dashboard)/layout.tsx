@@ -79,7 +79,10 @@ export default async function DashboardLayout({
             <Bi zh="请先修改初始密码" en="Please change your temporary password" /> →
           </a>
         ) : null}
-        <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+        {/* Extra bottom padding on desktop so the floating chat launcher
+            (fixed bottom-right) never sits on top of the last row's action
+            buttons in a long table. */}
+        <main className="flex-1 overflow-x-hidden p-4 pb-6 sm:p-6 sm:pb-24">
           {blockForIncompleteProfile ? (
             <div className="max-w-2xl space-y-4">
               <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
