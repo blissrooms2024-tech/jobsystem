@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
 import { users } from "@/db/schema";
@@ -71,30 +71,23 @@ export async function POST(request: Request) {
     })
     .returning({ id: users.id });
 
-  // Best-effort nudge to admins/boss so a signup doesn't sit unnoticed —
-  // never blocks the signup itself.
+  // Best-effort nudge to the admin inbox so a signup doesn't sit unnoticed —
+  // never blocks the signup itself. Sent to a fixed address rather than
+  // looked up from boss/admin user records, so it doesn't depend on those
+  // accounts having an email on file.
   try {
-    const approvers = await db
-      .select({ email: users.email })
-      .from(users)
-      .where(inArray(users.role, ["boss", "admin"]));
     const link = appUrl();
-    await Promise.all(
-      approvers
-        .filter((a) => a.email)
-        .map((a) =>
-          sendMail({
-            to: a.email!,
-            subject: "New employee signup request",
-            html: `
-              <p>${data.name} (${data.username}) just requested an account on the Bliss Rooms Job System.</p>
-              ${link ? `<p><a href="${link}/users/pending">Review pending signups</a></p>` : ""}
-            `,
-          }),
-        ),
-    );
+    await sendMail({
+      to: "blissrooms2024@gmail.com",
+      subject: "New employee signup request — approval needed",
+      html: `
+        <p>${data.name} (${data.username}) just requested an account on the Bliss Rooms Job System.</p>
+        <p>Please review and approve it before they can log in.</p>
+        ${link ? `<p><a href="${link}/users/pending">Review pending signups</a></p>` : ""}
+      `,
+    });
   } catch (err) {
-    console.error("Failed to notify admins of new signup", err);
+    console.error("Failed to notify admin of new signup", err);
   }
 
   return NextResponse.json({ id: created.id }, { status: 201 });
