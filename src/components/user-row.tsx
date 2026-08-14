@@ -32,7 +32,7 @@ export function UserRow({
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
-  const [resetInfo, setResetInfo] = useState<string | null>(null);
+  const [resetInfo, setResetInfo] = useState<{ tempPassword: string; emailSent: boolean } | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   return (
@@ -89,7 +89,7 @@ export function UserRow({
                 const res = await fetch(`/api/users/${id}/reset-password`, { method: "POST" });
                 if (res.ok) {
                   const data = await res.json();
-                  setResetInfo(data.tempPassword);
+                  setResetInfo({ tempPassword: data.tempPassword, emailSent: data.emailSent });
                 }
               });
             }}
@@ -136,7 +136,16 @@ export function UserRow({
         </div>
         {resetInfo ? (
           <p className="mt-1 text-xs">
-            新密码 <code className="rounded bg-neutral-100 px-1">{resetInfo}</code>
+            <Bi zh="新密码" en="New password" />{" "}
+            <code className="rounded bg-neutral-100 px-1">{resetInfo.tempPassword}</code>
+            <br />
+            <span className={resetInfo.emailSent ? "text-emerald-700" : "text-amber-700"}>
+              {resetInfo.emailSent ? (
+                <Bi zh="已发邮件通知员工" en="Emailed to the employee" />
+              ) : (
+                <Bi zh="邮件未发送，请手动告知" en="Email not sent — please tell them yourself" />
+              )}
+            </span>
           </p>
         ) : null}
         {deleteError ? <p className="mt-1 text-xs text-red-600">{deleteError}</p> : null}
