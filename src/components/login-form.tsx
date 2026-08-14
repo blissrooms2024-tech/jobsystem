@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { signInWithCredentials } from "@/app/login/actions";
 import { Bi } from "@/components/bi";
@@ -78,6 +79,11 @@ export function LoginForm() {
       >
         {isPending ? <Bi zh="登录中..." en="Signing in..." /> : <Bi zh="登录" en="Sign in" />}
       </button>
+      <p className="text-center text-sm">
+        <Link href="/signup" className="text-purple-700 underline">
+          <Bi zh="还没有账号？注册" en="No account yet? Sign up" />
+        </Link>
+      </p>
     </form>
   );
 }

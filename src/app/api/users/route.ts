@@ -7,7 +7,7 @@ import { requireRole } from "@/lib/api-auth";
 import { generateTempPassword } from "@/lib/passwords";
 import { nextUserCode } from "@/lib/user-code";
 import { sendMail } from "@/lib/mailer";
-import { appUrl } from "@/lib/app-url";
+import { welcomeEmailHtml } from "@/lib/welcome-email";
 
 const bodySchema = z.object({
   name: z.string().min(1),
@@ -22,20 +22,6 @@ const bodySchema = z.object({
   needCheckin: z.boolean().default(true),
   donePhotos: z.coerce.number().int().min(0).max(10).default(0),
 });
-
-function welcomeEmailHtml(name: string, username: string, tempPassword: string) {
-  const link = appUrl() || "";
-  return `
-    <p>Hi ${name},</p>
-    <p>An account has been created for you on the Bliss Rooms Job System.</p>
-    <p>
-      Username: <strong>${username}</strong><br />
-      Temporary password: <strong>${tempPassword}</strong>
-    </p>
-    <p>You will be asked to set a new password the first time you log in.</p>
-    ${link ? `<p><a href="${link}/login">Log in here</a></p>` : ""}
-  `;
-}
 
 export async function POST(request: Request) {
   const auth = await requireRole("boss", "admin");

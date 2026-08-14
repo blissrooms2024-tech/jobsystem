@@ -5,18 +5,20 @@ const ADMIN_ROLES = new Set(["boss", "admin"]);
 const ADMIN_ONLY_PREFIXES = ["/users", "/units", "/job-types"];
 const APPROVAL_ROLES = new Set(["boss", "admin", "supervisor"]);
 
+const PUBLIC_PAGES = new Set(["/login", "/signup"]);
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isLoginPage = pathname === "/login";
+  const isPublicPage = PUBLIC_PAGES.has(pathname);
   const isAuthed = !!req.auth?.user;
 
-  if (!isAuthed && !isLoginPage) {
+  if (!isAuthed && !isPublicPage) {
     const loginUrl = new URL("/login", req.nextUrl.origin);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthed && isLoginPage) {
+  if (isAuthed && isPublicPage) {
     return NextResponse.redirect(new URL("/", req.nextUrl.origin));
   }
 
