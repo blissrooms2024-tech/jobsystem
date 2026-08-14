@@ -91,6 +91,11 @@ export const users = pgTable(
     // Posting Agents post updates on their personal FB profile — admins
     // need the link on file to check the posts actually went up.
     fbProfileLink: text("fb_profile_link"),
+    // Self-service signups land here with active=false so authorize() in
+    // auth.ts already refuses login without any extra check — this flag is
+    // purely so the Users list/admin UI can tell "pending approval" apart
+    // from "deactivated employee" (both have active=false).
+    pendingApproval: boolean("pending_approval").notNull().default(false),
     payType: payTypeEnum("pay_type").default("per_job"),
     payRate: numeric("pay_rate", { precision: 10, scale: 2 }),
     needCheckin: boolean("need_checkin").notNull().default(true),
