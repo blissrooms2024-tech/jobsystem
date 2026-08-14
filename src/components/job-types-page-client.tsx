@@ -62,12 +62,13 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
       ) : null}
 
       <div className="overflow-x-auto rounded-lg border border-neutral-200">
-        <table className="w-full max-w-lg text-left text-sm">
+        <table className="w-full max-w-2xl text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
               <th className="px-3 py-2"><Bi zh="名称" en="Name" /></th>
               <th className="px-3 py-2"><Bi zh="单价" en="Pay" /></th>
               <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
             </tr>
           </thead>
           <tbody>
