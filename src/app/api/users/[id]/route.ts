@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/db";
 import { chatGroups, payroll, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
+import { bilingualError } from "@/lib/api-error";
 
 const bodySchema = z.object({
   active: z.boolean().optional(),
@@ -79,10 +80,7 @@ export async function DELETE(
 
   const { id } = await params;
   if (id === auth.session.user.id) {
-    return NextResponse.json(
-      { error: "不能删除自己的账号 You can't delete your own account" },
-      { status: 409 },
-    );
+    return bilingualError("不能删除自己的账号", "You can't delete your own account", 409);
   }
 
   const [existing] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -94,23 +92,19 @@ export async function DELETE(
   // block the delete rather than silently losing or cascading them.
   const [payrollRow] = await db.select({ id: payroll.id }).from(payroll).where(eq(payroll.userId, id)).limit(1);
   if (payrollRow) {
-    return NextResponse.json(
-      {
-        error:
-          "该员工有工资记录，不能删除，请改用停用 This user has payroll records — deactivate the account instead of deleting it",
-      },
-      { status: 409 },
+    return bilingualError(
+      "该员工有工资记录，不能删除，请改用停用",
+      "This user has payroll records — deactivate the account instead of deleting it",
+      409,
     );
   }
 
   const [groupRow] = await db.select({ id: chatGroups.id }).from(chatGroups).where(eq(chatGroups.createdBy, id)).limit(1);
   if (groupRow) {
-    return NextResponse.json(
-      {
-        error:
-          "该员工创建了聊天群组，请先解散或转移群组 This user created chat group(s) — delete or hand those off first",
-      },
-      { status: 409 },
+    return bilingualError(
+      "该员工创建了聊天群组，请先解散或转移群组",
+      "This user created chat group(s) — delete or hand those off first",
+      409,
     );
   }
 
