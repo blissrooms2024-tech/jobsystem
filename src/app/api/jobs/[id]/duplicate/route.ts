@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { jobs, users } from "@/db/schema";
+import { jobs, units, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { generateJobCode } from "@/lib/codes";
 import { datesBetween } from "@/lib/job-timing";
+import { notifyJobAssigned } from "@/lib/reminders";
 
 const bodySchema = z.object({
   schedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "请选择日期 Please pick a date"),
@@ -80,6 +81,22 @@ export async function POST(
       })),
     )
     .returning();
+
+  if (source.assignedTo) {
+    try {
+      const [unit] = source.unitId ? await db.select().from(units).where(eq(units.id, source.unitId)).limit(1) : [];
+      await notifyJobAssigned({
+        jobId: created[0].id,
+        assigneeId: source.assignedTo,
+        title: source.title,
+        dates,
+        unitName: unit?.unitName,
+        startTime: source.startTime,
+      });
+    } catch (err) {
+      console.error("Failed to send job-assigned notification", err);
+    }
+  }
 
   return NextResponse.json({ job: created[0], jobs: created, count: created.length }, { status: 201 });
 }

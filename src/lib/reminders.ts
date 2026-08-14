@@ -23,6 +23,44 @@ function jobEmailHtml(title: string, lines: string[], jobId: string) {
 }
 
 /**
+ * Fired right when a job is created/assigned (not on the reminder
+ * schedule) so the employee finds out immediately rather than waiting for
+ * the day-before reminder. Best-effort — a missing/broken email address
+ * shouldn't fail job creation, so callers should wrap this in try/catch.
+ */
+export async function notifyJobAssigned(opts: {
+  jobId: string;
+  assigneeId: string;
+  title: string;
+  dates: string[];
+  unitName?: string | null;
+  startTime?: string | null;
+}) {
+  const [assignee] = await db.select().from(users).where(eq(users.id, opts.assigneeId)).limit(1);
+  if (!assignee?.email) return;
+
+  const datesLabel =
+    opts.dates.length === 1
+      ? opts.dates[0]
+      : `${opts.dates[0]} – ${opts.dates[opts.dates.length - 1]} (${opts.dates.length} days)`;
+
+  await sendMail({
+    to: assignee.email,
+    subject: `New job assigned: ${opts.title}`,
+    html: jobEmailHtml(
+      `Hi ${assignee.name}, a new job has been assigned to you:`,
+      [
+        `Job: ${opts.title}`,
+        `Date: ${datesLabel}`,
+        opts.unitName ? `Location: ${opts.unitName}` : "",
+        opts.startTime ? `Start: ${opts.startTime}` : "",
+      ].filter(Boolean),
+      opts.jobId,
+    ),
+  });
+}
+
+/**
  * Two reminder passes, meant to be called on a schedule (every ~30 min):
  * - "advance": once, the day before a job's scheduled date
  * - "start": once, in the ~1 hour window before the job's start time

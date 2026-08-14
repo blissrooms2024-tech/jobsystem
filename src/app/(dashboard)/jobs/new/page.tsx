@@ -32,7 +32,7 @@ export default async function NewJobPage() {
             }
             return u.role === "employee" || u.role === "supervisor";
           })
-          .map((u) => ({ id: u.id, label: u.name }))}
+          .map((u) => ({ id: u.id, label: `${u.staffId ?? u.userCode} · ${u.name}` }))}
         minDate={myToday()}
         maxDate={maxSchedulableDate()}
       />

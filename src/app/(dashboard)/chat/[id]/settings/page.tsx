@@ -20,13 +20,13 @@ export default async function ChatGroupSettingsPage({
   if (group.createdBy !== user.id) notFound();
 
   const members = await db
-    .select({ id: users.id, name: users.name, role: users.role })
+    .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
     .from(chatGroupMembers)
     .innerJoin(users, eq(chatGroupMembers.userId, users.id))
     .where(eq(chatGroupMembers.groupId, id));
 
   const candidates = await db
-    .select({ id: users.id, name: users.name, role: users.role })
+    .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
     .from(users)
     .where(eq(users.active, true));
 
