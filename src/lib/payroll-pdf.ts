@@ -4,10 +4,7 @@ import { db } from "@/db";
 import { payroll, users } from "@/db/schema";
 import { renderPayslipPdf } from "@/lib/payslip-pdf";
 import { sendMail } from "@/lib/mailer";
-
-function appUrl() {
-  return process.env.APP_URL?.replace(/\/$/, "") ?? "";
-}
+import { appUrl } from "@/lib/app-url";
 
 /** "YYYY-MM-DD HH:mm:ss" in Malaysia time (fixed UTC+8, no DST), for the payslip footer. */
 export function generatedAtStamp(): string {
