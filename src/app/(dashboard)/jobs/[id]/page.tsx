@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { eq } from "drizzle-orm";
+import { Pencil } from "lucide-react";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, units, users } from "@/db/schema";
@@ -50,11 +52,21 @@ export default async function JobDetailPage({
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div>
-        <p className="text-xs text-neutral-400">{job.jobCode}</p>
-        <h1 className="text-lg font-semibold">{job.title}</h1>
-        {job.description ? (
-          <p className="mt-1 text-sm text-neutral-600">{job.description}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs text-neutral-400">{job.jobCode}</p>
+          <h1 className="text-lg font-semibold">{job.title}</h1>
+          {job.description ? (
+            <p className="mt-1 text-sm text-neutral-600">{job.description}</p>
+          ) : null}
+        </div>
+        {isAdmin ? (
+          <Link
+            href={`/jobs/${job.id}/edit`}
+            className="flex shrink-0 items-center gap-1 rounded-md border border-neutral-300 px-2 py-1 text-xs hover:bg-neutral-50"
+          >
+            <Pencil size={13} /> <Bi zh="编辑" en="Edit" />
+          </Link>
         ) : null}
       </div>
 
