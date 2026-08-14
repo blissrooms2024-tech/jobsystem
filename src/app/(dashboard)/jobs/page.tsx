@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { myToday } from "@/lib/job-timing";
 import { JobsListClient } from "@/components/jobs-list-client";
+import { JobsDatePicker } from "@/components/jobs-date-picker";
 import { Bi } from "@/components/bi";
 
 function addMonths(monthStr: string, delta: number) {
@@ -99,35 +100,38 @@ export default async function JobsPage({
         ) : null}
       </div>
 
-      {!date ? (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Link
-            href={`/jobs?month=${addMonths(month, -1)}${status ? `&status=${status}` : ""}`}
-            className="rounded-md border border-neutral-300 px-2 py-1"
-          >
-            ‹
-          </Link>
-          <span className="font-medium">{showAll ? <Bi zh="全部" en="All" /> : month}</span>
-          <Link
-            href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}`}
-            className="rounded-md border border-neutral-300 px-2 py-1"
-          >
-            ›
-          </Link>
-          {!showAll ? (
+      <div className="flex flex-wrap items-center gap-2 text-sm">
+        {!date ? (
+          <>
             <Link
-              href={`/jobs?month=all${status ? `&status=${status}` : ""}`}
-              className="ml-1 text-xs text-neutral-500 underline"
+              href={`/jobs?month=${addMonths(month, -1)}${status ? `&status=${status}` : ""}`}
+              className="rounded-md border border-neutral-300 px-2 py-1"
             >
-              <Bi zh="查看全部" en="Show all time" />
+              ‹
             </Link>
-          ) : (
-            <Link href="/jobs" className="ml-1 text-xs text-neutral-500 underline">
-              <Bi zh="只看本月" en="Back to this month" />
+            <span className="font-medium">{showAll ? <Bi zh="全部" en="All" /> : month}</span>
+            <Link
+              href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}`}
+              className="rounded-md border border-neutral-300 px-2 py-1"
+            >
+              ›
             </Link>
-          )}
-        </div>
-      ) : null}
+            {!showAll ? (
+              <Link
+                href={`/jobs?month=all${status ? `&status=${status}` : ""}`}
+                className="ml-1 text-xs text-neutral-500 underline"
+              >
+                <Bi zh="查看全部" en="Show all time" />
+              </Link>
+            ) : (
+              <Link href="/jobs" className="ml-1 text-xs text-neutral-500 underline">
+                <Bi zh="只看本月" en="Back to this month" />
+              </Link>
+            )}
+          </>
+        ) : null}
+        <JobsDatePicker value={date} />
+      </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
         {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => (
