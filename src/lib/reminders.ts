@@ -1,9 +1,11 @@
 import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
-import { jobs, units, users } from "@/db/schema";
+import { appSettings, jobs, units, users } from "@/db/schema";
 import { sendMail } from "@/lib/mailer";
 import { appUrl } from "@/lib/app-url";
 import { jobEndInstant, jobStartInstant, myToday } from "@/lib/job-timing";
+
+const PAYROLL_ADMIN_EMAIL = "blissrooms2024@gmail.com";
 
 const MY_TZ_OFFSET = "+08:00"; // Malaysia is fixed UTC+8, no DST
 
@@ -144,6 +146,43 @@ export async function runReminders() {
   }
 
   return { advanceSent, startSent };
+}
+
+/**
+ * Payroll is paid out every Tuesday before 12pm, so admin needs it settled
+ * by Monday. Nudges PAYROLL_ADMIN_EMAIL once, the first time this runs on a
+ * Monday each week — idempotent via appSettings so a cron firing every
+ * ~30 min doesn't send it repeatedly the same day.
+ */
+export async function sendPayrollReminder() {
+  const today = myToday();
+  const dayOfWeek = new Date(`${today}T00:00:00Z`).getUTCDay(); // 0 = Sun, 1 = Mon
+  if (dayOfWeek !== 1) return { sent: false };
+
+  const [row] = await db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, "lastPayrollReminderDate"))
+    .limit(1);
+  if (row?.value === today) return { sent: false };
+
+  const link = appUrl();
+  await sendMail({
+    to: PAYROLL_ADMIN_EMAIL,
+    subject: "Payroll reminder — settle today, payout is tomorrow before 12pm",
+    html: `
+      <p>Reminder: payroll is paid out every Tuesday before 12pm.</p>
+      <p>Please make sure this week's payroll is reviewed and settled today (Monday).</p>
+      ${link ? `<p><a href="${link}/payroll">Go to Payroll</a></p>` : ""}
+    `,
+  });
+
+  await db
+    .insert(appSettings)
+    .values({ key: "lastPayrollReminderDate", value: today })
+    .onConflictDoUpdate({ target: appSettings.key, set: { value: today } });
+
+  return { sent: true };
 }
 
 /**
