@@ -6,11 +6,14 @@ import { users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { generateTempPassword } from "@/lib/passwords";
 import { nextUserCode } from "@/lib/user-code";
+import { sendMail } from "@/lib/mailer";
+import { appUrl } from "@/lib/app-url";
 
 const bodySchema = z.object({
   name: z.string().min(1),
   staffId: z.string().optional(),
   username: z.string().min(3),
+  email: z.string().email("请填写有效邮箱 Please enter a valid email"),
   role: z.enum(["boss", "admin", "supervisor", "employee"]),
   staffType: z.string().optional(),
   phone: z.string().optional(),
@@ -19,6 +22,20 @@ const bodySchema = z.object({
   needCheckin: z.boolean().default(true),
   donePhotos: z.coerce.number().int().min(0).max(10).default(0),
 });
+
+function welcomeEmailHtml(name: string, username: string, tempPassword: string) {
+  const link = appUrl() || "";
+  return `
+    <p>Hi ${name},</p>
+    <p>An account has been created for you on the Bliss Rooms Job System.</p>
+    <p>
+      Username: <strong>${username}</strong><br />
+      Temporary password: <strong>${tempPassword}</strong>
+    </p>
+    <p>You will be asked to set a new password the first time you log in.</p>
+    ${link ? `<p><a href="${link}/login">Log in here</a></p>` : ""}
+  `;
+}
 
 export async function POST(request: Request) {
   const auth = await requireRole("boss", "admin");
@@ -42,6 +59,7 @@ export async function POST(request: Request) {
       staffId: data.staffId || null,
       name: data.name,
       username: data.username,
+      email: data.email,
       passwordHash,
       mustChangePassword: true,
       role: data.role,
@@ -54,8 +72,26 @@ export async function POST(request: Request) {
     })
     .returning();
 
+  // Best-effort — a bad SMTP config or address shouldn't block account
+  // creation. The temp password is also handed back in the response below
+  // for the admin to relay manually if the email doesn't land.
+  let emailSent = true;
+  try {
+    await sendMail({
+      to: data.email,
+      subject: "Your Bliss Rooms Job System account",
+      html: welcomeEmailHtml(data.name, data.username, tempPassword),
+    });
+  } catch (err) {
+    emailSent = false;
+    console.error("Failed to send welcome email", err);
+  }
+
   // Temp password is only ever returned here, in the create response — it is
   // never stored in plaintext or logged, and the account must change it on
   // first login (mustChangePassword). passwordHash never leaves the server.
-  return NextResponse.json({ user: { ...created, passwordHash: undefined }, tempPassword }, { status: 201 });
+  return NextResponse.json(
+    { user: { ...created, passwordHash: undefined }, tempPassword, emailSent },
+    { status: 201 },
+  );
 }

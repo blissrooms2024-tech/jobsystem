@@ -12,9 +12,12 @@ type Props = {
   emergencyContact: string | null;
   bankName: string | null;
   bankAccount: string | null;
+  /** When true, the core fields (everything except email) must be filled
+   * before this form can be submitted — used by the forced-completion gate. */
+  requireCore?: boolean;
 };
 
-export function MyProfileForm(props: Props) {
+export function MyProfileForm({ requireCore, ...props }: Props) {
   const router = useRouter();
   const [error, setError] = useState<React.ReactNode>(null);
   const [saved, setSaved] = useState(false);
@@ -52,15 +55,15 @@ export function MyProfileForm(props: Props) {
     >
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="电话" en="Phone" /></span>
-        <input name="phone" defaultValue={props.phone ?? ""} className="input" />
+        <input name="phone" defaultValue={props.phone ?? ""} required={requireCore} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="IC / 护照" en="IC / Passport" /></span>
-        <input name="icPassport" defaultValue={props.icPassport ?? ""} className="input" />
+        <input name="icPassport" defaultValue={props.icPassport ?? ""} required={requireCore} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm">
         <span className="font-medium"><Bi zh="地址" en="Address" /></span>
-        <textarea name="address" defaultValue={props.address ?? ""} rows={2} className="input" />
+        <textarea name="address" defaultValue={props.address ?? ""} rows={2} required={requireCore} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="邮箱" en="Email" /></span>
@@ -68,15 +71,15 @@ export function MyProfileForm(props: Props) {
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="紧急联系人" en="Emergency contact" /></span>
-        <input name="emergencyContact" defaultValue={props.emergencyContact ?? ""} className="input" />
+        <input name="emergencyContact" defaultValue={props.emergencyContact ?? ""} required={requireCore} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="银行" en="Bank name" /></span>
-        <input name="bankName" defaultValue={props.bankName ?? ""} className="input" />
+        <input name="bankName" defaultValue={props.bankName ?? ""} required={requireCore} className="input" />
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="银行账号" en="Bank account" /></span>
-        <input name="bankAccount" defaultValue={props.bankAccount ?? ""} className="input" />
+        <input name="bankAccount" defaultValue={props.bankAccount ?? ""} required={requireCore} className="input" />
       </label>
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}

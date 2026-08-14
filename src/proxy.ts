@@ -46,7 +46,12 @@ export default auth((req) => {
     }
   }
 
-  return NextResponse.next();
+  // Lets the dashboard layout (a Server Component) know which route it's
+  // rendering for, so it can exempt /account from the forced-profile-
+  // completion gate without needing its own client-side routing logic.
+  const res = NextResponse.next();
+  res.headers.set("x-pathname", pathname);
+  return res;
 });
 
 // API routes are excluded here and instead check `auth()` themselves, returning

@@ -2,6 +2,7 @@ import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
 import { sendMail } from "@/lib/mailer";
+import { appUrl } from "@/lib/app-url";
 import { jobEndInstant, jobStartInstant, myToday } from "@/lib/job-timing";
 
 const MY_TZ_OFFSET = "+08:00"; // Malaysia is fixed UTC+8, no DST
@@ -10,10 +11,6 @@ function addDays(dateStr: string, days: number): string {
   const d = new Date(`${dateStr}T00:00:00${MY_TZ_OFFSET}`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
-}
-
-function appUrl() {
-  return process.env.APP_URL?.replace(/\/$/, "") ?? "";
 }
 
 function jobEmailHtml(title: string, lines: string[], jobId: string) {

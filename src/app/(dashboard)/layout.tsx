@@ -1,10 +1,15 @@
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { LanguageToggle } from "@/components/language-toggle";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { ChatNotifier } from "@/components/chat-notifier";
 import { ChatWidget } from "@/components/chat-widget";
+import { MyProfileForm } from "@/components/my-profile-form";
 import { Bi } from "@/components/bi";
 import { signOutAction } from "./actions";
 
@@ -15,6 +20,23 @@ export default async function DashboardLayout({
 }) {
   const session = await auth();
   const user = session!.user;
+
+  const [me] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
+  const profileComplete = !!(
+    me?.phone &&
+    me?.icPassport &&
+    me?.address &&
+    me?.emergencyContact &&
+    me?.bankName &&
+    me?.bankAccount
+  );
+  const hdrs = await headers();
+  const onAccountPage = hdrs.get("x-pathname") === "/account";
+  // Boss/admin accounts predate this gate and run the system for everyone
+  // else — never lock them out of their own dashboard over a missing bank
+  // account field. This is aimed at onboarding new staff.
+  const gateApplies = user.role === "employee" || user.role === "supervisor";
+  const blockForIncompleteProfile = gateApplies && !profileComplete && !onAccountPage;
 
   return (
     <div className="flex min-h-screen">
@@ -57,7 +79,33 @@ export default async function DashboardLayout({
             <Bi zh="请先修改初始密码" en="Please change your temporary password" /> →
           </a>
         ) : null}
-        <main className="flex-1 overflow-x-hidden p-4 sm:p-6">{children}</main>
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
+          {blockForIncompleteProfile ? (
+            <div className="max-w-2xl space-y-4">
+              <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <Bi
+                  zh="请先填完以下资料才能使用系统其他功能。"
+                  en="Please complete the details below before using the rest of the system."
+                />
+              </div>
+              <h1 className="text-lg font-semibold">
+                <Bi zh="我的资料" en="My details" />
+              </h1>
+              <MyProfileForm
+                phone={me?.phone ?? null}
+                icPassport={me?.icPassport ?? null}
+                address={me?.address ?? null}
+                email={me?.email ?? null}
+                emergencyContact={me?.emergencyContact ?? null}
+                bankName={me?.bankName ?? null}
+                bankAccount={me?.bankAccount ?? null}
+                requireCore
+              />
+            </div>
+          ) : (
+            children
+          )}
+        </main>
       </div>
     </div>
   );
