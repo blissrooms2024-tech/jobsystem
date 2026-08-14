@@ -100,16 +100,19 @@ export function JobsListClient({
                 </td>
                 <td className="px-3 py-2">{formatMoney(row.pay)}</td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <div className="flex flex-nowrap items-center gap-0.5" onClick={(e) => e.stopPropagation()}>
-                    <Link
-                      href={`/jobs/${row.id}`}
-                      title={t("查看", "View")}
-                      aria-label={t("查看", "View")}
-                      className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-white"
-                    >
-                      👁
-                    </Link>
-                    {isAdmin ? <JobRowActions jobId={row.id} status={row.status} canDelete={canDelete} /> : null}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {isAdmin ? (
+                      <JobRowActions jobId={row.id} status={row.status} canDelete={canDelete} />
+                    ) : (
+                      <Link
+                        href={`/jobs/${row.id}`}
+                        title={t("查看", "View")}
+                        aria-label={t("查看", "View")}
+                        className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-white"
+                      >
+                        👁
+                      </Link>
+                    )}
                   </div>
                 </td>
               </tr>
