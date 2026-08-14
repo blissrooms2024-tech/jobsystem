@@ -21,7 +21,7 @@ export function JobRowActions({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  const call = (method: "POST" | "DELETE", path: string, body?: unknown) => {
+  const call = (method: "POST" | "DELETE", path: string, body?: unknown, onSuccess?: () => void) => {
     setError(null);
     startTransition(async () => {
       const res = await fetch(`/api/jobs/${jobId}${path}`, {
@@ -34,7 +34,8 @@ export function JobRowActions({
         setError(typeof data.error === "string" ? data.error : "操作失败 Failed");
         return;
       }
-      router.refresh();
+      if (onSuccess) onSuccess();
+      else router.refresh();
     });
   };
 
@@ -85,7 +86,10 @@ export function JobRowActions({
       <button
         type="button"
         disabled={isPending}
-        onClick={() => call("POST", "/duplicate", { schedDate: tomorrow() })}
+        onClick={() => {
+          const target = tomorrow();
+          call("POST", "/duplicate", { schedDate: target }, () => router.push(`/jobs?date=${target}`));
+        }}
         title={t("复制到明天", "Duplicate to tomorrow")}
         aria-label={t("复制到明天", "Duplicate to tomorrow")}
         className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"

@@ -16,6 +16,8 @@ export default async function PayrollListPage() {
       id: payroll.id,
       payrollCode: payroll.payrollCode,
       employeeName: users.name,
+      employeeStaffId: users.staffId,
+      employeeUserCode: users.userCode,
       periodStart: payroll.periodStart,
       periodEnd: payroll.periodEnd,
       jobsPay: payroll.jobsPay,

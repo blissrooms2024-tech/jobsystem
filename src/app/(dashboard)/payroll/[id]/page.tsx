@@ -43,7 +43,12 @@ export default async function PayrollDetailPage({
     <div className="max-w-3xl space-y-6">
       <div>
         <p className="text-xs text-neutral-400">{p.payrollCode}</p>
-        <h1 className="text-lg font-semibold">{row.employee.name}</h1>
+        <h1 className="text-lg font-semibold">
+          <span className="text-sm font-normal text-neutral-400">
+            {row.employee.staffId ?? row.employee.userCode}
+          </span>{" "}
+          {row.employee.name}
+        </h1>
         <p className="text-sm text-neutral-500">
           {p.periodStart} ~ {p.periodEnd} ·{" "}
           <Bi zh={p.status === "paid" ? "已发放" : "草稿"} en={p.status === "paid" ? "Paid" : "Draft"} />

@@ -49,7 +49,7 @@ export function UserRow({
       <td className="whitespace-nowrap px-3 py-1.5">{staffId ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{staffType ?? "-"}</td>
       <td className="whitespace-nowrap px-3 py-1.5">{phone ?? "-"}</td>
-      <td className="whitespace-nowrap px-3 py-1.5">
+      <td className="px-3 py-1.5">
         {bankName || bankAccount
           ? [bankName, bankAccount].filter(Boolean).join(" · ")
           : "-"}
@@ -78,7 +78,7 @@ export function UserRow({
         </button>
       </td>
       <td className="whitespace-nowrap px-3 py-1.5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <button
             type="button"
             disabled={isPending}
@@ -93,18 +93,10 @@ export function UserRow({
                 }
               });
             }}
-            className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
+            className="rounded-md border border-neutral-200 px-1 py-0.5 text-xs hover:bg-neutral-50"
           >
             🔑
           </button>
-          <Link
-            href={`/users/${id}`}
-            title={t("编辑更多资料", "Edit full profile")}
-            aria-label={t("编辑更多资料", "Edit full profile")}
-            className="rounded-md border border-neutral-200 px-1.5 py-1 text-sm hover:bg-neutral-50"
-          >
-            ✏️
-          </Link>
           <button
             type="button"
             disabled={isPending}
@@ -129,9 +121,9 @@ export function UserRow({
                 router.refresh();
               });
             }}
-            className="rounded-md border border-red-200 px-1.5 py-1 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-md border border-red-200 px-1 py-0.5 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
           >
-            <Trash2 size={14} />
+            <Trash2 size={12} />
           </button>
         </div>
         {resetInfo ? (

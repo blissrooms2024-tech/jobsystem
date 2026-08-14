@@ -29,6 +29,8 @@ type Row = {
   days: string;
   status: string;
   employeeName: string;
+  employeeStaffId: string | null;
+  employeeUserCode: string;
 };
 
 export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boolean }) {
@@ -46,7 +48,11 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (q && ![r.employeeName, r.type].some((v) => v.toLowerCase().includes(q))) return false;
+      if (
+        q &&
+        ![r.employeeName, r.employeeStaffId, r.type].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
+      )
+        return false;
       // Pending requests always stay visible regardless of month, so a
       // request from an earlier month never silently falls out of view
       // before it's been acted on.
@@ -103,7 +109,14 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
                 onClick={() => router.push(`/leaves/${r.id}`)}
                 className="cursor-pointer border-t border-neutral-100 hover:bg-purple-50"
               >
-                {isAdmin ? <td className="px-3 py-2 font-medium text-purple-700">{r.employeeName}</td> : null}
+                {isAdmin ? (
+                  <td className="px-3 py-2 font-medium text-purple-700">
+                    <span className="text-xs font-normal text-neutral-400">
+                      {r.employeeStaffId ?? r.employeeUserCode}
+                    </span>{" "}
+                    {r.employeeName}
+                  </td>
+                ) : null}
                 <td className={isAdmin ? "px-3 py-2" : "px-3 py-2 font-medium text-purple-700"}>{r.type}</td>
                 <td className="px-3 py-2">
                   {r.startDate} ~ {r.endDate}

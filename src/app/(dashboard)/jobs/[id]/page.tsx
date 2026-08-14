@@ -83,7 +83,15 @@ export default async function JobDetailPage({
             )
           }
         />
-        <Field labelZh="负责人" labelEn="Assignee" value={assignee?.name ?? "-"} />
+        <Field
+          labelZh="负责人"
+          labelEn="Assignee"
+          value={
+            assignee
+              ? `${assignee.staffId ?? assignee.userCode} · ${assignee.name}`
+              : "-"
+          }
+        />
         <Field labelZh="工种" labelEn="Job type" value={jobType?.typeName ?? "-"} />
         <Field labelZh="单位" labelEn="Unit" value={unit?.unitName ?? "-"} />
         <Field labelZh="工资" labelEn="Pay" value={formatMoney(job.pay)} />

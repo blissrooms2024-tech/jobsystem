@@ -18,6 +18,8 @@ type Row = {
   pay: string;
   unitName: string | null;
   assigneeName: string | null;
+  assigneeStaffId: string | null;
+  assigneeUserCode: string | null;
 };
 
 export function JobsListClient({
@@ -38,7 +40,9 @@ export function JobsListClient({
     const q = search.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.title, r.assigneeName, r.unitName].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
+      [r.title, r.assigneeName, r.assigneeStaffId, r.unitName]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
     );
   }, [rows, search]);
 
@@ -74,7 +78,20 @@ export function JobsListClient({
               >
                 <td className="px-3 py-2 text-neutral-500">{row.schedDate}</td>
                 <td className="px-3 py-2 font-medium text-purple-700">{row.title}</td>
-                {isAdmin ? <td className="px-3 py-2">{row.assigneeName ?? "-"}</td> : null}
+                {isAdmin ? (
+                  <td className="px-3 py-2">
+                    {row.assigneeName ? (
+                      <>
+                        <span className="text-xs text-neutral-400">
+                          {row.assigneeStaffId ?? row.assigneeUserCode}
+                        </span>{" "}
+                        {row.assigneeName}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                ) : null}
                 <td className="px-3 py-2">{row.unitName ?? "-"}</td>
                 <td className="px-3 py-2">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", JOB_STATUS_STYLE[row.status])}>
