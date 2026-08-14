@@ -72,7 +72,7 @@ export default async function ChatPage() {
 
   const activeUsers = isAdmin
     ? await db
-        .select({ id: users.id, name: users.name, role: users.role })
+        .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
         .from(users)
         .where(eq(users.active, true))
     : [];

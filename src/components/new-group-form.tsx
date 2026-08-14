@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
-type SimpleUser = { id: string; name: string; role: string };
+type SimpleUser = { id: string; name: string; role: string; staffId: string | null; userCode: string };
 
 export function NewGroupForm({ users }: { users: SimpleUser[] }) {
   const router = useRouter();
@@ -50,6 +50,7 @@ export function NewGroupForm({ users }: { users: SimpleUser[] }) {
             {users.map((u) => (
               <label key={u.id} className="flex items-center gap-2 rounded px-1 py-1 text-sm hover:bg-neutral-50">
                 <input type="checkbox" checked={selected.includes(u.id)} onChange={() => toggle(u.id)} />
+                <span className="text-xs text-neutral-400">{u.staffId ?? u.userCode}</span>
                 <span>{u.name}</span>
                 <span className="text-xs capitalize text-neutral-400">{u.role}</span>
               </label>

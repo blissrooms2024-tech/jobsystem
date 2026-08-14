@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { chatGroups, payroll, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 
 const bodySchema = z.object({
@@ -66,4 +66,52 @@ export async function PATCH(
   return NextResponse.json({
     user: { ...updated, passwordHash: undefined },
   });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const auth = await requireRole("boss", "admin");
+  if ("error" in auth) return auth.error;
+
+  const { id } = await params;
+  if (id === auth.session.user.id) {
+    return NextResponse.json(
+      { error: "不能删除自己的账号 You can't delete your own account" },
+      { status: 409 },
+    );
+  }
+
+  const [existing] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Jobs/leaves keep their history (assignedTo/userId either go null or
+  // cascade appropriately) — but payroll records and chat groups this
+  // person created are real shared history other people depend on, so
+  // block the delete rather than silently losing or cascading them.
+  const [payrollRow] = await db.select({ id: payroll.id }).from(payroll).where(eq(payroll.userId, id)).limit(1);
+  if (payrollRow) {
+    return NextResponse.json(
+      {
+        error:
+          "该员工有工资记录，不能删除，请改用停用 This user has payroll records — deactivate the account instead of deleting it",
+      },
+      { status: 409 },
+    );
+  }
+
+  const [groupRow] = await db.select({ id: chatGroups.id }).from(chatGroups).where(eq(chatGroups.createdBy, id)).limit(1);
+  if (groupRow) {
+    return NextResponse.json(
+      {
+        error:
+          "该员工创建了聊天群组，请先解散或转移群组 This user created chat group(s) — delete or hand those off first",
+      },
+      { status: 409 },
+    );
+  }
+
+  await db.delete(users).where(eq(users.id, id));
+  return NextResponse.json({ ok: true });
 }

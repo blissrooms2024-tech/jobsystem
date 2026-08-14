@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
@@ -32,6 +33,7 @@ export function UserRow({
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
   const [resetInfo, setResetInfo] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   return (
     <tr
@@ -103,12 +105,41 @@ export function UserRow({
           >
             ✏️
           </Link>
+          <button
+            type="button"
+            disabled={isPending}
+            title={t("删除账号", "Delete account")}
+            aria-label={t("删除账号", "Delete account")}
+            onClick={() => {
+              if (
+                !confirm(
+                  t(`确定要删除 ${name} 的账号吗？此操作无法撤销。`, `Delete ${name}'s account? This can't be undone.`),
+                )
+              ) {
+                return;
+              }
+              setDeleteError(null);
+              startTransition(async () => {
+                const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+                if (!res.ok) {
+                  const data = await res.json().catch(() => ({}));
+                  setDeleteError(typeof data.error === "string" ? data.error : t("删除失败", "Failed to delete"));
+                  return;
+                }
+                router.refresh();
+              });
+            }}
+            className="rounded-md border border-red-200 px-1.5 py-1 text-sm text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
         {resetInfo ? (
           <p className="mt-1 text-xs">
             新密码 <code className="rounded bg-neutral-100 px-1">{resetInfo}</code>
           </p>
         ) : null}
+        {deleteError ? <p className="mt-1 text-xs text-red-600">{deleteError}</p> : null}
       </td>
     </tr>
   );

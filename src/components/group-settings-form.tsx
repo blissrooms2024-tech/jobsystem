@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
-type SimpleUser = { id: string; name: string; role: string };
+type SimpleUser = { id: string; name: string; role: string; staffId: string | null; userCode: string };
 
 export function GroupSettingsForm({
   groupId,
@@ -126,7 +126,8 @@ export function GroupSettingsForm({
           {members.map((m) => (
             <div key={m.id} className="flex items-center justify-between rounded px-2 py-1 text-sm hover:bg-neutral-50">
               <span>
-                {m.name} <span className="text-xs capitalize text-neutral-400">{m.role}</span>
+                <span className="text-xs text-neutral-400">{m.staffId ?? m.userCode}</span> {m.name}{" "}
+                <span className="text-xs capitalize text-neutral-400">{m.role}</span>
               </span>
               <button
                 type="button"
@@ -159,6 +160,7 @@ export function GroupSettingsForm({
                       )
                     }
                   />
+                  <span className="text-xs text-neutral-400">{u.staffId ?? u.userCode}</span>
                   <span>{u.name}</span>
                   <span className="text-xs capitalize text-neutral-400">{u.role}</span>
                 </label>

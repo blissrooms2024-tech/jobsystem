@@ -5,6 +5,7 @@ import { jobTypes, jobs, units, users } from "@/db/schema";
 import { generateJobCode } from "@/lib/codes";
 import { requireRole } from "@/lib/api-auth";
 import { assertSchedulableDate, datesBetween } from "@/lib/job-timing";
+import { notifyJobAssigned } from "@/lib/reminders";
 import { eq } from "drizzle-orm";
 
 const bodySchema = z.object({
@@ -73,13 +74,17 @@ export async function POST(request: Request) {
 
   let pay = "0";
   let property: string | null = null;
+  let unitName: string | null = null;
   if (data.jobTypeId) {
     const [jt] = await db.select().from(jobTypes).where(eq(jobTypes.id, data.jobTypeId)).limit(1);
     if (jt) pay = jt.pay;
   }
   if (data.unitId) {
     const [unit] = await db.select().from(units).where(eq(units.id, data.unitId)).limit(1);
-    if (unit) property = unit.property;
+    if (unit) {
+      property = unit.property;
+      unitName = unit.unitName;
+    }
   }
 
   const created = await db
@@ -102,6 +107,19 @@ export async function POST(request: Request) {
       })),
     )
     .returning();
+
+  try {
+    await notifyJobAssigned({
+      jobId: created[0].id,
+      assigneeId: data.assignedTo,
+      title: data.title,
+      dates: scheduleDates,
+      unitName,
+      startTime: data.startTime,
+    });
+  } catch (err) {
+    console.error("Failed to send job-assigned notification", err);
+  }
 
   return NextResponse.json({ job: created[0], jobs: created, count: created.length }, { status: 201 });
 }
