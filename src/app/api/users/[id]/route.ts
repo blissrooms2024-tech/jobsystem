@@ -19,6 +19,7 @@ const bodySchema = z.object({
   emergencyContact: z.string().optional(),
   bankName: z.string().optional(),
   bankAccount: z.string().optional(),
+  fbProfileLink: z.string().optional(),
   needCheckin: z.boolean().optional(),
   donePhotos: z.coerce.number().int().min(0).max(10).optional(),
 });
@@ -56,6 +57,7 @@ export async function PATCH(
         : {}),
       ...(data.bankName !== undefined ? { bankName: data.bankName || null } : {}),
       ...(data.bankAccount !== undefined ? { bankAccount: data.bankAccount || null } : {}),
+      ...(data.fbProfileLink !== undefined ? { fbProfileLink: data.fbProfileLink || null } : {}),
       ...(data.needCheckin !== undefined ? { needCheckin: data.needCheckin } : {}),
       ...(data.donePhotos !== undefined ? { donePhotos: data.donePhotos } : {}),
     })

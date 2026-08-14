@@ -17,6 +17,7 @@ type Props = {
   emergencyContact: string | null;
   bankName: string | null;
   bankAccount: string | null;
+  fbProfileLink: string | null;
   payRate: string | null;
   needCheckin: boolean;
   donePhotos: number;
@@ -46,6 +47,7 @@ export function UserProfileForm(props: Props) {
             emergencyContact: String(formData.get("emergencyContact") || ""),
             bankName: String(formData.get("bankName") || ""),
             bankAccount: String(formData.get("bankAccount") || ""),
+            fbProfileLink: String(formData.get("fbProfileLink") || ""),
             payRate: String(formData.get("payRate") || "") || undefined,
             needCheckin: formData.get("needCheckin") === "on",
             donePhotos: formData.get("donePhotos") === "on" ? "1" : "0",
@@ -112,6 +114,16 @@ export function UserProfileForm(props: Props) {
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="银行账号" en="Bank account" /></span>
         <input name="bankAccount" defaultValue={props.bankAccount ?? ""} className="input" />
+      </label>
+      <label className="col-span-2 space-y-1 text-sm">
+        <span className="font-medium"><Bi zh="Facebook 主页链接" en="Facebook profile link" /></span>
+        <input
+          name="fbProfileLink"
+          type="url"
+          placeholder="https://facebook.com/..."
+          defaultValue={props.fbProfileLink ?? ""}
+          className="input"
+        />
       </label>
       <label className="col-span-2 flex items-center gap-2 text-sm">
         <input type="checkbox" name="needCheckin" defaultChecked={props.needCheckin} />

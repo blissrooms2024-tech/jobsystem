@@ -106,6 +106,8 @@ export default async function DashboardLayout({
                 emergencyContact={me?.emergencyContact ?? null}
                 bankName={me?.bankName ?? null}
                 bankAccount={me?.bankAccount ?? null}
+                staffType={me?.staffType ?? null}
+                fbProfileLink={me?.fbProfileLink ?? null}
                 requireCore
               />
             </div>

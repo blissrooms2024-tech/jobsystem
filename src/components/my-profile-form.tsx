@@ -12,6 +12,8 @@ type Props = {
   emergencyContact: string | null;
   bankName: string | null;
   bankAccount: string | null;
+  staffType: string | null;
+  fbProfileLink: string | null;
   /** When true, the core fields (everything except email) must be filled
    * before this form can be submitted — used by the forced-completion gate. */
   requireCore?: boolean;
@@ -22,6 +24,7 @@ export function MyProfileForm({ requireCore, ...props }: Props) {
   const [error, setError] = useState<React.ReactNode>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const isPostingAgent = (props.staffType ?? "").toLowerCase().includes("posting");
 
   return (
     <form
@@ -38,6 +41,7 @@ export function MyProfileForm({ requireCore, ...props }: Props) {
             emergencyContact: String(formData.get("emergencyContact") || ""),
             bankName: String(formData.get("bankName") || ""),
             bankAccount: String(formData.get("bankAccount") || ""),
+            fbProfileLink: String(formData.get("fbProfileLink") || ""),
           };
           const res = await fetch("/api/account/profile", {
             method: "PATCH",
@@ -81,6 +85,18 @@ export function MyProfileForm({ requireCore, ...props }: Props) {
         <span className="font-medium"><Bi zh="银行账号" en="Bank account" /></span>
         <input name="bankAccount" defaultValue={props.bankAccount ?? ""} required={requireCore} className="input" />
       </label>
+      {isPostingAgent ? (
+        <label className="col-span-2 space-y-1 text-sm">
+          <span className="font-medium"><Bi zh="Facebook 主页链接" en="Facebook profile link" /></span>
+          <input
+            name="fbProfileLink"
+            type="url"
+            placeholder="https://facebook.com/..."
+            defaultValue={props.fbProfileLink ?? ""}
+            className="input"
+          />
+        </label>
+      ) : null}
 
       {error ? <p className="col-span-2 text-sm text-red-600">{error}</p> : null}
       {saved ? (
