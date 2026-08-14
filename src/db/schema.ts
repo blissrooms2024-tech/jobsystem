@@ -54,6 +54,14 @@ export const codeSequences = pgTable("code_sequences", {
   value: integer("value").notNull().default(0),
 });
 
+// Tiny generic key/value store — currently just used to remember the last
+// date a recurring reminder (e.g. the weekly payroll cutoff nudge) was
+// sent, so a cron that runs every ~30 min doesn't send it a dozen times.
+export const appSettings = pgTable("app_settings", {
+  key: varchar("key", { length: 60 }).primaryKey(),
+  value: text("value").notNull(),
+});
+
 export const users = pgTable(
   "users",
   {
