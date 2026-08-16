@@ -22,7 +22,7 @@ export default async function TeamPage() {
     })
     .from(users)
     .where(eq(users.supervisorId, currentUser.id))
-    .orderBy(users.name);
+    .orderBy(users.staffId);
 
   return (
     <div className="max-w-2xl space-y-4">

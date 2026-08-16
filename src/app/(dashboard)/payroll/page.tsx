@@ -28,7 +28,7 @@ export default async function PayrollListPage() {
     })
     .from(payroll)
     .innerJoin(users, eq(payroll.userId, users.id))
-    .orderBy(desc(payroll.createdAt))
+    .orderBy(desc(payroll.createdAt), users.staffId, users.userCode)
     .limit(500);
 
   // Historical record of how much was actually paid out, by month — grouped

@@ -23,12 +23,14 @@ export default async function ChatGroupSettingsPage({
     .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
     .from(chatGroupMembers)
     .innerJoin(users, eq(chatGroupMembers.userId, users.id))
-    .where(eq(chatGroupMembers.groupId, id));
+    .where(eq(chatGroupMembers.groupId, id))
+    .orderBy(users.staffId, users.userCode);
 
   const candidates = await db
     .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
     .from(users)
-    .where(eq(users.active, true));
+    .where(eq(users.active, true))
+    .orderBy(users.staffId, users.userCode);
 
   return (
     <div className="max-w-xl space-y-4">

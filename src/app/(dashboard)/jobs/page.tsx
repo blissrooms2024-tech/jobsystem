@@ -75,7 +75,7 @@ export default async function JobsPage({
     .leftJoin(units, eq(jobs.unitId, units.id))
     .leftJoin(users, eq(jobs.assignedTo, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(jobs.schedDate))
+    .orderBy(desc(jobs.schedDate), users.staffId, users.userCode)
     .limit(500);
 
   return (
