@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, units, users } from "@/db/schema";
@@ -75,7 +75,7 @@ export default async function JobsPage({
     .leftJoin(units, eq(jobs.unitId, units.id))
     .leftJoin(users, eq(jobs.assignedTo, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(jobs.schedDate), users.staffId, users.userCode)
+    .orderBy(jobs.schedDate, users.staffId, users.userCode)
     .limit(500);
 
   return (
