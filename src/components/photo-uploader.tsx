@@ -71,7 +71,6 @@ export function PhotoUploader({
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         disabled={isPending}
         onChange={(e) => {
           const file = e.target.files?.[0];
