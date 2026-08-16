@@ -41,7 +41,7 @@ export default async function LeavesPage() {
     .from(leaves)
     .innerJoin(users, eq(leaves.userId, users.id))
     .where(scope)
-    .orderBy(desc(leaves.createdAt))
+    .orderBy(desc(leaves.createdAt), users.staffId, users.userCode)
     .limit(200);
 
   return (
