@@ -75,6 +75,7 @@ export default async function ChatPage() {
         .select({ id: users.id, name: users.name, role: users.role, staffId: users.staffId, userCode: users.userCode })
         .from(users)
         .where(eq(users.active, true))
+        .orderBy(users.staffId, users.userCode)
     : [];
 
   return (

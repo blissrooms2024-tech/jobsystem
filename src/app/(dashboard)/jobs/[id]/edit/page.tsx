@@ -34,7 +34,7 @@ export default async function EditJobPage({
   const [unitRows, jobTypeRows, employeeRows] = await Promise.all([
     db.select().from(units),
     db.select().from(jobTypes).where(eq(jobTypes.active, true)),
-    db.select().from(users).where(eq(users.active, true)),
+    db.select().from(users).where(eq(users.active, true)).orderBy(users.staffId, users.userCode),
   ]);
 
   return (

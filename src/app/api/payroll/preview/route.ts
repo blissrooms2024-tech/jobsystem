@@ -32,7 +32,8 @@ export async function GET(request: Request) {
   const staff = await db
     .select()
     .from(users)
-    .where(and(eq(users.active, true), inArray(users.role, ["employee", "supervisor"])));
+    .where(and(eq(users.active, true), inArray(users.role, ["employee", "supervisor"])))
+    .orderBy(users.staffId, users.userCode);
 
   const liveJobStats = await db
     .select({
