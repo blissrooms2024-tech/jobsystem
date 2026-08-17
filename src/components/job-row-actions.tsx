@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { MoreVertical, Eye, Pencil, Ban, RotateCcw, Copy, Trash2 } from "lucide-react";
+import { MoreVertical, Eye, Pencil, Check, Ban, RotateCcw, Copy, Trash2 } from "lucide-react";
 import { useLang } from "@/lib/use-lang";
 
 export function JobRowActions({
@@ -105,6 +105,20 @@ export function JobRowActions({
               <Link href={`/jobs/${jobId}/edit`} onClick={() => setOpen(false)} className={itemClass}>
                 <Pencil size={14} /> {t("编辑", "Edit")}
               </Link>
+              {status === "assigned" || status === "in_progress" ? (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => {
+                    if (confirm(t("标记这个任务为已完成？不需要照片。", "Mark this job completed? No photos needed."))) {
+                      call("POST", "/complete");
+                    }
+                  }}
+                  className={itemClass}
+                >
+                  <Check size={14} /> {t("标记完成", "Mark completed")}
+                </button>
+              ) : null}
               {status !== "completed" && status !== "cancelled" ? (
                 <button
                   type="button"

@@ -58,6 +58,28 @@ export function JobAdminActions({
       </p>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
+        {status === "assigned" || status === "in_progress" ? (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => {
+              if (
+                confirm(
+                  biText(
+                    "标记这个任务为已完成？不需要照片，会直接计入工资。",
+                    "Mark this job completed? No photos needed — it'll count toward payroll right away.",
+                  ),
+                )
+              ) {
+                call("POST", "/complete");
+              }
+            }}
+            className="rounded-md bg-emerald-600 hover:bg-emerald-700 px-3 py-2 text-sm text-white"
+          >
+            <Bi zh="标记完成" en="Mark completed" />
+          </button>
+        ) : null}
+
         {status !== "completed" && status !== "cancelled" ? (
           <button
             type="button"
