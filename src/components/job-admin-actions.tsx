@@ -58,7 +58,7 @@ export function JobAdminActions({
       </p>
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       <div className="flex flex-wrap items-center gap-2">
-        {status === "assigned" || status === "in_progress" ? (
+        {status === "assigned" || status === "in_progress" || status === "missed" ? (
           <button
             type="button"
             disabled={isPending}
