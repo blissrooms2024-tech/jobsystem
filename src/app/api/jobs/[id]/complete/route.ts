@@ -61,7 +61,13 @@ export async function POST(
   if (!isOwner && !adminOverride) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
-  if (job.status !== "assigned" && job.status !== "in_progress") {
+  // Employees can only self-complete a still-open job; admin can also
+  // rescue a job that already got auto-marked Missed (e.g. the work was
+  // actually done but nobody checked in/out in time).
+  const completableStatuses = adminOverride
+    ? ["assigned", "in_progress", "missed"]
+    : ["assigned", "in_progress"];
+  if (!completableStatuses.includes(job.status)) {
     return NextResponse.json(
       { error: "此任务当前状态不能完成 This job cannot be completed right now" },
       { status: 409 },

@@ -105,7 +105,7 @@ export function JobRowActions({
               <Link href={`/jobs/${jobId}/edit`} onClick={() => setOpen(false)} className={itemClass}>
                 <Pencil size={14} /> {t("编辑", "Edit")}
               </Link>
-              {status === "assigned" || status === "in_progress" ? (
+              {status === "assigned" || status === "in_progress" || status === "missed" ? (
                 <button
                   type="button"
                   disabled={isPending}
