@@ -1,8 +1,9 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { jobs, leaves, payroll } from "@/db/schema";
+import { jobs, leaves, payroll, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
+import { myToday } from "@/lib/job-timing";
 import { Bi } from "@/components/bi";
 
 function startOfMonth() {
@@ -59,6 +60,52 @@ async function getAdminStats() {
   return { ...jobStats, ...payrollStats, pendingLeaves: leaveStats?.pending ?? 0 };
 }
 
+/** Ad-hoc "how much did X do/earn in period Y" lookup — a specific date wins
+ * over the month if both are somehow present, mirroring the Jobs page filter. */
+async function getScopedStats(opts: { userId?: string; date?: string; month: string }) {
+  let periodStart: string;
+  let periodEnd: string;
+  if (opts.date) {
+    periodStart = opts.date;
+    periodEnd = opts.date;
+  } else {
+    const [y, m] = opts.month.split("-").map(Number);
+    periodStart = `${opts.month}-01`;
+    periodEnd = `${opts.month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+  }
+
+  const jobConditions = [gte(jobs.schedDate, periodStart), lte(jobs.schedDate, periodEnd)];
+  if (opts.userId) jobConditions.push(eq(jobs.assignedTo, opts.userId));
+
+  const [jobStats] = await db
+    .select({
+      completed: sql<number>`count(*) filter (where ${jobs.status} = 'completed')`,
+      missed: sql<number>`count(*) filter (where ${jobs.status} = 'missed')`,
+      completedPay: sql<string>`coalesce(sum(${jobs.pay}) filter (where ${jobs.status} = 'completed'), 0)`,
+    })
+    .from(jobs)
+    .where(and(...jobConditions));
+
+  // "Paid" here means payroll actually marked Paid with a paidAt landing in
+  // this window — separate from completedPay, which is job-level earnings
+  // regardless of whether a payslip has been generated/paid yet.
+  const paidConditions = [
+    eq(payroll.status, "paid"),
+    gte(payroll.paidAt, new Date(`${periodStart}T00:00:00+08:00`)),
+    lte(payroll.paidAt, new Date(`${periodEnd}T23:59:59+08:00`)),
+  ];
+  if (opts.userId) paidConditions.push(eq(payroll.userId, opts.userId));
+
+  const [paidStats] = await db
+    .select({
+      paidTotal: sql<string>`coalesce(sum(${payroll.jobsPay} + ${payroll.baseSalary} + ${payroll.allowance} - ${payroll.deduction}), 0)`,
+    })
+    .from(payroll)
+    .where(and(...paidConditions));
+
+  return { ...jobStats, paidTotal: paidStats?.paidTotal ?? "0" };
+}
+
 function StatCard({
   labelZh,
   labelEn,
@@ -86,7 +133,11 @@ function StatCard({
   );
 }
 
-export default async function DashboardHomePage() {
+export default async function DashboardHomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ userId?: string; date?: string; month?: string }>;
+}) {
   const session = await auth();
   const user = session!.user;
   const isAdmin = user.role === "boss" || user.role === "admin" || user.role === "supervisor";
@@ -106,6 +157,8 @@ export default async function DashboardHomePage() {
       ) : (
         <EmployeeOverview userId={user.id} />
       )}
+
+      {isAdmin ? <ScopedStatsPanel searchParams={await searchParams} /> : null}
     </div>
   );
 }
@@ -134,6 +187,86 @@ async function EmployeeOverview({ userId }: { userId: string }) {
       <StatCard labelZh="待完成" labelEn="Assigned" value={stats.assigned ?? 0} />
       <StatCard labelZh="错过" labelEn="Missed" value={stats.missed ?? 0} accent="red" />
       <StatCard labelZh="待批请假" labelEn="Pending leave" value={stats.pendingLeave} accent="amber" />
+    </div>
+  );
+}
+
+async function ScopedStatsPanel({
+  searchParams,
+}: {
+  searchParams: { userId?: string; date?: string; month?: string };
+}) {
+  const employees = await db
+    .select({ id: users.id, name: users.name, staffId: users.staffId, userCode: users.userCode })
+    .from(users)
+    .where(eq(users.active, true))
+    .orderBy(users.staffId, users.userCode);
+
+  const month = !searchParams.date && searchParams.month ? searchParams.month : myToday().slice(0, 7);
+  const stats = await getScopedStats({ userId: searchParams.userId, date: searchParams.date, month });
+
+  return (
+    <div className="space-y-4 border-t border-neutral-200 pt-6">
+      <h2 className="text-sm font-semibold text-neutral-700">
+        <Bi zh="按员工/日期查询" en="Employee & date lookup" />
+      </h2>
+
+      <form className="flex flex-wrap items-end gap-3 text-sm" method="get">
+        <label className="space-y-1">
+          <span className="block text-xs text-neutral-500">
+            <Bi zh="员工" en="Employee" />
+          </span>
+          <select
+            name="userId"
+            defaultValue={searchParams.userId ?? ""}
+            className="rounded-md border border-neutral-300 px-2 py-1.5"
+          >
+            <option value="">
+              <Bi zh="全部员工" en="All employees" />
+            </option>
+            {employees.map((e) => (
+              <option key={e.id} value={e.id}>
+                {(e.staffId ?? e.userCode) + " · " + e.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="space-y-1">
+          <span className="block text-xs text-neutral-500">
+            <Bi zh="月份" en="Month" />
+          </span>
+          <input
+            type="month"
+            name="month"
+            defaultValue={month}
+            className="rounded-md border border-neutral-300 px-2 py-1.5"
+          />
+        </label>
+        <label className="space-y-1">
+          <span className="block text-xs text-neutral-500">
+            <Bi zh="或指定日期" en="Or a specific date" />
+          </span>
+          <input
+            type="date"
+            name="date"
+            defaultValue={searchParams.date ?? ""}
+            className="rounded-md border border-neutral-300 px-2 py-1.5"
+          />
+        </label>
+        <button
+          type="submit"
+          className="rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-1.5 font-medium text-white"
+        >
+          <Bi zh="查询" en="Search" />
+        </button>
+      </form>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard labelZh="已完成任务" labelEn="Completed jobs" value={stats.completed ?? 0} accent="emerald" />
+        <StatCard labelZh="错过任务" labelEn="Missed jobs" value={stats.missed ?? 0} accent="red" />
+        <StatCard labelZh="任务工资总额" labelEn="Job pay total" value={formatMoney(stats.completedPay)} />
+        <StatCard labelZh="已发放工资" labelEn="Paid out" value={formatMoney(stats.paidTotal)} accent="emerald" />
+      </div>
     </div>
   );
 }
