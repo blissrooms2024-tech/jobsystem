@@ -7,6 +7,7 @@ import { formatMoney, cn } from "@/lib/utils";
 import { DeletePayrollButton } from "@/components/delete-payroll-button";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Row = {
   id: string;
@@ -38,11 +39,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (month && r.periodStart.slice(0, 7) !== month) return false;
-      if (
-        search &&
-        ![r.employeeName, r.employeeStaffId].filter(Boolean).some((v) => String(v).toLowerCase().includes(search.toLowerCase()))
-      )
-        return false;
+      if (!matchesQuery([r.employeeName, r.employeeStaffId], search)) return false;
       return true;
     });
   }, [rows, search, month]);
@@ -57,6 +54,13 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
           placeholder={t("搜索员工姓名...", "Search employee")}
           className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
+        <span className="text-sm text-neutral-500">
+          {search ? (
+            <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+          ) : (
+            <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+          )}
+        </span>
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Row = {
   id: string;
@@ -18,13 +19,10 @@ export function TeamListClient({ rows }: { rows: Row[] }) {
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.name, r.staffId, r.staffType, r.phone].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
+  const filtered = useMemo(
+    () => rows.filter((r) => matchesQuery([r.name, r.staffId, r.staffType, r.phone], search)),
+    [rows, search],
+  );
 
   return (
     <div className="space-y-4">
@@ -36,6 +34,15 @@ export function TeamListClient({ rows }: { rows: Row[] }) {
           placeholder={t("搜索姓名/编号/电话...", "Search name/ID/phone")}
           className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
+      ) : null}
+      {rows.length > 0 ? (
+        <span className="text-sm text-neutral-500">
+          {search ? (
+            <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+          ) : (
+            <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+          )}
+        </span>
       ) : null}
 
       <div className="overflow-x-auto rounded-lg border border-neutral-200">

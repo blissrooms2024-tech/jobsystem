@@ -5,6 +5,7 @@ import { UserRow } from "@/components/user-row";
 import { NewUserForm } from "@/components/new-user-form";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type UserData = {
   id: string;
@@ -27,15 +28,13 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((u) =>
-      [u.name, u.username, u.staffId, u.staffType, u.phone, u.icPassport, u.email]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
+  const filtered = useMemo(
+    () =>
+      rows.filter((u) =>
+        matchesQuery([u.name, u.username, u.staffId, u.staffType, u.phone, u.icPassport, u.email], search),
+      ),
+    [rows, search],
+  );
 
   return (
     <div className="space-y-4">
@@ -51,6 +50,13 @@ export function UsersPageClient({ rows }: { rows: UserData[] }) {
             placeholder={t("搜索姓名/员工编号/电话...", "Search")}
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
+          <span className="text-sm text-neutral-500">
+            {search ? (
+              <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+            ) : (
+              <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+            )}
+          </span>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}

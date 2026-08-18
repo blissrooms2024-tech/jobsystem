@@ -5,6 +5,7 @@ import { UnitRow } from "@/components/unit-row";
 import { NewUnitForm } from "@/components/new-unit-form";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type UnitData = {
   id: string;
@@ -22,13 +23,10 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((u) =>
-      [u.unitCode, u.unitName, u.property].filter(Boolean).some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
+  const filtered = useMemo(
+    () => rows.filter((u) => matchesQuery([u.unitCode, u.unitName, u.property], search)),
+    [rows, search],
+  );
 
   return (
     <div className="space-y-4">
@@ -44,6 +42,13 @@ export function UnitsPageClient({ rows }: { rows: UnitData[] }) {
             placeholder={t("搜索编号/名称/物业...", "Search")}
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
+          <span className="text-sm text-neutral-500">
+            {search ? (
+              <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+            ) : (
+              <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+            )}
+          </span>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}

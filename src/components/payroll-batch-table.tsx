@@ -8,6 +8,7 @@ import { PayslipView } from "@/components/payslip-view";
 import { Bi } from "@/components/bi";
 import { biText } from "@/lib/lang";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Row = {
   userId: string;
@@ -87,7 +88,7 @@ export function PayrollBatchTable() {
     if (!rows) return null;
     return rows.filter((r) => {
       if (selectedUserId && r.userId !== selectedUserId) return false;
-      if (search && !r.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (!matchesQuery([r.name, r.staffId], search)) return false;
       return true;
     });
   }, [rows, selectedUserId, search]);

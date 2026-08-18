@@ -8,5 +8,9 @@ export function matchesQuery(fields: (string | null | undefined)[], query: strin
   const q = query.trim().toLowerCase();
   if (!q) return true;
   const haystack = fields.filter(Boolean).join(" ").toLowerCase();
+  // Pure-digit queries (phone numbers, bank/IC numbers, payroll codes) search
+  // as a substring anywhere — useful for looking up by the last few digits,
+  // where prefix-only matching would never find anything.
+  if (/^\d+$/.test(q)) return haystack.includes(q);
   return haystack.split(/\s+/).some((word) => word.startsWith(q));
 }

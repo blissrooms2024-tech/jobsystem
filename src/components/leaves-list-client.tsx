@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 const STATUS_STYLE: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -46,13 +47,8 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
   }, [rows]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (
-        q &&
-        ![r.employeeName, r.employeeStaffId, r.type].filter(Boolean).some((v) => String(v).toLowerCase().includes(q))
-      )
-        return false;
+      if (!matchesQuery([r.employeeName, r.employeeStaffId, r.type], search)) return false;
       // Pending requests always stay visible regardless of month, so a
       // request from an earlier month never silently falls out of view
       // before it's been acted on.
@@ -73,6 +69,13 @@ export function LeavesListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: bool
             className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
         ) : null}
+        <span className="text-sm text-neutral-500">
+          {search ? (
+            <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+          ) : (
+            <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+          )}
+        </span>
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}
