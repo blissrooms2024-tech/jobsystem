@@ -6,6 +6,7 @@ import { Camera, Check, Copy, Eraser, Forward, Mic, Send, Smile, Trash2, X } fro
 import { Bi } from "@/components/bi";
 import { cn } from "@/lib/utils";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Message = {
   id: string;
@@ -124,8 +125,7 @@ export function ChatRoom({
   );
   const mentionMatches = useMemo(() => {
     if (mentionQuery === null) return [];
-    const q = mentionQuery.toLowerCase();
-    return otherMembers.filter((m) => m.name.toLowerCase().includes(q));
+    return otherMembers.filter((m) => matchesQuery([m.name], mentionQuery));
   }, [mentionQuery, otherMembers]);
 
   // Which messages the current user is allowed to delete — own within the

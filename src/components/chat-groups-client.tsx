@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Group = {
   id: string;
@@ -17,11 +18,7 @@ export function ChatGroupsClient({ groups, isAdmin }: { groups: Group[]; isAdmin
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return groups;
-    return groups.filter((g) => g.name.toLowerCase().includes(q));
-  }, [groups, search]);
+  const filtered = useMemo(() => groups.filter((g) => matchesQuery([g.name], search)), [groups, search]);
 
   return (
     <div className="space-y-3">

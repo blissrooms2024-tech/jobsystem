@@ -5,6 +5,7 @@ import { JobTypeRow } from "@/components/job-type-row";
 import { NewJobTypeForm } from "@/components/new-job-type-form";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type JobTypeData = {
   id: string;
@@ -19,11 +20,7 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((jt) => jt.typeName.toLowerCase().includes(q));
-  }, [rows, search]);
+  const filtered = useMemo(() => rows.filter((jt) => matchesQuery([jt.typeName], search)), [rows, search]);
 
   return (
     <div className="space-y-4">
@@ -39,6 +36,13 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
             placeholder={t("搜索工种...", "Search")}
             className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
           />
+          <span className="text-sm text-neutral-500">
+            {search ? (
+              <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+            ) : (
+              <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+            )}
+          </span>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}

@@ -6,6 +6,7 @@ import { formatMoney, cn } from "@/lib/utils";
 import { Bi } from "@/components/bi";
 import { PayslipDownloadLink } from "@/components/payslip-download-link";
 import { useLang } from "@/lib/use-lang";
+import { matchesQuery } from "@/lib/search";
 
 type Row = {
   id: string;
@@ -33,7 +34,7 @@ export function MyPayslipsClient({ rows }: { rows: Row[] }) {
   const filtered = useMemo(() => {
     return rows.filter((r) => {
       if (month && r.periodStart.slice(0, 7) !== month) return false;
-      if (search && !r.payrollCode.toLowerCase().includes(search.toLowerCase())) return false;
+      if (!matchesQuery([r.payrollCode], search)) return false;
       return true;
     });
   }, [rows, search, month]);
