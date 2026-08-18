@@ -41,7 +41,7 @@ export function JobsListClient({
   const [bulkError, setBulkError] = useState<string | null>(null);
 
   const filtered = useMemo(
-    () => rows.filter((r) => matchesQuery([r.title, r.assigneeName, r.assigneeStaffId, r.unitName], search)),
+    () => rows.filter((r) => matchesQuery([r.assigneeName, r.assigneeStaffId, r.assigneeUserCode], search)),
     [rows, search],
   );
 
@@ -99,9 +99,16 @@ export function JobsListClient({
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("搜索标题/负责人/单位...", "Search")}
+          placeholder={t("搜索姓名/编号...", "Search name/ID")}
           className="w-64 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
+        <span className="text-sm text-neutral-500">
+          {search ? (
+            <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
+          ) : (
+            <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
+          )}
+        </span>
         {canDelete && selected.size > 0 ? (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-neutral-500">
