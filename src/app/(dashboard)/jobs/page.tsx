@@ -8,6 +8,7 @@ import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { myToday } from "@/lib/job-timing";
 import { JobsListClient } from "@/components/jobs-list-client";
 import { JobsDatePicker } from "@/components/jobs-date-picker";
+import { JobsAssigneeFilter } from "@/components/jobs-assignee-filter";
 import { Bi } from "@/components/bi";
 
 function addMonths(monthStr: string, delta: number) {
@@ -19,12 +20,12 @@ function addMonths(monthStr: string, delta: number) {
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; date?: string; month?: string }>;
+  searchParams: Promise<{ status?: string; date?: string; month?: string; assignee?: string }>;
 }) {
   const session = await auth();
   const user = session!.user;
   const isAdmin = ["boss", "admin", "supervisor"].includes(user.role);
-  const { status, date, month: monthParam } = await searchParams;
+  const { status, date, month: monthParam, assignee } = await searchParams;
 
   // A specific-day link (e.g. from the calendar) always wins over the month
   // filter. Otherwise, default to the current month — showing every job
@@ -36,6 +37,7 @@ export default async function JobsPage({
       : myToday().slice(0, 7);
 
   const conditions = [];
+  let teamIds: string[] | null = null;
   if (!isAdmin) {
     conditions.push(eq(jobs.assignedTo, user.id));
   } else if (user.role === "supervisor") {
@@ -43,7 +45,8 @@ export default async function JobsPage({
       .select({ id: users.id })
       .from(users)
       .where(eq(users.supervisorId, user.id));
-    conditions.push(inArray(jobs.assignedTo, [user.id, ...subordinates.map((s) => s.id)]));
+    teamIds = [user.id, ...subordinates.map((s) => s.id)];
+    conditions.push(inArray(jobs.assignedTo, teamIds));
   }
   if (status)
     conditions.push(
@@ -57,6 +60,17 @@ export default async function JobsPage({
     const monthEnd = `${month}-${String(new Date(y, m, 0).getDate()).padStart(2, "0")}`;
     conditions.push(gte(jobs.schedDate, monthStart), lte(jobs.schedDate, monthEnd));
   }
+  if (isAdmin && assignee) {
+    conditions.push(eq(jobs.assignedTo, assignee));
+  }
+
+  const employeeOptions = isAdmin
+    ? await db
+        .select({ id: users.id, name: users.name, staffId: users.staffId, userCode: users.userCode })
+        .from(users)
+        .where(teamIds ? inArray(users.id, teamIds) : eq(users.active, true))
+        .orderBy(users.staffId, users.userCode)
+    : [];
 
   const rows = await db
     .select({
@@ -106,40 +120,59 @@ export default async function JobsPage({
         {!date ? (
           <>
             <Link
-              href={`/jobs?month=${addMonths(month, -1)}${status ? `&status=${status}` : ""}`}
+              href={`/jobs?month=${addMonths(month, -1)}${status ? `&status=${status}` : ""}${assignee ? `&assignee=${assignee}` : ""}`}
               className="rounded-md border border-neutral-300 px-2 py-1"
             >
               ‹
             </Link>
             <span className="font-medium">{showAll ? <Bi zh="全部" en="All" /> : month}</span>
             <Link
-              href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}`}
+              href={`/jobs?month=${addMonths(month, 1)}${status ? `&status=${status}` : ""}${assignee ? `&assignee=${assignee}` : ""}`}
               className="rounded-md border border-neutral-300 px-2 py-1"
             >
               ›
             </Link>
             {!showAll ? (
               <Link
-                href={`/jobs?month=all${status ? `&status=${status}` : ""}`}
+                href={`/jobs?month=all${status ? `&status=${status}` : ""}${assignee ? `&assignee=${assignee}` : ""}`}
                 className="ml-1 text-xs text-neutral-500 underline"
               >
                 <Bi zh="查看全部" en="Show all time" />
               </Link>
             ) : (
-              <Link href="/jobs" className="ml-1 text-xs text-neutral-500 underline">
+              <Link
+                href={`/jobs${assignee ? `?assignee=${assignee}` : ""}`}
+                className="ml-1 text-xs text-neutral-500 underline"
+              >
                 <Bi zh="只看本月" en="Back to this month" />
               </Link>
             )}
           </>
         ) : null}
         <JobsDatePicker value={date} />
+        {isAdmin ? (
+          <JobsAssigneeFilter
+            value={assignee}
+            options={employeeOptions.map((e) => ({ id: e.id, label: `${e.staffId ?? e.userCode} · ${e.name}` }))}
+            status={status}
+            date={date}
+            month={month}
+            showAll={showAll}
+          />
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
         {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => (
           <Link
             key={s || "all"}
-            href={s ? `/jobs?status=${s}${showAll ? "&month=all" : `&month=${month}`}` : showAll ? "/jobs?month=all" : `/jobs?month=${month}`}
+            href={
+              (s
+                ? `/jobs?status=${s}${showAll ? "&month=all" : `&month=${month}`}`
+                : showAll
+                  ? "/jobs?month=all"
+                  : `/jobs?month=${month}`) + (assignee ? `&assignee=${assignee}` : "")
+            }
             className={cn(
               "rounded-full px-3 py-1",
               (status || "") === s
