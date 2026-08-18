@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatMoney, cn } from "@/lib/utils";
+import { matchesQuery } from "@/lib/search";
 import { JOB_STATUS_LABEL, JOB_STATUS_STYLE } from "@/lib/job-status";
 import { JobRowActions } from "@/components/job-row-actions";
 import { Bi } from "@/components/bi";
@@ -39,15 +40,10 @@ export function JobsListClient({
   const [isPending, startTransition] = useTransition();
   const [bulkError, setBulkError] = useState<string | null>(null);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [r.title, r.assigneeName, r.assigneeStaffId, r.unitName]
-        .filter(Boolean)
-        .some((v) => String(v).toLowerCase().includes(q)),
-    );
-  }, [rows, search]);
+  const filtered = useMemo(
+    () => rows.filter((r) => matchesQuery([r.title, r.assigneeName, r.assigneeStaffId, r.unitName], search)),
+    [rows, search],
+  );
 
   const allFilteredSelected = filtered.length > 0 && filtered.every((r) => selected.has(r.id));
 
