@@ -100,10 +100,10 @@ export function JobRowActions({
               className="z-50 w-44 overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg"
             >
               <Link href={`/jobs/${jobId}`} onClick={() => setOpen(false)} className={itemClass}>
-                <Eye size={14} /> {t("查看", "View")}
+                <Eye size={14} className="text-blue-600" /> {t("查看", "View")}
               </Link>
               <Link href={`/jobs/${jobId}/edit`} onClick={() => setOpen(false)} className={itemClass}>
-                <Pencil size={14} /> {t("编辑", "Edit")}
+                <Pencil size={14} className="text-amber-600" /> {t("编辑", "Edit")}
               </Link>
               {status === "assigned" || status === "in_progress" || status === "missed" ? (
                 <button
@@ -116,7 +116,7 @@ export function JobRowActions({
                   }}
                   className={itemClass}
                 >
-                  <Check size={14} /> {t("标记完成", "Mark completed")}
+                  <Check size={14} className="text-emerald-600" /> {t("标记完成", "Mark completed")}
                 </button>
               ) : null}
               {status !== "completed" && status !== "cancelled" ? (
@@ -128,7 +128,7 @@ export function JobRowActions({
                   }}
                   className={itemClass}
                 >
-                  <Ban size={14} /> {t("取消", "Cancel")}
+                  <Ban size={14} className="text-orange-600" /> {t("取消", "Cancel")}
                 </button>
               ) : null}
               {status === "missed" || status === "cancelled" ? (
@@ -140,7 +140,7 @@ export function JobRowActions({
                   }}
                   className={itemClass}
                 >
-                  <RotateCcw size={14} /> {t("重开", "Reopen")}
+                  <RotateCcw size={14} className="text-sky-600" /> {t("重开", "Reopen")}
                 </button>
               ) : null}
               <button
@@ -152,7 +152,7 @@ export function JobRowActions({
                 }}
                 className={itemClass}
               >
-                <Copy size={14} /> {t("复制到明天", "Duplicate to tomorrow")}
+                <Copy size={14} className="text-purple-600" /> {t("复制到明天", "Duplicate to tomorrow")}
               </button>
               {canDelete ? (
                 <button
@@ -163,7 +163,7 @@ export function JobRowActions({
                   }}
                   className={`${itemClass} text-red-700 hover:bg-red-50`}
                 >
-                  <Trash2 size={14} /> {t("删除", "Delete")}
+                  <Trash2 size={14} className="text-red-600" /> {t("删除", "Delete")}
                 </button>
               ) : null}
             </div>,
