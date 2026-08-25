@@ -4,7 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, users } from "@/db/schema";
-import { parsePhotos, photoEntrySchema } from "@/lib/photos";
+import { MAX_COMPLETION_PHOTOS, parsePhotos, photoEntrySchema } from "@/lib/photos";
 
 const bodySchema = z.object({
   url: photoEntrySchema.shape.url,
@@ -44,12 +44,18 @@ export async function POST(
 
   const existing = parsePhotos(job.photos);
 
-  // The completion "photo" (proof-of-work for no-checkin staff) may only be
-  // uploaded once per job — no replacing it after the fact. Before/after
-  // comparison shots are unaffected.
-  if (parsed.data.kind === "photo" && existing.some((p) => p.kind === "photo")) {
+  // Completion photos (proof-of-work for no-checkin staff) are capped at
+  // MAX_COMPLETION_PHOTOS per job — otherwise unlimited re-uploads. Before/
+  // after comparison shots are unaffected (already capped at one each by
+  // the UI only offering one slot per kind).
+  if (
+    parsed.data.kind === "photo" &&
+    existing.filter((p) => p.kind === "photo").length >= MAX_COMPLETION_PHOTOS
+  ) {
     return NextResponse.json(
-      { error: "该照片已上传，不能重新上传 This photo was already uploaded and can't be re-uploaded" },
+      {
+        error: `最多只能上传 ${MAX_COMPLETION_PHOTOS} 张照片 You can upload at most ${MAX_COMPLETION_PHOTOS} photos`,
+      },
       { status: 409 },
     );
   }
