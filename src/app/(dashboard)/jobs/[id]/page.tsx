@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, units, users } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
-import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
+import { MAX_COMPLETION_PHOTOS, parsePhotos, requiredPhotoCount } from "@/lib/photos";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
@@ -48,7 +48,7 @@ export default async function JobDetailPage({
   const photos = parsePhotos(job.photos);
   const needCheckin = assignee?.needCheckin ?? true;
   const requiredPhotos = requiredPhotoCount(assignee?.donePhotos);
-  const hasCompletionPhoto = photos.some((p) => p.kind === "photo");
+  const completionPhotoCount = photos.filter((p) => p.kind === "photo").length;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -148,11 +148,11 @@ export default async function JobDetailPage({
                   completion photo; before/after comparison shots are a
                   Cleaner (on-site, GPS check-in) concept. */}
               {(needCheckin ? (["before", "after"] as const) : (["photo"] as const)).map((kind) =>
-                kind === "photo" && hasCompletionPhoto ? (
+                kind === "photo" && completionPhotoCount >= MAX_COMPLETION_PHOTOS ? (
                   <p key={kind} className="text-xs text-neutral-500">
                     <Bi
-                      zh="完成照片已上传，不能重新上传"
-                      en="Completion photo already uploaded — can't be re-uploaded"
+                      zh={`已达上限（${MAX_COMPLETION_PHOTOS} 张），不能再上传`}
+                      en={`Reached the limit (${MAX_COMPLETION_PHOTOS}) — can't upload more`}
                     />
                   </p>
                 ) : (
@@ -164,6 +164,14 @@ export default async function JobDetailPage({
                   />
                 ),
               )}
+              {!needCheckin ? (
+                <p className="col-span-full text-xs text-neutral-400">
+                  <Bi
+                    zh={`已上传 ${completionPhotoCount}/${MAX_COMPLETION_PHOTOS} 张${requiredPhotos > 0 ? "，至少需要 1 张" : ""}`}
+                    en={`${completionPhotoCount}/${MAX_COMPLETION_PHOTOS} uploaded${requiredPhotos > 0 ? " — at least 1 required" : ""}`}
+                  />
+                </p>
+              ) : null}
             </div>
           ) : null}
           {photos.length > 0 ? (
