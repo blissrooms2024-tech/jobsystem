@@ -341,6 +341,51 @@ export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
   sender: one(users, { fields: [chatMessages.senderId], references: [users.id] }),
 }));
 
+export const resourceTypeEnum = pgEnum("resource_type", [
+  "guideline",
+  "tutorial",
+  "contact",
+  "drive_link",
+]);
+
+// Employee-facing reference material (SOPs, how-tos, who-to-contact, Drive
+// folders). Optionally scoped to one unit, one staff type, and/or one
+// specific employee (e.g. each Posting Agent's own Drive folder) — null on
+// any of those means "applies to everyone/every unit".
+export const resources = pgTable("resources", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: resourceTypeEnum("type").notNull(),
+  title: text("title").notNull(),
+  content: text("content"),
+  url: text("url"),
+  unitId: uuid("unit_id").references(() => units.id, { onDelete: "cascade" }),
+  staffType: text("staff_type"),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Company-wide announcement banner, shown at the top of every page while
+// active — active is a manual on/off switch; startDate/endDate are an
+// optional additional date window on top of that.
+export const notices = pgTable("notices", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  content: text("content"),
+  active: boolean("active").notNull().default(true),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const resourcesRelations = relations(resources, ({ one }) => ({
+  unit: one(units, { fields: [resources.unitId], references: [units.id] }),
+  assignee: one(users, { fields: [resources.userId], references: [users.id], relationName: "resourceAssignee" }),
+  creator: one(users, { fields: [resources.createdBy], references: [users.id] }),
+}));
+
 export const usersRelations = relations(users, ({ many, one }) => ({
   jobsAssigned: many(jobs, { relationName: "assignedTo" }),
   payrolls: many(payroll),

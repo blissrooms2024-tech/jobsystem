@@ -1,8 +1,9 @@
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq, lte, or, gte, isNull } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { notices, users } from "@/db/schema";
+import { myToday } from "@/lib/job-timing";
 import { DashboardNav } from "@/components/dashboard-nav";
 import { MobileNav } from "@/components/mobile-nav";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -37,6 +38,18 @@ export default async function DashboardLayout({
   // account field. This is aimed at onboarding new staff.
   const gateApplies = user.role === "employee" || user.role === "supervisor";
   const blockForIncompleteProfile = gateApplies && !profileComplete && !onAccountPage;
+
+  const today = myToday();
+  const activeNotices = await db
+    .select()
+    .from(notices)
+    .where(
+      and(
+        eq(notices.active, true),
+        or(isNull(notices.startDate), lte(notices.startDate, today)),
+        or(isNull(notices.endDate), gte(notices.endDate, today)),
+      ),
+    );
 
   return (
     <div className="flex min-h-screen">
@@ -83,6 +96,12 @@ export default async function DashboardLayout({
             <Bi zh="请先修改初始密码" en="Please change your temporary password" /> →
           </a>
         ) : null}
+        {activeNotices.map((n) => (
+          <div key={n.id} className="bg-purple-50 px-4 py-2 text-center text-sm text-purple-900 sm:px-6">
+            <span className="font-medium">{n.title}</span>
+            {n.content ? <span className="text-purple-700"> — {n.content}</span> : null}
+          </div>
+        ))}
         {/* Extra bottom padding on desktop so the floating chat launcher
             (fixed bottom-right) never sits on top of the last row's action
             buttons in a long table. */}
