@@ -2,14 +2,15 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Pencil, Trash2, ExternalLink, Copy } from "lucide-react";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
 
-type ResourceType = "guideline" | "tutorial" | "contact" | "drive_link";
+export type ResourceType = "guideline" | "tutorial" | "contact" | "drive_link";
 
-type Row = {
+export type Row = {
   id: string;
   type: ResourceType;
   title: string;
@@ -24,18 +25,18 @@ type Row = {
   assigneeUserCode: string | null;
 };
 
-type UnitOption = { id: string; unitName: string };
-type EmployeeOption = { id: string; name: string; staffId: string | null; userCode: string };
+export type UnitOption = { id: string; unitName: string };
+export type EmployeeOption = { id: string; name: string; staffId: string | null; userCode: string };
 
 // Contacts are usually just a phone/WhatsApp number, not a real URL — turn
 // those into a tel: link instead of trying to navigate to them as-is.
-function linkHref(value: string): string {
+export function linkHref(value: string): string {
   if (/^https?:\/\//i.test(value)) return value;
   const digits = value.replace(/[^\d+]/g, "");
   return digits ? `tel:${digits}` : value;
 }
 
-const TYPE_LABEL: Record<ResourceType, { zh: string; en: string }> = {
+export const TYPE_LABEL: Record<ResourceType, { zh: string; en: string }> = {
   guideline: { zh: "指南 / SOP", en: "Guidelines" },
   tutorial: { zh: "教程", en: "Tutorials" },
   contact: { zh: "联系方式", en: "Contacts" },
@@ -154,7 +155,6 @@ function ResourceItem({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [showDetail, setShowDetail] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const del = () => {
@@ -200,11 +200,7 @@ function ResourceItem({
 
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 p-3">
-      <button
-        type="button"
-        onClick={() => setShowDetail(true)}
-        className="min-w-0 flex-1 space-y-1 text-left"
-      >
+      <Link href={`/resources/${row.id}`} className="min-w-0 flex-1 space-y-1">
         <p className="font-medium">{row.title}</p>
         {row.content ? <p className="line-clamp-2 text-sm text-neutral-600">{row.content}</p> : null}
         {row.url ? (
@@ -227,7 +223,7 @@ function ResourceItem({
             ) : null}
           </p>
         ) : null}
-      </button>
+      </Link>
       {isAdmin ? (
         <div className="flex shrink-0 items-center gap-1">
           <button
@@ -258,59 +254,11 @@ function ResourceItem({
           </button>
         </div>
       ) : null}
-      {showDetail ? (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowDetail(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-lg font-semibold">{row.title}</p>
-            {row.content ? (
-              <p className="mt-2 text-sm whitespace-pre-wrap text-neutral-600">{row.content}</p>
-            ) : null}
-            {row.url ? (
-              <a
-                href={linkHref(row.url)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1 text-sm text-purple-700 hover:underline"
-              >
-                <ExternalLink size={13} /> {row.url}
-              </a>
-            ) : null}
-            {badges ? (
-              <p className="mt-2 flex flex-wrap gap-1">
-                {row.unitName ? (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{row.unitName}</span>
-                ) : null}
-                {row.staffType ? (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{row.staffType}</span>
-                ) : null}
-                {row.assigneeName ? (
-                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800">
-                    {row.assigneeStaffId ?? row.assigneeUserCode} · {row.assigneeName}
-                  </span>
-                ) : null}
-              </p>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setShowDetail(false)}
-              className="mt-4 w-full rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white"
-            >
-              <Bi zh="关闭" en="Close" />
-            </button>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
 
-function ResourceForm({
+export function ResourceForm({
   units,
   employees,
   types,
