@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { units, users } from "@/db/schema";
 import { UserProfileForm } from "@/components/user-profile-form";
 import { Bi } from "@/components/bi";
 
@@ -19,6 +19,10 @@ export default async function UserDetailPage({
   if (!user) notFound();
 
   const canEdit = session!.user.role === "boss" || session!.user.role === "admin";
+  const unitOptions = await db.select({ id: units.id, unitName: units.unitName }).from(units).orderBy(units.unitName);
+  const unitNames = user.unitIds?.length
+    ? unitOptions.filter((u) => user.unitIds!.includes(u.id)).map((u) => u.unitName)
+    : [];
 
   return (
     <div className="space-y-6">
@@ -45,6 +49,8 @@ export default async function UserDetailPage({
           bankName={user.bankName}
           bankAccount={user.bankAccount}
           fbProfileLink={user.fbProfileLink}
+          units={unitOptions}
+          unitIds={user.unitIds}
           payRate={user.payRate}
           needCheckin={user.needCheckin}
           donePhotos={user.donePhotos}
@@ -54,6 +60,7 @@ export default async function UserDetailPage({
           <Field labelZh="员工编号" labelEn="Staff ID" value={user.staffId} />
           <Field labelZh="电话" labelEn="Phone" value={user.phone} />
           <Field labelZh="类型" labelEn="Staff type" value={user.staffType} />
+          <Field labelZh="单位" labelEn="Units" value={unitNames.length ? unitNames.join(", ") : null} />
           <Field labelZh="IC / 护照" labelEn="IC / Passport" value={user.icPassport} />
           <Field labelZh="邮箱" labelEn="Email" value={user.email} />
           <Field labelZh="地址" labelEn="Address" value={user.address} full />
