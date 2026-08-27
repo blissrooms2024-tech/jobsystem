@@ -10,7 +10,7 @@ const bodySchema = z.object({
   title: z.string().min(1),
   content: z.string().optional(),
   url: z.string().optional(),
-  unitId: z.string().uuid().nullable().optional(),
+  unitIds: z.array(z.string().uuid()).nullable().optional(),
   staffType: z.string().nullable().optional(),
   userId: z.string().uuid().nullable().optional(),
 });
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       title: data.title,
       content: data.content || null,
       url: data.url || null,
-      unitId: data.unitId || null,
+      unitIds: data.unitIds?.length ? data.unitIds : null,
       staffType: data.staffType || null,
       userId: data.userId || null,
       createdBy: auth.session.user.id,

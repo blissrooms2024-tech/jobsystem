@@ -24,8 +24,7 @@ export async function getResourcesData(userId: string, role: string) {
       title: resources.title,
       content: resources.content,
       url: resources.url,
-      unitId: resources.unitId,
-      unitName: units.unitName,
+      unitIds: resources.unitIds,
       staffType: resources.staffType,
       userId: resources.userId,
       assigneeName: users.name,
@@ -33,14 +32,13 @@ export async function getResourcesData(userId: string, role: string) {
       assigneeUserCode: users.userCode,
     })
     .from(resources)
-    .leftJoin(units, eq(resources.unitId, units.id))
     .leftJoin(users, eq(resources.userId, users.id))
     .where(scopeCondition)
     .orderBy(resources.type, resources.title);
 
-  const unitOptions = isAdmin
-    ? await db.select({ id: units.id, unitName: units.unitName }).from(units).orderBy(units.unitName)
-    : [];
+  // Fetched for everyone (not just admins) so non-admin viewers can resolve
+  // unit names for display — unitIds is just a plain array, no FK join.
+  const unitOptions = await db.select({ id: units.id, unitName: units.unitName }).from(units).orderBy(units.unitName);
 
   const employeeOptions = isAdmin
     ? await db

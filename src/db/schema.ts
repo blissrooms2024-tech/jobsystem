@@ -349,16 +349,19 @@ export const resourceTypeEnum = pgEnum("resource_type", [
 ]);
 
 // Employee-facing reference material (SOPs, how-tos, who-to-contact, Drive
-// folders). Optionally scoped to one unit, one staff type, and/or one
-// specific employee (e.g. each Posting Agent's own Drive folder) — null on
-// any of those means "applies to everyone/every unit".
+// folders). Optionally scoped to any number of units, one staff type, and/or
+// one specific employee (e.g. each Posting Agent's own Drive folder) — null/
+// empty on any of those means "applies to everyone/every unit". unitIds is a
+// plain array (not a join table) for simplicity — this is a small, lightly
+// used table, so application-level validation is enough; no FK enforcement
+// on the array elements.
 export const resources = pgTable("resources", {
   id: uuid("id").primaryKey().defaultRandom(),
   type: resourceTypeEnum("type").notNull(),
   title: text("title").notNull(),
   content: text("content"),
   url: text("url"),
-  unitId: uuid("unit_id").references(() => units.id, { onDelete: "cascade" }),
+  unitIds: uuid("unit_ids").array(),
   staffType: text("staff_type"),
   userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
@@ -381,7 +384,6 @@ export const notices = pgTable("notices", {
 });
 
 export const resourcesRelations = relations(resources, ({ one }) => ({
-  unit: one(units, { fields: [resources.unitId], references: [units.id] }),
   assignee: one(users, { fields: [resources.userId], references: [users.id], relationName: "resourceAssignee" }),
   creator: one(users, { fields: [resources.createdBy], references: [users.id] }),
 }));

@@ -16,8 +16,7 @@ export type Row = {
   title: string;
   content: string | null;
   url: string | null;
-  unitId: string | null;
-  unitName: string | null;
+  unitIds: string[] | null;
   staffType: string | null;
   userId: string | null;
   assigneeName: string | null;
@@ -175,7 +174,7 @@ function ResourceItem({
           title: `${row.title} (${t("副本", "copy")})`,
           content: row.content ?? "",
           url: row.url ?? "",
-          unitId: row.unitId,
+          unitIds: row.unitIds,
           staffType: row.staffType,
           userId: row.userId,
         }),
@@ -196,7 +195,10 @@ function ResourceItem({
     );
   }
 
-  const badges = row.unitName || row.staffType || row.assigneeName;
+  const unitNames = row.unitIds?.length
+    ? units.filter((u) => row.unitIds!.includes(u.id)).map((u) => u.unitName)
+    : [];
+  const badges = unitNames.length > 0 || row.staffType || row.assigneeName;
 
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 p-3">
@@ -210,9 +212,9 @@ function ResourceItem({
         ) : null}
         {badges ? (
           <p className="flex flex-wrap gap-1 pt-1">
-            {row.unitName ? (
-              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{row.unitName}</span>
-            ) : null}
+            {unitNames.map((name) => (
+              <span key={name} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{name}</span>
+            ))}
             {row.staffType ? (
               <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{row.staffType}</span>
             ) : null}
@@ -280,7 +282,7 @@ export function ResourceForm({
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [url, setUrl] = useState(initial?.url ?? "");
-  const [unitId, setUnitId] = useState(initial?.unitId ?? "");
+  const [unitIds, setUnitIds] = useState<string[]>(initial?.unitIds ?? []);
   const [staffType, setStaffType] = useState(initial?.staffType ?? "");
   const [userId, setUserId] = useState(initial?.userId ?? "");
 
@@ -293,7 +295,7 @@ export function ResourceForm({
         title: title.trim(),
         content: content.trim(),
         url: url.trim(),
-        unitId: unitId || null,
+        unitIds: unitIds.length ? unitIds : null,
         staffType: staffType.trim() || null,
         userId: userId || null,
       };
@@ -357,20 +359,24 @@ export function ResourceForm({
           className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
         />
       </label>
-      <label className="col-span-2 space-y-1 sm:col-span-1">
-        <span className="font-medium"><Bi zh="单位（可选）" en="Unit (optional)" /></span>
-        <select
-          value={unitId}
-          onChange={(e) => setUnitId(e.target.value)}
-          className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
-        >
-          <option value="">{t("全部单位", "All units")}</option>
+      <label className="col-span-2 space-y-1">
+        <span className="font-medium"><Bi zh="单位（可选，不选表示全部单位）" en="Units (optional, none = all units)" /></span>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-md border border-neutral-300 px-2 py-1.5">
           {units.map((u) => (
-            <option key={u.id} value={u.id}>
+            <label key={u.id} className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={unitIds.includes(u.id)}
+                onChange={(e) =>
+                  setUnitIds((prev) =>
+                    e.target.checked ? [...prev, u.id] : prev.filter((id) => id !== u.id),
+                  )
+                }
+              />
               {u.unitName}
-            </option>
+            </label>
           ))}
-        </select>
+        </div>
       </label>
       <label className="col-span-2 space-y-1 sm:col-span-1">
         <span className="font-medium"><Bi zh="工种（可选）" en="Staff type (optional)" /></span>
