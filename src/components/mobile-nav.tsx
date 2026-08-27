@@ -25,7 +25,7 @@ export function MobileNav({ role }: { role: Role }) {
 
       {open ? (
         <div className="fixed inset-0 z-50 flex">
-          <div className="w-64 max-w-[80vw] space-y-6 bg-white p-4 shadow-lg">
+          <div className="flex w-64 max-w-[80vw] flex-col space-y-6 bg-white p-4 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-purple-900">Bliss Rooms</p>
@@ -43,6 +43,9 @@ export function MobileNav({ role }: { role: Role }) {
               </button>
             </div>
             <DashboardNav role={role} />
+            <p className="mt-auto pt-4 text-center text-xs text-neutral-400">
+              © {new Date().getFullYear()} Bliss Rooms
+            </p>
           </div>
           <button
             type="button"

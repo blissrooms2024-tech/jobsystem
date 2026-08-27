@@ -8,6 +8,7 @@ export default function SignupPage() {
         <p className="text-sm text-neutral-500">员工注册 Employee Sign Up</p>
       </div>
       <SignupForm />
+      <p className="text-xs text-neutral-400">© {new Date().getFullYear()} Bliss Rooms</p>
     </main>
   );
 }
