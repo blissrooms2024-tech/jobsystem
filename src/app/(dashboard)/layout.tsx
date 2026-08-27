@@ -67,6 +67,9 @@ export default async function DashboardLayout({
           </p>
         </div>
         <DashboardNav role={user.role} />
+        <p className="mt-auto pt-4 text-center text-xs text-neutral-400">
+          © {new Date().getFullYear()} Bliss Rooms
+        </p>
       </aside>
       {/* min-w-0 is required here — without it, a flex child containing a
           wide element (like a table with min-w-[...]) forces this whole

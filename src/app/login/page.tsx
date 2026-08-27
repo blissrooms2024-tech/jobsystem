@@ -11,6 +11,7 @@ export default function LoginPage() {
       <Suspense>
         <LoginForm />
       </Suspense>
+      <p className="text-xs text-neutral-400">© {new Date().getFullYear()} Bliss Rooms</p>
     </main>
   );
 }
