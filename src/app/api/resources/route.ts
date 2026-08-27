@@ -10,9 +10,9 @@ const bodySchema = z.object({
   title: z.string().min(1),
   content: z.string().optional(),
   url: z.string().optional(),
-  unitId: z.string().uuid().optional(),
-  staffType: z.string().optional(),
-  userId: z.string().uuid().optional(),
+  unitId: z.string().uuid().nullable().optional(),
+  staffType: z.string().nullable().optional(),
+  userId: z.string().uuid().nullable().optional(),
 });
 
 // Any logged-in user can read resources — employees need to see them.
