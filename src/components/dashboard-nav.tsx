@@ -26,6 +26,8 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/leaves", zh: "请假", en: "Leaves" },
   { href: "/chat", zh: "聊天", en: "Chat" },
   { href: "/resources", zh: "资源", en: "Resources" },
+  { href: "/contacts", zh: "联系方式", en: "Contacts" },
+  { href: "/notices", zh: "公告", en: "Notices" },
   { href: "/team", zh: "我的下属", en: "My Team", roles: ["supervisor"] },
   { href: "/users", zh: "员工", en: "Users", roles: ADMIN_ROLES },
   { href: "/units", zh: "单位", en: "Units", roles: ADMIN_ROLES },
