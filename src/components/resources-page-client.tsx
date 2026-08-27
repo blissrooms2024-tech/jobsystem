@@ -146,6 +146,7 @@ function ResourceItem({
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const del = () => {
@@ -164,22 +165,23 @@ function ResourceItem({
     );
   }
 
+  const badges = row.unitName || row.staffType || row.assigneeName;
+
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-neutral-200 p-3">
-      <div className="min-w-0 space-y-1">
+      <button
+        type="button"
+        onClick={() => setShowDetail(true)}
+        className="min-w-0 flex-1 space-y-1 text-left"
+      >
         <p className="font-medium">{row.title}</p>
-        {row.content ? <p className="text-sm whitespace-pre-wrap text-neutral-600">{row.content}</p> : null}
+        {row.content ? <p className="line-clamp-2 text-sm text-neutral-600">{row.content}</p> : null}
         {row.url ? (
-          <a
-            href={row.url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-purple-700 hover:underline"
-          >
+          <span className="inline-flex items-center gap-1 text-sm text-purple-700">
             <ExternalLink size={13} /> {row.url}
-          </a>
+          </span>
         ) : null}
-        {row.unitName || row.staffType || row.assigneeName ? (
+        {badges ? (
           <p className="flex flex-wrap gap-1 pt-1">
             {row.unitName ? (
               <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{row.unitName}</span>
@@ -194,7 +196,7 @@ function ResourceItem({
             ) : null}
           </p>
         ) : null}
-      </div>
+      </button>
       {isAdmin ? (
         <div className="flex shrink-0 items-center gap-1">
           <button
@@ -214,6 +216,54 @@ function ResourceItem({
           >
             <Trash2 size={14} />
           </button>
+        </div>
+      ) : null}
+      {showDetail ? (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowDetail(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-lg font-semibold">{row.title}</p>
+            {row.content ? (
+              <p className="mt-2 text-sm whitespace-pre-wrap text-neutral-600">{row.content}</p>
+            ) : null}
+            {row.url ? (
+              <a
+                href={row.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex items-center gap-1 text-sm text-purple-700 hover:underline"
+              >
+                <ExternalLink size={13} /> {row.url}
+              </a>
+            ) : null}
+            {badges ? (
+              <p className="mt-2 flex flex-wrap gap-1">
+                {row.unitName ? (
+                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{row.unitName}</span>
+                ) : null}
+                {row.staffType ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{row.staffType}</span>
+                ) : null}
+                {row.assigneeName ? (
+                  <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs text-purple-800">
+                    {row.assigneeStaffId ?? row.assigneeUserCode} · {row.assigneeName}
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setShowDetail(false)}
+              className="mt-4 w-full rounded-md bg-purple-700 hover:bg-purple-800 px-4 py-2 text-sm font-medium text-white"
+            >
+              <Bi zh="关闭" en="Close" />
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

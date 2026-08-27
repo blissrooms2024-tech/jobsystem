@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { notices } from "@/db/schema";
 import { myToday } from "@/lib/job-timing";
 import { NoticesAdmin } from "@/components/notices-admin";
+import { NoticesList } from "@/components/notices-list";
 import { Bi } from "@/components/bi";
 
 export default async function NoticesPage() {
@@ -44,14 +45,7 @@ export default async function NoticesPage() {
           <Bi zh="暂无公告" en="No notices right now" />
         </p>
       ) : (
-        <div className="space-y-2">
-          {activeNotices.map((n) => (
-            <div key={n.id} className="rounded-lg border border-neutral-200 p-3">
-              <p className="font-medium">{n.title}</p>
-              {n.content ? <p className="mt-1 text-sm text-neutral-600">{n.content}</p> : null}
-            </div>
-          ))}
-        </div>
+        <NoticesList notices={activeNotices.map((n) => ({ id: n.id, title: n.title, content: n.content }))} />
       )}
     </div>
   );
