@@ -10,7 +10,7 @@ const bodySchema = z.object({
   title: z.string().min(1).optional(),
   content: z.string().optional(),
   url: z.string().optional(),
-  unitId: z.string().uuid().nullable().optional(),
+  unitIds: z.array(z.string().uuid()).nullable().optional(),
   staffType: z.string().nullable().optional(),
   userId: z.string().uuid().nullable().optional(),
 });
@@ -37,7 +37,7 @@ export async function PATCH(
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(data.content !== undefined ? { content: data.content || null } : {}),
       ...(data.url !== undefined ? { url: data.url || null } : {}),
-      ...(data.unitId !== undefined ? { unitId: data.unitId } : {}),
+      ...(data.unitIds !== undefined ? { unitIds: data.unitIds?.length ? data.unitIds : null } : {}),
       ...(data.staffType !== undefined ? { staffType: data.staffType || null } : {}),
       ...(data.userId !== undefined ? { userId: data.userId } : {}),
       updatedAt: new Date(),

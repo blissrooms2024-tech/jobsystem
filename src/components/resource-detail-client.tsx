@@ -51,7 +51,7 @@ export function ResourceDetailClient({
           title: `${row.title} (${t("副本", "copy")})`,
           content: row.content ?? "",
           url: row.url ?? "",
-          unitId: row.unitId,
+          unitIds: row.unitIds,
           staffType: row.staffType,
           userId: row.userId,
         }),
@@ -65,7 +65,10 @@ export function ResourceDetailClient({
     });
   };
 
-  const badges = row.unitName || row.staffType || row.assigneeName;
+  const unitNames = row.unitIds?.length
+    ? units.filter((u) => row.unitIds!.includes(u.id)).map((u) => u.unitName)
+    : [];
+  const badges = unitNames.length > 0 || row.staffType || row.assigneeName;
 
   return (
     <div className="max-w-2xl space-y-4">
@@ -100,9 +103,9 @@ export function ResourceDetailClient({
           ) : null}
           {badges ? (
             <p className="flex flex-wrap gap-1 pt-1">
-              {row.unitName ? (
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{row.unitName}</span>
-              ) : null}
+              {unitNames.map((name) => (
+                <span key={name} className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">{name}</span>
+              ))}
               {row.staffType ? (
                 <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">{row.staffType}</span>
               ) : null}
