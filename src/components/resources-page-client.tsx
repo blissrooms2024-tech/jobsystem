@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Pencil, Trash2, ExternalLink, Copy } from "lucide-react";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 import { Bi } from "@/components/bi";
 import { useLang } from "@/lib/use-lang";
@@ -26,6 +26,14 @@ type Row = {
 
 type UnitOption = { id: string; unitName: string };
 type EmployeeOption = { id: string; name: string; staffId: string | null; userCode: string };
+
+// Contacts are usually just a phone/WhatsApp number, not a real URL — turn
+// those into a tel: link instead of trying to navigate to them as-is.
+function linkHref(value: string): string {
+  if (/^https?:\/\//i.test(value)) return value;
+  const digits = value.replace(/[^\d+]/g, "");
+  return digits ? `tel:${digits}` : value;
+}
 
 const TYPE_LABEL: Record<ResourceType, { zh: string; en: string }> = {
   guideline: { zh: "指南 / SOP", en: "Guidelines" },
@@ -157,6 +165,29 @@ function ResourceItem({
     });
   };
 
+  const duplicate = () => {
+    startTransition(async () => {
+      const res = await fetch("/api/resources", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: row.type,
+          title: `${row.title} (${t("副本", "copy")})`,
+          content: row.content ?? "",
+          url: row.url ?? "",
+          unitId: row.unitId,
+          staffType: row.staffType,
+          userId: row.userId,
+        }),
+      });
+      if (!res.ok) {
+        alert(t("复制失败", "Copy failed"));
+        return;
+      }
+      router.refresh();
+    });
+  };
+
   if (editing) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
@@ -210,6 +241,15 @@ function ResourceItem({
           <button
             type="button"
             disabled={isPending}
+            title={t("复制", "Copy")}
+            onClick={duplicate}
+            className="rounded-md border border-neutral-200 p-1.5 hover:bg-neutral-50"
+          >
+            <Copy size={14} />
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
             title={t("删除", "Delete")}
             onClick={del}
             className="rounded-md border border-red-200 p-1.5 text-red-700 hover:bg-red-50"
@@ -233,7 +273,7 @@ function ResourceItem({
             ) : null}
             {row.url ? (
               <a
-                href={row.url}
+                href={linkHref(row.url)}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-2 inline-flex items-center gap-1 text-sm text-purple-700 hover:underline"
@@ -360,12 +400,12 @@ function ResourceForm({
         />
       </label>
       <label className="col-span-2 space-y-1">
-        <span className="font-medium"><Bi zh="链接" en="URL" /></span>
+        <span className="font-medium"><Bi zh="链接 / 电话 / WhatsApp" en="Link / Phone / WhatsApp" /></span>
         <input
-          type="url"
+          type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://..."
+          placeholder={t("https://... 或电话号码", "https://... or a phone number")}
           className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
         />
       </label>
