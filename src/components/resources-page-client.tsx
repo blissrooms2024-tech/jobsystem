@@ -33,29 +33,37 @@ const TYPE_LABEL: Record<ResourceType, { zh: string; en: string }> = {
   contact: { zh: "联系方式", en: "Contacts" },
   drive_link: { zh: "Google Drive 链接", en: "Drive Links" },
 };
-const TYPE_ORDER: ResourceType[] = ["guideline", "tutorial", "contact", "drive_link"];
+const ALL_TYPES: ResourceType[] = ["guideline", "tutorial", "drive_link", "contact"];
 
 export function ResourcesPageClient({
   rows,
   units,
   employees,
   isAdmin,
+  types = ALL_TYPES,
+  addLabel,
 }: {
   rows: Row[];
   units: UnitOption[];
   employees: EmployeeOption[];
   isAdmin: boolean;
+  /** Restrict which resource types this page manages/shows — e.g. the
+   * Contacts page only deals with "contact". Single-type pages skip the
+   * type picker and the grouped section headers. */
+  types?: ResourceType[];
+  addLabel?: { zh: string; en: string };
 }) {
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [showAdd, setShowAdd] = useState(false);
+  const singleType = types.length === 1 ? types[0] : null;
 
   const grouped = useMemo(() => {
     const map = new Map<ResourceType, Row[]>();
-    for (const type of TYPE_ORDER) map.set(type, []);
-    for (const r of rows) map.get(r.type)?.push(r);
+    for (const type of types) map.set(type, []);
+    for (const r of rows) if (types.includes(r.type)) map.get(r.type)?.push(r);
     return map;
-  }, [rows]);
+  }, [rows, types]);
 
   return (
     <div className="space-y-6">
@@ -66,39 +74,57 @@ export function ResourcesPageClient({
             onClick={() => setShowAdd((v) => !v)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-1.5 text-sm font-medium text-white"
           >
-            {showAdd ? <Bi zh="取消" en="Cancel" /> : <>+ <Bi zh="添加资源" en="Add resource" /></>}
+            {showAdd ? (
+              <Bi zh="取消" en="Cancel" />
+            ) : (
+              <>+ <Bi zh={addLabel?.zh ?? "添加资源"} en={addLabel?.en ?? "Add resource"} /></>
+            )}
           </button>
         </div>
       ) : null}
 
       {showAdd ? (
         <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-          <ResourceForm units={units} employees={employees} onDone={() => setShowAdd(false)} />
+          <ResourceForm units={units} employees={employees} types={types} onDone={() => setShowAdd(false)} />
         </div>
       ) : null}
 
-      {TYPE_ORDER.map((type) => {
-        const items = grouped.get(type) ?? [];
-        if (items.length === 0 && !isAdmin) return null;
-        return (
-          <div key={type} className="space-y-2">
-            <h2 className="text-sm font-semibold text-neutral-700">
-              <Bi zh={TYPE_LABEL[type].zh} en={TYPE_LABEL[type].en} />
-            </h2>
-            {items.length === 0 ? (
-              <p className="text-sm text-neutral-400">
-                <Bi zh="暂无内容" en="Nothing here yet" />
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {items.map((r) => (
-                  <ResourceItem key={r.id} row={r} units={units} employees={employees} isAdmin={isAdmin} t={t} />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {singleType ? (
+        <div className="space-y-2">
+          {(grouped.get(singleType) ?? []).length === 0 ? (
+            <p className="text-sm text-neutral-400">
+              <Bi zh="暂无内容" en="Nothing here yet" />
+            </p>
+          ) : (
+            (grouped.get(singleType) ?? []).map((r) => (
+              <ResourceItem key={r.id} row={r} units={units} employees={employees} types={types} isAdmin={isAdmin} t={t} />
+            ))
+          )}
+        </div>
+      ) : (
+        types.map((type) => {
+          const items = grouped.get(type) ?? [];
+          if (items.length === 0 && !isAdmin) return null;
+          return (
+            <div key={type} className="space-y-2">
+              <h2 className="text-sm font-semibold text-neutral-700">
+                <Bi zh={TYPE_LABEL[type].zh} en={TYPE_LABEL[type].en} />
+              </h2>
+              {items.length === 0 ? (
+                <p className="text-sm text-neutral-400">
+                  <Bi zh="暂无内容" en="Nothing here yet" />
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {items.map((r) => (
+                    <ResourceItem key={r.id} row={r} units={units} employees={employees} types={types} isAdmin={isAdmin} t={t} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
@@ -107,12 +133,14 @@ function ResourceItem({
   row,
   units,
   employees,
+  types,
   isAdmin,
   t,
 }: {
   row: Row;
   units: UnitOption[];
   employees: EmployeeOption[];
+  types: ResourceType[];
   isAdmin: boolean;
   t: (zh: string, en: string) => string;
 }) {
@@ -131,7 +159,7 @@ function ResourceItem({
   if (editing) {
     return (
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-        <ResourceForm units={units} employees={employees} initial={row} onDone={() => setEditing(false)} />
+        <ResourceForm units={units} employees={employees} types={types} initial={row} onDone={() => setEditing(false)} />
       </div>
     );
   }
@@ -195,11 +223,13 @@ function ResourceItem({
 function ResourceForm({
   units,
   employees,
+  types,
   initial,
   onDone,
 }: {
   units: UnitOption[];
   employees: EmployeeOption[];
+  types: ResourceType[];
   initial?: Row;
   onDone: () => void;
 }) {
@@ -208,7 +238,7 @@ function ResourceForm({
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [type, setType] = useState<ResourceType>(initial?.type ?? "guideline");
+  const [type, setType] = useState<ResourceType>(initial?.type ?? types[0]);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
   const [url, setUrl] = useState(initial?.url ?? "");
@@ -246,19 +276,22 @@ function ResourceForm({
 
   return (
     <div className="grid grid-cols-2 gap-3 text-sm">
-      <label className="col-span-2 space-y-1 sm:col-span-1">
-        <span className="font-medium"><Bi zh="类型" en="Type" /></span>
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as ResourceType)}
-          className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
-        >
-          <option value="guideline">{t("指南 / SOP", "Guideline")}</option>
-          <option value="tutorial">{t("教程", "Tutorial")}</option>
-          <option value="contact">{t("联系方式", "Contact")}</option>
-          <option value="drive_link">{t("Google Drive 链接", "Drive Link")}</option>
-        </select>
-      </label>
+      {types.length > 1 ? (
+        <label className="col-span-2 space-y-1 sm:col-span-1">
+          <span className="font-medium"><Bi zh="类型" en="Type" /></span>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as ResourceType)}
+            className="w-full rounded-md border border-neutral-300 px-2 py-1.5"
+          >
+            {types.map((ty) => (
+              <option key={ty} value={ty}>
+                {t(TYPE_LABEL[ty].zh, TYPE_LABEL[ty].en)}
+              </option>
+            ))}
+          </select>
+        </label>
+      ) : null}
       <label className="col-span-2 space-y-1 sm:col-span-1">
         <span className="font-medium"><Bi zh="标题" en="Title" /> *</span>
         <input

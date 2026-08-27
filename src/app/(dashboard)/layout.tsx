@@ -10,6 +10,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { ChatNotifier } from "@/components/chat-notifier";
 import { ChatWidget } from "@/components/chat-widget";
+import { NoticePopup } from "@/components/notice-popup";
 import { MyProfileForm } from "@/components/my-profile-form";
 import { Bi } from "@/components/bi";
 import { signOutAction } from "./actions";
@@ -56,6 +57,7 @@ export default async function DashboardLayout({
       <PresenceHeartbeat />
       <ChatNotifier />
       <ChatWidget currentUserId={user.id} />
+      <NoticePopup notices={activeNotices.map((n) => ({ id: n.id, title: n.title, content: n.content }))} />
       <aside className="hidden w-56 shrink-0 flex-col border-r border-purple-100 bg-purple-50/40 p-4 sm:flex">
         <div className="mb-6">
           {/* eslint-disable-next-line @next/next/no-img-element -- static SVG in /public, no Image optimization needed */}
@@ -96,12 +98,6 @@ export default async function DashboardLayout({
             <Bi zh="请先修改初始密码" en="Please change your temporary password" /> →
           </a>
         ) : null}
-        {activeNotices.map((n) => (
-          <div key={n.id} className="bg-purple-50 px-4 py-2 text-center text-sm text-purple-900 sm:px-6">
-            <span className="font-medium">{n.title}</span>
-            {n.content ? <span className="text-purple-700"> — {n.content}</span> : null}
-          </div>
-        ))}
         {/* Extra bottom padding on desktop so the floating chat launcher
             (fixed bottom-right) never sits on top of the last row's action
             buttons in a long table. */}
