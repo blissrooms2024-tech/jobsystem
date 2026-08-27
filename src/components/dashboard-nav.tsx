@@ -18,20 +18,25 @@ type NavItem = {
 const ADMIN_ROLES: Role[] = ["boss", "admin"];
 
 const NAV_ITEMS: NavItem[] = [
+  // Daily work
   { href: "/", zh: "总览", en: "Dashboard" },
   { href: "/jobs", zh: "任务", en: "Jobs" },
   { href: "/jobs/calendar", zh: "日历", en: "Calendar" },
+  { href: "/leaves", zh: "请假", en: "Leaves" },
   { href: "/payroll", zh: "工资", en: "Payroll", roles: ["boss", "admin"] },
   { href: "/payroll/me", zh: "我的工资", en: "My Payslips", roles: ["employee", "supervisor"] },
-  { href: "/leaves", zh: "请假", en: "Leaves" },
-  { href: "/chat", zh: "聊天", en: "Chat" },
-  { href: "/resources", zh: "资源", en: "Resources" },
-  { href: "/contacts", zh: "联系方式", en: "Contacts" },
-  { href: "/notices", zh: "公告", en: "Notices" },
+  // Team & setup (admin/supervisor)
   { href: "/team", zh: "我的下属", en: "My Team", roles: ["supervisor"] },
   { href: "/users", zh: "员工", en: "Users", roles: ADMIN_ROLES },
   { href: "/units", zh: "单位", en: "Units", roles: ADMIN_ROLES },
   { href: "/job-types", zh: "工种", en: "Job Types", roles: ADMIN_ROLES },
+  // Communication
+  { href: "/chat", zh: "聊天", en: "Chat" },
+  { href: "/notices", zh: "公告", en: "Notices" },
+  // Reference material
+  { href: "/resources", zh: "资源", en: "Resources" },
+  { href: "/contacts", zh: "联系方式", en: "Contacts" },
+  // Personal
   { href: "/account", zh: "我的账号", en: "Account" },
 ];
 
