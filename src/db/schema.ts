@@ -99,6 +99,10 @@ export const users = pgTable(
     // Posting Agents post updates on their personal FB profile — admins
     // need the link on file to check the posts actually went up.
     fbProfileLink: text("fb_profile_link"),
+    // Which unit(s)/property location(s) this employee works at — a plain
+    // array (not a join table), same approach as resources.unitIds. Empty/
+    // null means unassigned, not "all units".
+    unitIds: uuid("unit_ids").array(),
     // Self-service signups land here with active=false so authorize() in
     // auth.ts already refuses login without any extra check — this flag is
     // purely so the Users list/admin UI can tell "pending approval" apart

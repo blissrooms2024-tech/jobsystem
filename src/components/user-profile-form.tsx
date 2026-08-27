@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { STAFF_TYPE_SUGGESTIONS } from "@/lib/staff-types";
 import { Bi } from "@/components/bi";
 
+type UnitOption = { id: string; unitName: string };
+
 type Props = {
   userId: string;
   name: string;
@@ -21,6 +23,8 @@ type Props = {
   payRate: string | null;
   needCheckin: boolean;
   donePhotos: number;
+  units: UnitOption[];
+  unitIds: string[] | null;
 };
 
 export function UserProfileForm(props: Props) {
@@ -28,6 +32,7 @@ export function UserProfileForm(props: Props) {
   const [error, setError] = useState<React.ReactNode>(null);
   const [saved, setSaved] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [unitIds, setUnitIds] = useState<string[]>(props.unitIds ?? []);
 
   return (
     <form
@@ -48,6 +53,7 @@ export function UserProfileForm(props: Props) {
             bankName: String(formData.get("bankName") || ""),
             bankAccount: String(formData.get("bankAccount") || ""),
             fbProfileLink: String(formData.get("fbProfileLink") || ""),
+            unitIds: unitIds.length ? unitIds : null,
             payRate: String(formData.get("payRate") || "") || undefined,
             needCheckin: formData.get("needCheckin") === "on",
             donePhotos: formData.get("donePhotos") === "on" ? "1" : "0",
@@ -86,6 +92,29 @@ export function UserProfileForm(props: Props) {
             <option key={t} value={t} />
           ))}
         </datalist>
+      </label>
+      <label className="col-span-2 space-y-1 text-sm">
+        <span className="font-medium"><Bi zh="单位（可选，可多选）" en="Units (optional, multiple allowed)" /></span>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 rounded-md border border-neutral-300 px-3 py-2">
+          {props.units.length === 0 ? (
+            <span className="text-neutral-400">-</span>
+          ) : (
+            props.units.map((u) => (
+              <label key={u.id} className="flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={unitIds.includes(u.id)}
+                  onChange={(e) =>
+                    setUnitIds((prev) =>
+                      e.target.checked ? [...prev, u.id] : prev.filter((id) => id !== u.id),
+                    )
+                  }
+                />
+                {u.unitName}
+              </label>
+            ))
+          )}
+        </div>
       </label>
       <label className="col-span-2 space-y-1 text-sm sm:col-span-1">
         <span className="font-medium"><Bi zh="单价" en="Pay rate" /></span>
