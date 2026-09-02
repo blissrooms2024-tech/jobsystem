@@ -61,12 +61,13 @@ export function datesBetween(start: string, end: string): string[] {
   return dates;
 }
 
-/** Validates a schedDate is not in the past and not too far in the future. */
+/**
+ * Validates a schedDate is not too far in the future. Past dates are
+ * allowed — admin/supervisor (the only roles that can create/edit jobs)
+ * need to backdate jobs to record work that was already done before it
+ * was entered into the system.
+ */
 export function assertSchedulableDate(schedDate: string) {
-  const today = myToday();
-  if (schedDate < today) {
-    throw new Error("不能安排过去的日期 Cannot schedule in the past");
-  }
   if (schedDate > maxSchedulableDate()) {
     throw new Error(`只能安排 ${SCHEDULE_AHEAD_DAYS} 天以内的任务 Can only schedule within ${SCHEDULE_AHEAD_DAYS} days`);
   }

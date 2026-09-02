@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobTypes, units, users } from "@/db/schema";
 import { NewJobForm } from "@/components/new-job-form";
-import { myToday, maxSchedulableDate } from "@/lib/job-timing";
+import { maxSchedulableDate } from "@/lib/job-timing";
 import { Bi } from "@/components/bi";
 
 export default async function NewJobPage() {
@@ -33,7 +33,6 @@ export default async function NewJobPage() {
             return u.role === "employee" || u.role === "supervisor";
           })
           .map((u) => ({ id: u.id, label: `${u.staffId ?? u.userCode} · ${u.name}` }))}
-        minDate={myToday()}
         maxDate={maxSchedulableDate()}
       />
     </div>
