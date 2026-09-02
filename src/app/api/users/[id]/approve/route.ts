@@ -62,6 +62,10 @@ export async function POST(
       mustChangePassword: true,
       active: true,
       pendingApproval: false,
+      // Otherwise sweepInactiveUsers() measures from the original signup
+      // date (createdAt) — if approval sat pending for 7+ days, the account
+      // would be auto-deactivated again before the new hire ever logs in.
+      lastSeenAt: new Date(),
     })
     .where(eq(users.id, id))
     .returning();
