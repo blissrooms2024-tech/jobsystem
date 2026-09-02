@@ -41,10 +41,22 @@ export async function PATCH(
   }
   const data = parsed.data;
 
+  // Reactivating a previously-inactive user must restart their 7-day
+  // inactivity countdown from now — otherwise sweepInactiveUsers() (which
+  // measures from lastSeenAt/createdAt) sees the same stale timestamp and
+  // deactivates them again on its very next run before they get a chance
+  // to log back in.
+  let reactivating = false;
+  if (data.active === true) {
+    const [existing] = await db.select({ active: users.active }).from(users).where(eq(users.id, id)).limit(1);
+    reactivating = existing ? !existing.active : false;
+  }
+
   const [updated] = await db
     .update(users)
     .set({
       ...(data.active !== undefined ? { active: data.active } : {}),
+      ...(reactivating ? { lastSeenAt: new Date() } : {}),
       ...(data.role !== undefined ? { role: data.role } : {}),
       ...(data.payRate !== undefined ? { payRate: data.payRate.toFixed(2) } : {}),
       ...(data.name !== undefined ? { name: data.name } : {}),
