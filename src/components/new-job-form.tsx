@@ -10,13 +10,11 @@ export function NewJobForm({
   units,
   jobTypes,
   employees,
-  minDate,
   maxDate,
 }: {
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
-  minDate: string;
   maxDate: string;
 }) {
   const router = useRouter();
@@ -97,10 +95,10 @@ export function NewJobForm({
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field labelZh="日期" labelEn="Date">
-          <input type="date" name="schedDate" required min={minDate} max={maxDate} className="input" />
+          <input type="date" name="schedDate" required max={maxDate} className="input" />
         </Field>
         <Field labelZh="重复直到（可选）" labelEn="Repeat until (optional)">
-          <input type="date" name="repeatUntil" min={minDate} max={maxDate} className="input" />
+          <input type="date" name="repeatUntil" max={maxDate} className="input" />
         </Field>
       </div>
       <p className="-mt-2 text-xs text-neutral-500">

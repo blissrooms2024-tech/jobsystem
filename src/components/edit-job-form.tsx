@@ -11,7 +11,6 @@ export function EditJobForm({
   units,
   jobTypes,
   employees,
-  minDate,
   maxDate,
   initial,
 }: {
@@ -19,7 +18,6 @@ export function EditJobForm({
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
-  minDate: string;
   maxDate: string;
   initial: {
     title: string;
@@ -109,7 +107,7 @@ export function EditJobForm({
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field labelZh="日期" labelEn="Date">
-          <input type="date" name="schedDate" defaultValue={initial.schedDate} required min={minDate} max={maxDate} className="input" />
+          <input type="date" name="schedDate" defaultValue={initial.schedDate} required max={maxDate} className="input" />
         </Field>
         <Field labelZh="工资" labelEn="Pay (RM)">
           <input type="number" step="0.01" name="pay" defaultValue={initial.pay} className="input" />
