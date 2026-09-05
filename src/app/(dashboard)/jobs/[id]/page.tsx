@@ -10,6 +10,7 @@ import { MAX_COMPLETION_PHOTOS, parsePhotos, requiredPhotoCount } from "@/lib/ph
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
+import { PhotoGallery } from "@/components/photo-gallery";
 import { JobAdminActions } from "@/components/job-admin-actions";
 import { Bi } from "@/components/bi";
 
@@ -175,21 +176,7 @@ export default async function JobDetailPage({
             </div>
           ) : null}
           {photos.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {photos.map((p, i) => {
-                const proxied = `/api/jobs/${job.id}/photo?url=${encodeURIComponent(p.url)}`;
-                return (
-                  <a key={i} href={proxied} target="_blank" rel="noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- served through our own proxy, not worth Image optimization config here */}
-                    <img
-                      src={proxied}
-                      alt={`${p.kind} ${p.idx + 1}`}
-                      className="aspect-square w-full rounded-md object-cover"
-                    />
-                  </a>
-                );
-              })}
-            </div>
+            <PhotoGallery jobId={job.id} photos={photos} />
           ) : (
             <p className="text-sm text-neutral-400">
               <Bi zh="暂无照片" en="No photos yet" />
