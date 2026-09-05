@@ -296,6 +296,20 @@ function PayrollRow({
     (Number(jobsPay) || 0) + (Number(baseSalary) || 0) + (Number(allowance) || 0) - (Number(deduction) || 0);
   const isPaid = row.status === "paid";
 
+  // Per-job staff get paid rate × job count — recompute Job pay automatically
+  // when the admin edits the job count, so the two fields don't drift apart.
+  // (Job pay stays freely editable on its own for one-off manual overrides.)
+  const handleJobsCountChange = (v: string) => {
+    setJobsCount(v);
+    if (row.payType === "per_job" && row.payRate) {
+      const count = Number(v);
+      const rate = Number(row.payRate);
+      if (Number.isFinite(count) && Number.isFinite(rate)) {
+        setJobsPay((count * rate).toFixed(2));
+      }
+    }
+  };
+
   const save = () => {
     setError(null);
     startTransition(async () => {
@@ -360,7 +374,7 @@ function PayrollRow({
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <Field labelZh="任务数" labelEn="Jobs" value={jobsCount} onChange={setJobsCount} disabled={isPaid} type="number" />
+        <Field labelZh="任务数" labelEn="Jobs" value={jobsCount} onChange={handleJobsCountChange} disabled={isPaid} type="number" />
         <Field labelZh="任务工资" labelEn="Job pay" value={jobsPay} onChange={setJobsPay} disabled={isPaid} type="number" />
         <Field labelZh="底薪" labelEn="Base" value={baseSalary} onChange={setBaseSalary} disabled={isPaid} type="number" />
         <Field labelZh="津贴" labelEn="Allowance" value={allowance} onChange={setAllowance} disabled={isPaid} type="number" />
