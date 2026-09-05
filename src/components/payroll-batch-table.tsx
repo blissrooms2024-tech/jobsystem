@@ -240,7 +240,7 @@ export function PayrollBatchTable() {
       <div className="space-y-3">
         {filteredRows?.map((row) => (
           <PayrollRow
-            key={`${row.userId}-${row.payrollId ?? "new"}-${row.status ?? "draft"}`}
+            key={`${row.userId}-${row.payrollId ?? "new"}-${row.status ?? "draft"}-${from}-${to}`}
             row={row}
             periodStart={from}
             periodEnd={to}
