@@ -29,12 +29,17 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
   const lang = useLang();
   const t = (zh: string, en: string) => (lang === "en" ? en : zh);
   const [search, setSearch] = useState("");
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const currentMonth = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const [month, setMonth] = useState(currentMonth);
 
+  // Always include the current month even if nothing's been generated for
+  // it yet — otherwise the dropdown can only ever offer months that already
+  // have a payslip, so admin can't pick the month they're about to work on.
   const months = useMemo(() => {
     const set = new Set(rows.map((r) => r.periodStart.slice(0, 7)));
+    set.add(currentMonth);
     return Array.from(set).sort().reverse();
-  }, [rows]);
+  }, [rows, currentMonth]);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
@@ -55,7 +60,7 @@ export function PayrollListClient({ rows, isAdmin }: { rows: Row[]; isAdmin: boo
           className="w-56 rounded-md border border-neutral-300 px-3 py-1.5 text-sm"
         />
         <span className="text-sm text-neutral-500">
-          {search ? (
+          {search || month ? (
             <Bi zh={`共 ${rows.length} 个，筛选出 ${filtered.length} 个`} en={`${filtered.length} of ${rows.length}`} />
           ) : (
             <Bi zh={`共 ${rows.length} 个`} en={`${rows.length} total`} />
