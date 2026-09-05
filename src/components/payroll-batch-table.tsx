@@ -296,17 +296,18 @@ function PayrollRow({
     (Number(jobsPay) || 0) + (Number(baseSalary) || 0) + (Number(allowance) || 0) - (Number(deduction) || 0);
   const isPaid = row.status === "paid";
 
-  // Per-job staff get paid rate × job count — recompute Job pay automatically
-  // when the admin edits the job count, so the two fields don't drift apart.
-  // (Job pay stays freely editable on its own for one-off manual overrides.)
+  // Staff with a configured per-job rate get paid rate × job count —
+  // recompute Job pay automatically when the admin edits the job count, so
+  // the two fields don't drift apart. (Not gated on payType — some accounts
+  // predate that field being set correctly, but a rate on file is a clear
+  // enough signal the employee is paid per job.) Job pay stays freely
+  // editable afterwards for one-off manual overrides.
   const handleJobsCountChange = (v: string) => {
     setJobsCount(v);
-    if (row.payType === "per_job" && row.payRate) {
-      const count = Number(v);
-      const rate = Number(row.payRate);
-      if (Number.isFinite(count) && Number.isFinite(rate)) {
-        setJobsPay((count * rate).toFixed(2));
-      }
+    const rate = Number(row.payRate);
+    const count = Number(v);
+    if (row.payRate && Number.isFinite(rate) && Number.isFinite(count)) {
+      setJobsPay((count * rate).toFixed(2));
     }
   };
 
