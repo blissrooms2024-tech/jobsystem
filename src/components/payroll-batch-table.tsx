@@ -240,7 +240,13 @@ export function PayrollBatchTable() {
       <div className="space-y-3">
         {filteredRows?.map((row) => (
           <PayrollRow
-            key={`${row.userId}-${row.payrollId ?? "new"}-${row.status ?? "draft"}-${from}-${to}`}
+            // Keying on the fetched values (not just user/payroll identity)
+            // forces React to remount — and re-read row's fresh numbers into
+            // local state — any time the server data actually changes, even
+            // if the same payroll draft/period is being viewed again. Without
+            // this, an admin editing a field could keep seeing numbers from
+            // an earlier fetch.
+            key={`${row.userId}-${row.payrollId ?? "new"}-${row.status ?? "draft"}-${from}-${to}-${row.jobsCount}-${row.jobsPay}-${row.baseSalary}-${row.allowance}-${row.deduction}-${row.note}`}
             row={row}
             periodStart={from}
             periodEnd={to}
