@@ -12,9 +12,13 @@ export function generateJobCode(schedDate: Date) {
   return `J${y}${m}${d}-${randomDigits(4)}`;
 }
 
-/** P0001 style sequential code. `nextSeq` is the next free integer sequence value. */
+/**
+ * SL0001 style sequential code. `nextSeq` is the next free integer sequence
+ * value. Uses "SL" (Salary), not "P" — a "P"-prefixed code reads too much
+ * like a Posting Agent staff ID (PA0xx), which is confusing side by side.
+ */
 export function generatePayrollCode(nextSeq: number) {
-  return `P${String(nextSeq).padStart(4, "0")}`;
+  return `SL${String(nextSeq).padStart(4, "0")}`;
 }
 
 /** L0001 style sequential code for leave requests. */
