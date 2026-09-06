@@ -148,15 +148,15 @@ export async function runReminders() {
 }
 
 /**
- * Payroll is paid out every Tuesday before 12pm, so admin needs it settled
- * by Monday. Nudges ADMIN_NOTIFY_EMAIL once, the first time this runs on a
- * Monday each week — idempotent via appSettings so a cron firing every
- * ~30 min doesn't send it repeatedly the same day.
+ * Payroll is now settled once a month, so this nudges ADMIN_NOTIFY_EMAIL
+ * once, the first time this runs on the 28th of each month — idempotent via
+ * appSettings so a cron firing every ~30 min doesn't send it repeatedly the
+ * same day.
  */
 export async function sendPayrollReminder() {
   const today = myToday();
-  const dayOfWeek = new Date(`${today}T00:00:00Z`).getUTCDay(); // 0 = Sun, 1 = Mon
-  if (dayOfWeek !== 1) return { sent: false };
+  const dayOfMonth = Number(today.slice(8, 10));
+  if (dayOfMonth !== 28) return { sent: false };
 
   const [row] = await db
     .select()
@@ -168,10 +168,9 @@ export async function sendPayrollReminder() {
   const link = appUrl();
   await sendMail({
     to: ADMIN_NOTIFY_EMAIL,
-    subject: "Payroll reminder — settle today, payout is tomorrow before 12pm",
+    subject: "Payroll reminder — settle this month's payroll",
     html: `
-      <p>Reminder: payroll is paid out every Tuesday before 12pm.</p>
-      <p>Please make sure this week's payroll is reviewed and settled today (Monday).</p>
+      <p>Reminder: it's the 28th — please review and settle this month's payroll.</p>
       ${link ? `<p><a href="${link}/payroll">Go to Payroll</a></p>` : ""}
     `,
   });
