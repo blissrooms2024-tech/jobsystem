@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { Pencil } from "lucide-react";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { jobs, jobTypes, units, users } from "@/db/schema";
+import { jobs, jobTypes, units, users, courses, courseCompletions } from "@/db/schema";
 import { formatMoney } from "@/lib/utils";
 import { MAX_COMPLETION_PHOTOS, parsePhotos, requiredPhotoCount } from "@/lib/photos";
 import { JOB_STATUS_LABEL } from "@/lib/job-status";
@@ -50,6 +50,22 @@ export default async function JobDetailPage({
   const needCheckin = assignee?.needCheckin ?? true;
   const requiredPhotos = requiredPhotoCount(assignee?.donePhotos);
   const completionPhotoCount = photos.filter((p) => p.kind === "photo").length;
+
+  let missingCourses: { id: string; title: string }[] = [];
+  if (isOwner && job.jobTypeId) {
+    const requiredCourses = await db
+      .select({ id: courses.id, title: courses.title })
+      .from(courses)
+      .where(eq(courses.jobTypeId, job.jobTypeId));
+    if (requiredCourses.length > 0) {
+      const myCompletions = await db
+        .select({ courseId: courseCompletions.courseId })
+        .from(courseCompletions)
+        .where(eq(courseCompletions.userId, currentUser.id));
+      const doneIds = new Set(myCompletions.map((c) => c.courseId));
+      missingCourses = requiredCourses.filter((c) => !doneIds.has(c.id));
+    }
+  }
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -119,6 +135,20 @@ export default async function JobDetailPage({
         </div>
       )}
 
+      {missingCourses.length > 0 ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+          <p>
+            <Bi
+              zh={`🚫 需要先完成培训课程才能打卡/提交此任务：${missingCourses.map((c) => c.title).join("、")}`}
+              en={`🚫 Complete this training first before you can check in / submit this job: ${missingCourses.map((c) => c.title).join(", ")}`}
+            />
+          </p>
+          <Link href="/courses" className="mt-1 inline-block font-medium underline">
+            <Bi zh="去看课程 →" en="Go watch it →" />
+          </Link>
+        </div>
+      ) : null}
+
       {isOwner ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           <Bi
@@ -135,6 +165,7 @@ export default async function JobDetailPage({
           status={job.status}
           photoCount={photos.length}
           requiredPhotos={requiredPhotos}
+          trainingIncomplete={missingCourses.length > 0}
         />
       ) : null}
 

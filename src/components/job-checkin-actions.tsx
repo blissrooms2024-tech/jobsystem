@@ -29,12 +29,14 @@ export function JobCheckinActions({
   status,
   photoCount,
   requiredPhotos,
+  trainingIncomplete,
 }: {
   jobId: string;
   needCheckin: boolean;
   status: string;
   photoCount: number;
   requiredPhotos: number;
+  trainingIncomplete?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +88,7 @@ export function JobCheckinActions({
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            disabled={isPending || status !== "assigned" || photoCount < 1}
+            disabled={isPending || status !== "assigned" || photoCount < 1 || trainingIncomplete}
             onClick={() => call("checkin", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
@@ -97,7 +99,7 @@ export function JobCheckinActions({
           </button>
           <button
             type="button"
-            disabled={isPending || status !== "in_progress" || photoCount < 1}
+            disabled={isPending || status !== "in_progress" || photoCount < 1 || trainingIncomplete}
             onClick={() => call("checkout", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
@@ -113,7 +115,7 @@ export function JobCheckinActions({
         <div>
           <button
             type="button"
-            disabled={isPending || photoCount < requiredPhotos}
+            disabled={isPending || photoCount < requiredPhotos || trainingIncomplete}
             onClick={() => call("complete", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
