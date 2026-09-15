@@ -6,6 +6,7 @@ import { db } from "@/db";
 import { jobs, units } from "@/db/schema";
 import { haversineDistanceMeters } from "@/lib/geo";
 import { assertWithinCheckinWindow, jobEndInstant } from "@/lib/job-timing";
+import { assertTrainingComplete } from "@/lib/courses";
 import { parsePhotos } from "@/lib/photos";
 
 const bodySchema = z.object({
@@ -40,6 +41,12 @@ export async function POST(
       { error: "此任务当前状态不能打卡 This job cannot be checked into right now" },
       { status: 409 },
     );
+  }
+
+  try {
+    await assertTrainingComplete(session.user.id, job.jobTypeId);
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Training required" }, { status: 409 });
   }
 
   try {

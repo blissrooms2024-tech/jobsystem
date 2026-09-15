@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   // Reference material
   { href: "/resources", zh: "资源", en: "Resources" },
   { href: "/contacts", zh: "联系方式", en: "Contacts" },
+  { href: "/courses", zh: "培训课程", en: "Training" },
   // Personal
   { href: "/account", zh: "我的账号", en: "Account" },
 ];
