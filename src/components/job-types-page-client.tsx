@@ -12,6 +12,7 @@ type JobTypeData = {
   typeName: string;
   pay: string;
   active: boolean;
+  requiresPostLink: boolean;
 };
 
 export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
@@ -72,12 +73,20 @@ export function JobTypesPageClient({ rows }: { rows: JobTypeData[] }) {
               <th className="px-3 py-2"><Bi zh="名称" en="Name" /></th>
               <th className="px-3 py-2"><Bi zh="单价" en="Pay" /></th>
               <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
+              <th className="px-3 py-2"><Bi zh="需提交链接" en="Needs link" /></th>
               <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((jt) => (
-              <JobTypeRow key={jt.id} id={jt.id} typeName={jt.typeName} pay={jt.pay} active={jt.active} />
+              <JobTypeRow
+                key={jt.id}
+                id={jt.id}
+                typeName={jt.typeName}
+                pay={jt.pay}
+                active={jt.active}
+                requiresPostLink={jt.requiresPostLink}
+              />
             ))}
           </tbody>
         </table>

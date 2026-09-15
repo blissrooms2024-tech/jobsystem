@@ -12,11 +12,13 @@ export function JobTypeRow({
   typeName,
   pay,
   active,
+  requiresPostLink,
 }: {
   id: string;
   typeName: string;
   pay: string;
   active: boolean;
+  requiresPostLink: boolean;
 }) {
   const router = useRouter();
   const lang = useLang();
@@ -77,6 +79,9 @@ export function JobTypeRow({
             <Bi zh={active ? "启用中" : "已停用"} en={active ? "Active" : "Inactive"} />
           </span>
         </td>
+        <td className="px-3 py-2 text-neutral-400">
+          <Bi zh={requiresPostLink ? "是" : "-"} en={requiresPostLink ? "Yes" : "-"} />
+        </td>
         <td className="px-3 py-2">
           <div className="flex items-center gap-1.5">
             <button
@@ -132,6 +137,29 @@ export function JobTypeRow({
           }
         >
           <Bi zh={active ? "启用中" : "已停用"} en={active ? "Active" : "Inactive"} />
+        </button>
+      </td>
+      <td className="px-3 py-2">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            startTransition(async () => {
+              await fetch(`/api/job-types/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ requiresPostLink: !requiresPostLink }),
+              });
+              router.refresh();
+            });
+          }}
+          className={
+            requiresPostLink
+              ? "rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800"
+              : "rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-500"
+          }
+        >
+          <Bi zh={requiresPostLink ? "需要" : "不需要"} en={requiresPostLink ? "Required" : "Not required"} />
         </button>
       </td>
       <td className="px-3 py-2">

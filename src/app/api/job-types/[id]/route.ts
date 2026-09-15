@@ -9,6 +9,7 @@ const bodySchema = z.object({
   typeName: z.string().min(1).optional(),
   active: z.boolean().optional(),
   pay: z.coerce.number().nonnegative().optional(),
+  requiresPostLink: z.boolean().optional(),
 });
 
 export async function PATCH(
@@ -33,6 +34,7 @@ export async function PATCH(
         ...(parsed.data.typeName !== undefined ? { typeName: parsed.data.typeName } : {}),
         ...(parsed.data.active !== undefined ? { active: parsed.data.active } : {}),
         ...(parsed.data.pay !== undefined ? { pay: parsed.data.pay.toFixed(2) } : {}),
+        ...(parsed.data.requiresPostLink !== undefined ? { requiresPostLink: parsed.data.requiresPostLink } : {}),
       })
       .where(eq(jobTypes.id, id))
       .returning();

@@ -132,6 +132,10 @@ export const jobTypes = pgTable("job_types", {
   typeName: text("type_name").notNull().unique(),
   pay: numeric("pay", { precision: 10, scale: 2 }).notNull(),
   active: boolean("active").notNull().default(true),
+  // Link-based jobs (e.g. Mudah.com/iBilik posting) — employee must submit
+  // the URL of the actual post before they can self-complete a job of this
+  // type, so admin can click through and verify it went up.
+  requiresPostLink: boolean("requires_post_link").notNull().default(false),
 });
 
 export const units = pgTable("units", {
@@ -224,6 +228,10 @@ export const jobs = pgTable(
     // sheet with an open-ended list: [{ url, kind: 'photo'|'before'|'after', idx }]
     photos: jsonb("photos").notNull().default(sql`'[]'::jsonb`),
     notes: text("notes"),
+    // Submitted by the employee for link-based jobs (e.g. Mudah.com/iBilik
+    // posting) so admin can click through and verify the post actually went
+    // up — separate from `notes`, which is set by admin at job creation.
+    postLink: text("post_link"),
     pay: numeric("pay", { precision: 10, scale: 2 }).notNull().default("0"),
     jobTypeId: uuid("job_type_id").references(() => jobTypes.id, {
       onDelete: "set null",
