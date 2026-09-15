@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, jobTypes, users } from "@/db/schema";
 import { assertWithinCheckinWindow, jobEndInstant } from "@/lib/job-timing";
+import { assertTrainingComplete } from "@/lib/courses";
 import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
 
 const bodySchema = z.object({
@@ -75,6 +76,12 @@ export async function POST(
   }
 
   if (!adminOverride) {
+    try {
+      await assertTrainingComplete(session.user.id, job.jobTypeId);
+    } catch (err) {
+      return NextResponse.json({ error: err instanceof Error ? err.message : "Training required" }, { status: 409 });
+    }
+
     try {
       assertWithinCheckinWindow(job);
     } catch (err) {

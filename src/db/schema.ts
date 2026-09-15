@@ -387,6 +387,35 @@ export const notices = pgTable("notices", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// Training videos (external links — YouTube/Drive, not hosted here).
+// Optionally tied to a job type: if set, an employee must have a completion
+// row (courseCompletions) for every course tied to that job type before
+// they can check in / self-complete a job of that type. jobTypeId null means
+// a general-interest course with no gating effect.
+export const courses = pgTable("courses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url").notNull(),
+  jobTypeId: uuid("job_type_id").references(() => jobTypes.id, { onDelete: "set null" }),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Self-reported "I've watched this" — one row per (course, user). No actual
+// video-watch tracking (courses link out to external video hosts, which
+// can't be reliably instrumented from here).
+export const courseCompletions = pgTable(
+  "course_completions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    courseId: uuid("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("course_completions_course_user_idx").on(t.courseId, t.userId)],
+);
+
 export const resourcesRelations = relations(resources, ({ one }) => ({
   assignee: one(users, { fields: [resources.userId], references: [users.id], relationName: "resourceAssignee" }),
   creator: one(users, { fields: [resources.createdBy], references: [users.id] }),
