@@ -11,6 +11,7 @@ import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
 const bodySchema = z.object({
   lat: z.number().optional(),
   lon: z.number().optional(),
+  postLink: z.string().optional(),
 });
 
 // One-step completion for jobs that don't require an on-site GPS check-in
@@ -43,6 +44,10 @@ export async function POST(
   if (!job) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
+
+  const jobType = job.jobTypeId
+    ? (await db.select().from(jobTypes).where(eq(jobTypes.id, job.jobTypeId)).limit(1))[0]
+    : undefined;
 
   const isOwner = job.assignedTo === session.user.id;
   const isAdmin = ["boss", "admin", "supervisor"].includes(session.user.role);
@@ -105,12 +110,18 @@ export async function POST(
         );
       }
     }
+
+    if (jobType?.requiresPostLink && !(job.postLink || parsed.data.postLink)?.trim()) {
+      return NextResponse.json(
+        { error: "请先填写帖子链接 Please enter the post link first" },
+        { status: 400 },
+      );
+    }
   }
 
   let pay = job.pay;
-  if ((!pay || Number(pay) === 0) && job.jobTypeId) {
-    const [jt] = await db.select().from(jobTypes).where(eq(jobTypes.id, job.jobTypeId)).limit(1);
-    if (jt) pay = jt.pay;
+  if ((!pay || Number(pay) === 0) && jobType) {
+    pay = jobType.pay;
   }
 
   const now = new Date();
@@ -125,6 +136,7 @@ export async function POST(
       checkOutLon: parsed.data.lon ?? null,
       status: "completed",
       pay,
+      ...(parsed.data.postLink !== undefined ? { postLink: parsed.data.postLink.trim() || null } : {}),
     })
     .where(eq(jobs.id, id));
 

@@ -112,6 +112,23 @@ export default async function JobDetailPage({
         <Field labelZh="工种" labelEn="Job type" value={jobType?.typeName ?? "-"} />
         <Field labelZh="单位" labelEn="Unit" value={unit?.unitName ?? "-"} />
         <Field labelZh="工资" labelEn="Pay" value={formatMoney(job.pay)} />
+        {job.postLink ? (
+          <Field
+            labelZh="帖子链接"
+            labelEn="Post link"
+            value={
+              <a
+                href={job.postLink}
+                target="_blank"
+                rel="noreferrer"
+                className="break-all text-purple-700 hover:underline"
+              >
+                {job.postLink}
+              </a>
+            }
+            full
+          />
+        ) : null}
         {job.notes ? <Field labelZh="备注" labelEn="Notes" value={job.notes} full /> : null}
       </dl>
 
@@ -166,6 +183,8 @@ export default async function JobDetailPage({
           photoCount={photos.length}
           requiredPhotos={requiredPhotos}
           trainingIncomplete={missingCourses.length > 0}
+          requiresPostLink={jobType?.requiresPostLink ?? false}
+          initialPostLink={job.postLink}
         />
       ) : null}
 
