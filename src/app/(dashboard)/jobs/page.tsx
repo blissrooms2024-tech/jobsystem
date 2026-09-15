@@ -149,7 +149,7 @@ export default async function JobsPage({
             )}
           </>
         ) : null}
-        <JobsDatePicker value={date} />
+        <JobsDatePicker value={date} status={status} assignee={assignee} />
         {isAdmin ? (
           <JobsAssigneeFilter
             value={assignee}
@@ -163,26 +163,32 @@ export default async function JobsPage({
       </div>
 
       <div className="flex flex-wrap gap-2 text-sm">
-        {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => (
-          <Link
-            key={s || "all"}
-            href={
-              (s
-                ? `/jobs?status=${s}${showAll ? "&month=all" : `&month=${month}`}`
-                : showAll
-                  ? "/jobs?month=all"
-                  : `/jobs?month=${month}`) + (assignee ? `&assignee=${assignee}` : "")
-            }
-            className={cn(
-              "rounded-full px-3 py-1",
-              (status || "") === s
-                ? "bg-purple-700 hover:bg-purple-800 text-white"
-                : "bg-neutral-100 text-neutral-700",
-            )}
-          >
-            {s ? <Bi zh={JOB_STATUS_LABEL[s].zh} en={JOB_STATUS_LABEL[s].en} /> : <Bi zh="全部" en="All" />}
-          </Link>
-        ))}
+        {["", "assigned", "in_progress", "completed", "cancelled", "missed"].map((s) => {
+          const params = new URLSearchParams();
+          if (s) params.set("status", s);
+          // A specific date filter takes precedence over month, same as the
+          // rest of this page — dropping it here (as this used to) meant
+          // picking a status silently threw away the date filter and fell
+          // back to the whole month.
+          if (date) params.set("date", date);
+          else if (showAll) params.set("month", "all");
+          else params.set("month", month);
+          if (assignee) params.set("assignee", assignee);
+          return (
+            <Link
+              key={s || "all"}
+              href={`/jobs?${params.toString()}`}
+              className={cn(
+                "rounded-full px-3 py-1",
+                (status || "") === s
+                  ? "bg-purple-700 hover:bg-purple-800 text-white"
+                  : "bg-neutral-100 text-neutral-700",
+              )}
+            >
+              {s ? <Bi zh={JOB_STATUS_LABEL[s].zh} en={JOB_STATUS_LABEL[s].en} /> : <Bi zh="全部" en="All" />}
+            </Link>
+          );
+        })}
       </div>
 
       <JobsListClient
