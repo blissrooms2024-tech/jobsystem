@@ -16,12 +16,19 @@ type Row = {
   title: string;
   status: string;
   schedDate: string;
+  endTime: string | null;
   pay: string;
   unitName: string | null;
   assigneeName: string | null;
   assigneeStaffId: string | null;
   assigneeUserCode: string | null;
 };
+
+// Matches jobEndInstant's default in job-timing.ts — a blank end time still
+// means "due by end of day", so show that instead of a blank cell.
+function formatDeadline(endTime: string | null): string {
+  return (endTime ?? "23:59").slice(0, 5);
+}
 
 export function JobsListClient({
   rows,
@@ -144,6 +151,7 @@ export function JobsListClient({
                 </th>
               ) : null}
               <th className="px-3 py-2"><Bi zh="日期" en="Date" /></th>
+              <th className="px-3 py-2"><Bi zh="截止时间" en="Deadline" /></th>
               <th className="px-3 py-2"><Bi zh="标题" en="Title" /></th>
               {isAdmin ? <th className="px-3 py-2"><Bi zh="负责人" en="Assignee" /></th> : null}
               <th className="px-3 py-2"><Bi zh="单位" en="Unit" /></th>
@@ -170,6 +178,7 @@ export function JobsListClient({
                   </td>
                 ) : null}
                 <td className="px-3 py-2 text-neutral-500">{row.schedDate}</td>
+                <td className="px-3 py-2 text-neutral-500">{formatDeadline(row.endTime)}</td>
                 <td className="px-3 py-2 font-medium text-purple-700">{row.title}</td>
                 {isAdmin ? (
                   <td className="px-3 py-2">
@@ -212,7 +221,7 @@ export function JobsListClient({
             ))}
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={(canDelete ? 1 : 0) + (isAdmin ? 7 : 6)} className="px-3 py-6 text-center text-neutral-400">
+                <td colSpan={(canDelete ? 1 : 0) + (isAdmin ? 8 : 7)} className="px-3 py-6 text-center text-neutral-400">
                   <Bi zh="没有符合的任务" en="No matching jobs" />
                 </td>
               </tr>

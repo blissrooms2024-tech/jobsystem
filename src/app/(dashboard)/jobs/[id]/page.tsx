@@ -90,6 +90,11 @@ export default async function JobDetailPage({
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <Field labelZh="日期" labelEn="Date" value={job.schedDate} />
         <Field
+          labelZh="截止时间"
+          labelEn="Deadline"
+          value={(job.endTime ?? "23:59").slice(0, 5)}
+        />
+        <Field
           labelZh="状态"
           labelEn="Status"
           value={
