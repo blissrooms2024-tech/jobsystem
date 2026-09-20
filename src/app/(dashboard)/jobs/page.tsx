@@ -79,6 +79,7 @@ export default async function JobsPage({
       title: jobs.title,
       status: jobs.status,
       schedDate: jobs.schedDate,
+      endTime: jobs.endTime,
       pay: jobs.pay,
       unitName: units.unitName,
       assigneeName: users.name,
