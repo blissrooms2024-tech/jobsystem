@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runReminders, sendPayrollReminder, sweepInactiveUsers, sweepMissedJobs } from "@/lib/reminders";
+import { sweepOldPhotos } from "@/lib/photo-cleanup";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -30,6 +31,7 @@ export async function GET(request: Request) {
   const deactivated = await runStep("sweepInactiveUsers", sweepInactiveUsers);
   const reminders = await runStep("runReminders", runReminders);
   const payroll = await runStep("sendPayrollReminder", sendPayrollReminder);
+  const photosCleaned = await runStep("sweepOldPhotos", sweepOldPhotos);
 
-  return NextResponse.json({ ok: true, missed, deactivated, reminders, payroll });
+  return NextResponse.json({ ok: true, missed, deactivated, reminders, payroll, photosCleaned });
 }
