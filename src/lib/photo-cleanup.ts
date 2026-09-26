@@ -1,4 +1,4 @@
-import { eq, lt } from "drizzle-orm";
+import { and, eq, lt, sql } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { db } from "@/db";
 import { jobs } from "@/db/schema";
@@ -9,6 +9,14 @@ import { parsePhotos } from "@/lib/photos";
 // job's photos array get cleared once the job is old enough.
 const PHOTO_RETENTION_DAYS = 60;
 
+// Vercel Blob's Hobby plan caps "advanced operations" (deletes included) at
+// 2000/month for the whole store, shared with everything else. The first
+// version of this swept the entire backlog in one run and blew through the
+// whole month's quota instantly, breaking photo uploads for everyone until
+// the quota reset. Capping jobs-per-run (oldest first) spreads the backlog
+// out over many cron runs instead of spiking in one.
+const MAX_JOBS_PER_SWEEP = 10;
+
 export async function sweepOldPhotos() {
   const cutoffDate = new Date(Date.now() - PHOTO_RETENTION_DAYS * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -17,7 +25,13 @@ export async function sweepOldPhotos() {
   const candidates = await db
     .select({ id: jobs.id, photos: jobs.photos })
     .from(jobs)
-    .where(lt(jobs.schedDate, cutoffDate));
+    // Skip jobs whose photos are already cleared — otherwise, since they're
+    // always the *oldest* by schedDate, they'd permanently occupy the top
+    // of every future batch and starve out newly-eligible jobs from ever
+    // being reached.
+    .where(and(lt(jobs.schedDate, cutoffDate), sql`${jobs.photos} <> '[]'::jsonb`))
+    .orderBy(jobs.schedDate)
+    .limit(MAX_JOBS_PER_SWEEP);
 
   let jobsCleaned = 0;
   let filesDeleted = 0;
