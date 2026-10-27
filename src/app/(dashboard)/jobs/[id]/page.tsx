@@ -48,7 +48,10 @@ export default async function JobDetailPage({
 
   const photos = parsePhotos(job.photos);
   const needCheckin = assignee?.needCheckin ?? true;
-  const requiredPhotos = requiredPhotoCount(assignee?.donePhotos);
+  // Link-based job types (Mudah.com/iBilik posting) only need the post
+  // link, not a completion photo too — skip the employee's normal
+  // photo-required setting for those.
+  const requiredPhotos = jobType?.requiresPostLink ? 0 : requiredPhotoCount(assignee?.donePhotos);
   const completionPhotoCount = photos.filter((p) => p.kind === "photo").length;
 
   let missingCourses: { id: string; title: string }[] = [];
