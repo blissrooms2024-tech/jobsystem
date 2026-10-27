@@ -11,6 +11,7 @@ export function EditJobForm({
   units,
   jobTypes,
   employees,
+  titleSuggestions,
   maxDate,
   initial,
 }: {
@@ -18,6 +19,7 @@ export function EditJobForm({
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
+  titleSuggestions: string[];
   maxDate: string;
   initial: {
     title: string;
@@ -70,7 +72,12 @@ export function EditJobForm({
       }}
     >
       <Field labelZh="标题" labelEn="Title">
-        <input name="title" defaultValue={initial.title} required className="input" />
+        <input name="title" defaultValue={initial.title} required list="job-title-suggestions" className="input" />
+        <datalist id="job-title-suggestions">
+          {titleSuggestions.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
       </Field>
       <Field labelZh="说明" labelEn="Description">
         <textarea name="description" defaultValue={initial.description ?? ""} className="input" rows={3} />
