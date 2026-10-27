@@ -100,7 +100,9 @@ export async function POST(
     }
 
     const [assignee] = await db.select().from(users).where(eq(users.id, session.user.id)).limit(1);
-    const need = requiredPhotoCount(assignee?.donePhotos);
+    // Link-based job types only need the post link, not a completion photo
+    // too — skip the employee's normal photo-required setting for those.
+    const need = jobType?.requiresPostLink ? 0 : requiredPhotoCount(assignee?.donePhotos);
     if (need > 0) {
       const photoCount = parsePhotos(job.photos).length;
       if (photoCount < need) {

@@ -10,11 +10,13 @@ export function NewJobForm({
   units,
   jobTypes,
   employees,
+  titleSuggestions,
   maxDate,
 }: {
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
+  titleSuggestions: string[];
   maxDate: string;
 }) {
   const router = useRouter();
@@ -58,7 +60,12 @@ export function NewJobForm({
       }}
     >
       <Field labelZh="标题" labelEn="Title">
-        <input name="title" required className="input" />
+        <input name="title" required list="job-title-suggestions" className="input" />
+        <datalist id="job-title-suggestions">
+          {titleSuggestions.map((t) => (
+            <option key={t} value={t} />
+          ))}
+        </datalist>
       </Field>
       <Field labelZh="说明" labelEn="Description">
         <textarea name="description" className="input" rows={3} />

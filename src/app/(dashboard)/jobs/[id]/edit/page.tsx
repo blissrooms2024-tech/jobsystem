@@ -31,10 +31,11 @@ export default async function EditJobPage({
     row.assignee?.supervisorId === currentUser.id;
   if (!isOwnTeam) notFound();
 
-  const [unitRows, jobTypeRows, employeeRows] = await Promise.all([
+  const [unitRows, jobTypeRows, employeeRows, titleRows] = await Promise.all([
     db.select().from(units),
     db.select().from(jobTypes).where(eq(jobTypes.active, true)),
     db.select().from(users).where(eq(users.active, true)).orderBy(users.staffId, users.userCode),
+    db.selectDistinct({ title: jobs.title }).from(jobs).orderBy(jobs.title),
   ]);
 
   return (
@@ -54,6 +55,7 @@ export default async function EditJobPage({
             return u.role === "employee" || u.role === "supervisor";
           })
           .map((u) => ({ id: u.id, label: `${u.staffId ?? u.userCode} · ${u.name}` }))}
+        titleSuggestions={titleRows.map((t) => t.title)}
         maxDate={maxSchedulableDate()}
         initial={{
           title: row.job.title,
