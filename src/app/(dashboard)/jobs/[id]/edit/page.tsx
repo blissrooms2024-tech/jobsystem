@@ -60,6 +60,7 @@ export default async function EditJobPage({
         initial={{
           title: row.job.title,
           description: row.job.description,
+          project: row.job.project,
           unitId: row.job.unitId,
           assignedTo: row.job.assignedTo,
           schedDate: row.job.schedDate,

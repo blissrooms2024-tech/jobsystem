@@ -11,6 +11,7 @@ import { eq } from "drizzle-orm";
 const bodySchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
+  project: z.string().optional(),
   unitId: z.string().uuid().optional(),
   assignedTo: z.string().uuid(),
   schedDate: z.string(), // yyyy-mm-dd
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
         jobCode: generateJobCode(new Date(schedDate)),
         title: data.title,
         description: data.description,
+        project: data.project || null,
         property,
         unitId: data.unitId,
         assignedTo: data.assignedTo,

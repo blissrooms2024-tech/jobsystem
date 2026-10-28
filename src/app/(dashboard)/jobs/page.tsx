@@ -77,6 +77,7 @@ export default async function JobsPage({
       id: jobs.id,
       jobCode: jobs.jobCode,
       title: jobs.title,
+      project: jobs.project,
       status: jobs.status,
       schedDate: jobs.schedDate,
       endTime: jobs.endTime,

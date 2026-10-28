@@ -118,6 +118,7 @@ export default async function JobDetailPage({
           }
         />
         <Field labelZh="工种" labelEn="Job type" value={jobType?.typeName ?? "-"} />
+        {job.project ? <Field labelZh="项目" labelEn="Project" value={job.project} /> : null}
         <Field labelZh="单位" labelEn="Unit" value={unit?.unitName ?? "-"} />
         <Field labelZh="工资" labelEn="Pay" value={formatMoney(job.pay)} />
         {job.postLink ? (
