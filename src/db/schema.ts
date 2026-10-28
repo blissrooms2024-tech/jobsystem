@@ -203,6 +203,10 @@ export const jobs = pgTable(
     title: text("title").notNull(),
     description: text("description"),
     property: text("property"),
+    // Which listing/building this posting job is for (e.g. "PENANG",
+    // "CEMARA") — a fixed, admin-picked category, separate from `property`
+    // (auto-copied from the job's unit) and from job type (which platform).
+    project: text("project"),
     unitId: uuid("unit_id").references(() => units.id, {
       onDelete: "set null",
     }),

@@ -14,6 +14,7 @@ type Row = {
   id: string;
   jobCode: string;
   title: string;
+  project: string | null;
   status: string;
   schedDate: string;
   endTime: string | null;
@@ -153,8 +154,8 @@ export function JobsListClient({
               <th className="px-3 py-2"><Bi zh="日期" en="Date" /></th>
               <th className="px-3 py-2"><Bi zh="截止时间" en="Deadline" /></th>
               <th className="px-3 py-2"><Bi zh="标题" en="Title" /></th>
+              <th className="px-3 py-2"><Bi zh="项目" en="Project" /></th>
               {isAdmin ? <th className="px-3 py-2"><Bi zh="负责人" en="Assignee" /></th> : null}
-              <th className="px-3 py-2"><Bi zh="单位" en="Unit" /></th>
               <th className="px-3 py-2"><Bi zh="状态" en="Status" /></th>
               <th className="px-3 py-2"><Bi zh="工资" en="Pay" /></th>
               <th className="px-3 py-2"><Bi zh="操作" en="Actions" /></th>
@@ -180,6 +181,7 @@ export function JobsListClient({
                 <td className="px-3 py-2 text-neutral-500">{row.schedDate}</td>
                 <td className="px-3 py-2 text-neutral-500">{formatDeadline(row.endTime)}</td>
                 <td className="px-3 py-2 font-medium text-purple-700">{row.title}</td>
+                <td className="px-3 py-2 text-neutral-500">{row.project ?? "-"}</td>
                 {isAdmin ? (
                   <td className="px-3 py-2">
                     {row.assigneeName ? (
@@ -194,7 +196,6 @@ export function JobsListClient({
                     )}
                   </td>
                 ) : null}
-                <td className="px-3 py-2">{row.unitName ?? "-"}</td>
                 <td className="px-3 py-2">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", JOB_STATUS_STYLE[row.status])}>
                     <Bi zh={JOB_STATUS_LABEL[row.status].zh} en={JOB_STATUS_LABEL[row.status].en} />

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { JOB_PROJECT_OPTIONS } from "@/lib/job-projects";
 
 type Option = { id: string; label: string };
 
@@ -24,6 +25,7 @@ export function EditJobForm({
   initial: {
     title: string;
     description: string | null;
+    project: string | null;
     unitId: string | null;
     assignedTo: string | null;
     schedDate: string;
@@ -47,6 +49,7 @@ export function EditJobForm({
           const payload = {
             title: String(formData.get("title") || ""),
             description: String(formData.get("description") || ""),
+            project: String(formData.get("project") || "") || null,
             unitId: String(formData.get("unitId") || "") || null,
             assignedTo: String(formData.get("assignedTo") || ""),
             schedDate: String(formData.get("schedDate") || ""),
@@ -81,6 +84,16 @@ export function EditJobForm({
       </Field>
       <Field labelZh="说明" labelEn="Description">
         <textarea name="description" defaultValue={initial.description ?? ""} className="input" rows={3} />
+      </Field>
+      <Field labelZh="项目" labelEn="Project">
+        <select name="project" defaultValue={initial.project ?? ""} className="input">
+          <option value="">-- 选择 select --</option>
+          {JOB_PROJECT_OPTIONS.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" defaultValue={initial.jobTypeId ?? ""} className="input">

@@ -68,6 +68,7 @@ export async function POST(
         jobCode: generateJobCode(new Date(schedDate)),
         title: source.title,
         description: source.description,
+        project: source.project,
         property: source.property,
         unitId: source.unitId,
         assignedTo: source.assignedTo,

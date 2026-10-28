@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
+import { JOB_PROJECT_OPTIONS } from "@/lib/job-projects";
 
 type Option = { id: string; label: string };
 
@@ -32,6 +33,7 @@ export function NewJobForm({
           const payload = {
             title: String(formData.get("title") || ""),
             description: String(formData.get("description") || "") || undefined,
+            project: String(formData.get("project") || "") || undefined,
             unitId: String(formData.get("unitId") || "") || undefined,
             assignedTo: String(formData.get("assignedTo") || ""),
             schedDate: String(formData.get("schedDate") || ""),
@@ -69,6 +71,16 @@ export function NewJobForm({
       </Field>
       <Field labelZh="说明" labelEn="Description">
         <textarea name="description" className="input" rows={3} />
+      </Field>
+      <Field labelZh="项目" labelEn="Project">
+        <select name="project" className="input">
+          <option value="">-- 选择 select --</option>
+          {JOB_PROJECT_OPTIONS.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
       </Field>
       <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" className="input">
