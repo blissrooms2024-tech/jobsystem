@@ -208,7 +208,7 @@ export default async function JobDetailPage({
         />
       ) : null}
 
-      {isOwner || isAdmin ? (
+      {(isOwner || isAdmin) && !jobType?.requiresPostLink ? (
         <div className="space-y-3 rounded-lg border border-neutral-200 p-4">
           <p className="text-sm font-medium">
             <Bi zh="照片" en="Photos" />

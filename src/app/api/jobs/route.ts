@@ -20,6 +20,7 @@ const bodySchema = z.object({
   endTime: z.string().optional(),
   jobTypeId: z.string().uuid().optional(),
   notes: z.string().optional(),
+  postLink: z.string().optional(),
 });
 
 const MAX_REPEAT_DAYS = 60;
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
         endTime: data.endTime,
         jobTypeId: data.jobTypeId,
         notes: data.notes,
+        postLink: data.postLink || null,
         pay,
       })),
     )

@@ -34,6 +34,7 @@ export function EditJobForm({
     jobTypeId: string | null;
     notes: string | null;
     pay: string;
+    postLink: string | null;
   };
 }) {
   const router = useRouter();
@@ -58,6 +59,7 @@ export function EditJobForm({
             jobTypeId: String(formData.get("jobTypeId") || "") || null,
             notes: String(formData.get("notes") || ""),
             pay: String(formData.get("pay") || ""),
+            postLink: String(formData.get("postLink") || "") || null,
           };
           const res = await fetch(`/api/jobs/${jobId}`, {
             method: "PATCH",
@@ -143,6 +145,9 @@ export function EditJobForm({
       </div>
       <Field labelZh="备注" labelEn="Notes">
         <textarea name="notes" defaultValue={initial.notes ?? ""} className="input" rows={2} />
+      </Field>
+      <Field labelZh="帖子链接（可选）" labelEn="Post link (optional)">
+        <input type="text" name="postLink" defaultValue={initial.postLink ?? ""} placeholder="https://..." className="input" />
       </Field>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

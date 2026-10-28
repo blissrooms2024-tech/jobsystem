@@ -42,6 +42,7 @@ export function NewJobForm({
             endTime: String(formData.get("endTime") || "") || undefined,
             jobTypeId: String(formData.get("jobTypeId") || "") || undefined,
             notes: String(formData.get("notes") || "") || undefined,
+            postLink: String(formData.get("postLink") || "") || undefined,
           };
           const res = await fetch("/api/jobs", {
             method: "POST",
@@ -140,6 +141,9 @@ export function NewJobForm({
       </div>
       <Field labelZh="备注" labelEn="Notes">
         <textarea name="notes" className="input" rows={2} />
+      </Field>
+      <Field labelZh="帖子链接（可选）" labelEn="Post link (optional)">
+        <input type="text" name="postLink" placeholder="https://..." className="input" />
       </Field>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

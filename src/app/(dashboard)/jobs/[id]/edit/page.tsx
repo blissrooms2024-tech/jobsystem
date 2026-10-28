@@ -69,6 +69,7 @@ export default async function EditJobPage({
           jobTypeId: row.job.jobTypeId,
           notes: row.job.notes,
           pay: row.job.pay,
+          postLink: row.job.postLink,
         }}
       />
     </div>
