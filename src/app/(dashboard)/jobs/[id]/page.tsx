@@ -11,6 +11,7 @@ import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { PhotoGallery } from "@/components/photo-gallery";
+import { JobPostLinkField } from "@/components/job-post-link-field";
 import { JobAdminActions } from "@/components/job-admin-actions";
 import { Bi } from "@/components/bi";
 
@@ -121,22 +122,32 @@ export default async function JobDetailPage({
         {job.project ? <Field labelZh="项目" labelEn="Project" value={job.project} /> : null}
         <Field labelZh="单位" labelEn="Unit" value={unit?.unitName ?? "-"} />
         <Field labelZh="工资" labelEn="Pay" value={formatMoney(job.pay)} />
-        {job.postLink ? (
-          <Field
-            labelZh="帖子链接"
-            labelEn="Post link"
-            value={
-              <a
-                href={job.postLink}
-                target="_blank"
-                rel="noreferrer"
-                className="break-all text-purple-700 hover:underline"
-              >
-                {job.postLink}
-              </a>
-            }
-            full
-          />
+        {jobType?.requiresPostLink ? (
+          <div className="col-span-2">
+            <p className="text-xs text-neutral-400">
+              <Bi zh="帖子链接" en="Post link" />
+            </p>
+            {isAdmin ? (
+              <JobPostLinkField jobId={job.id} initialValue={job.postLink} />
+            ) : (
+              <p className="font-medium">
+                {job.postLink ? (
+                  <a
+                    href={job.postLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="break-all text-purple-700 hover:underline"
+                  >
+                    {job.postLink}
+                  </a>
+                ) : (
+                  <span className="text-neutral-400">
+                    <Bi zh="尚未填写" en="Not yet submitted" />
+                  </span>
+                )}
+              </p>
+            )}
+          </div>
         ) : null}
         {job.notes ? <Field labelZh="备注" labelEn="Notes" value={job.notes} full /> : null}
       </dl>

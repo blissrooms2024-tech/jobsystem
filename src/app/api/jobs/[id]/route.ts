@@ -18,6 +18,7 @@ const bodySchema = z.object({
   jobTypeId: z.string().uuid().nullable().optional(),
   notes: z.string().optional(),
   pay: z.coerce.number().nonnegative().optional(),
+  postLink: z.string().nullable().optional(),
 });
 
 export async function PATCH(
@@ -113,6 +114,7 @@ export async function PATCH(
       ...(data.endTime !== undefined ? { endTime: data.endTime || null } : {}),
       ...(data.jobTypeId !== undefined ? { jobTypeId: data.jobTypeId } : {}),
       ...(data.notes !== undefined ? { notes: data.notes || null } : {}),
+      ...(data.postLink !== undefined ? { postLink: data.postLink || null } : {}),
       ...(pay !== undefined ? { pay } : {}),
     })
     .where(eq(jobs.id, id))
