@@ -5,6 +5,8 @@ import { jobTypes, jobs, units, users } from "@/db/schema";
 import { generateJobCode } from "@/lib/codes";
 import { requireRole } from "@/lib/api-auth";
 import { assertSchedulableDate, datesBetween } from "@/lib/job-timing";
+import { normalizeProject } from "@/lib/job-projects";
+import { cleanPostLinks, parsePostLinks, serializePostLinks } from "@/lib/post-links";
 import { notifyJobAssigned } from "@/lib/reminders";
 import { eq } from "drizzle-orm";
 
@@ -61,6 +63,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const { links: postLinks, invalid: invalidLink } = cleanPostLinks(parsePostLinks(data.postLink));
+  if (invalidLink) {
+    return NextResponse.json({ error: `链接格式不正确 Invalid link: ${invalidLink}` }, { status: 400 });
+  }
+
   // Supervisors may only assign jobs to their own subordinates (or themselves).
   if (auth.session.user.role === "supervisor") {
     const [target] = await db.select().from(users).where(eq(users.id, data.assignedTo)).limit(1);
@@ -96,7 +103,7 @@ export async function POST(request: Request) {
         jobCode: generateJobCode(new Date(schedDate)),
         title: data.title,
         description: data.description,
-        project: data.project || null,
+        project: normalizeProject(data.project),
         property,
         unitId: data.unitId,
         assignedTo: data.assignedTo,
@@ -106,7 +113,7 @@ export async function POST(request: Request) {
         endTime: data.endTime,
         jobTypeId: data.jobTypeId,
         notes: data.notes,
-        postLink: data.postLink || null,
+        postLink: serializePostLinks(postLinks),
         pay,
       })),
     )

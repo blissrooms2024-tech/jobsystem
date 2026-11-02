@@ -5,6 +5,12 @@ import { db } from "@/db";
 import { jobTypes, jobs, payroll, units, users } from "@/db/schema";
 import { requireRole } from "@/lib/api-auth";
 import { assertSchedulableDate } from "@/lib/job-timing";
+import { normalizeProject } from "@/lib/job-projects";
+import { cleanPostLinks, parsePostLinks, serializePostLinks } from "@/lib/post-links";
+
+const STAFF_ROLES = new Set(["boss", "admin", "supervisor"]);
+// What the assigned agent may change on their own job.
+const AGENT_EDITABLE = new Set(["project", "postLinks"]);
 
 const bodySchema = z.object({
   title: z.string().min(1).optional(),
@@ -18,15 +24,18 @@ const bodySchema = z.object({
   jobTypeId: z.string().uuid().nullable().optional(),
   notes: z.string().optional(),
   pay: z.coerce.number().nonnegative().optional(),
+  // Legacy single field (also accepts several links, one per line).
   postLink: z.string().nullable().optional(),
+  postLinks: z.array(z.string().max(2000)).max(20).optional(),
 });
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = await requireRole("boss", "admin", "supervisor");
+  const auth = await requireRole();
   if ("error" in auth) return auth.error;
+  const isStaff = STAFF_ROLES.has(auth.session.user.role);
 
   const { id } = await params;
   const [job] = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
@@ -47,6 +56,32 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
   const data = parsed.data;
+
+  // Posting agents can fill in the project and their post links on their own
+  // job (links often arrive days later, after Mudah/iBilik approve the post),
+  // but nothing else.
+  if (!isStaff) {
+    if (job.assignedTo !== auth.session.user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const extra = Object.keys(data).filter((k) => !AGENT_EDITABLE.has(k));
+    if (extra.length > 0) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  let postLink: string | null | undefined = undefined;
+  if (data.postLinks !== undefined || data.postLink !== undefined) {
+    const raw = data.postLinks ?? parsePostLinks(data.postLink);
+    const { links, invalid } = cleanPostLinks(raw);
+    if (invalid) {
+      return NextResponse.json(
+        { error: `链接格式不正确 Invalid link: ${invalid}` },
+        { status: 400 },
+      );
+    }
+    postLink = serializePostLinks(links);
+  }
 
   if (auth.session.user.role === "supervisor") {
     const currentAssignee = job.assignedTo
@@ -106,7 +141,7 @@ export async function PATCH(
     .set({
       ...(data.title !== undefined ? { title: data.title } : {}),
       ...(data.description !== undefined ? { description: data.description || null } : {}),
-      ...(data.project !== undefined ? { project: data.project || null } : {}),
+      ...(data.project !== undefined ? { project: normalizeProject(data.project) } : {}),
       ...(data.unitId !== undefined ? { unitId: data.unitId, property } : {}),
       ...(data.assignedTo !== undefined ? { assignedTo: data.assignedTo } : {}),
       ...(data.schedDate !== undefined ? { schedDate: data.schedDate } : {}),
@@ -114,7 +149,7 @@ export async function PATCH(
       ...(data.endTime !== undefined ? { endTime: data.endTime || null } : {}),
       ...(data.jobTypeId !== undefined ? { jobTypeId: data.jobTypeId } : {}),
       ...(data.notes !== undefined ? { notes: data.notes || null } : {}),
-      ...(data.postLink !== undefined ? { postLink: data.postLink || null } : {}),
+      ...(postLink !== undefined ? { postLink } : {}),
       ...(pay !== undefined ? { pay } : {}),
     })
     .where(eq(jobs.id, id))

@@ -7,6 +7,7 @@ import { jobs, jobTypes, users } from "@/db/schema";
 import { assertWithinCheckinWindow, jobEndInstant } from "@/lib/job-timing";
 import { assertTrainingComplete } from "@/lib/courses";
 import { parsePhotos, requiredPhotoCount } from "@/lib/photos";
+import { cleanPostLinks, parsePostLinks, serializePostLinks } from "@/lib/post-links";
 
 const bodySchema = z.object({
   lat: z.number().optional(),
@@ -44,6 +45,18 @@ export async function POST(
   if (!job) {
     return NextResponse.json({ error: "Job not found" }, { status: 404 });
   }
+
+  // Links are normally saved beforehand via the job page's link editor; a
+  // link sent with the submit request (older clients) is added to them.
+  const { links: extraLinks, invalid: invalidLink } = cleanPostLinks(
+    parsePostLinks(parsed.data.postLink),
+  );
+  if (invalidLink) {
+    return NextResponse.json({ error: `链接格式不正确 Invalid link: ${invalidLink}` }, { status: 400 });
+  }
+  const mergedPostLink = serializePostLinks([
+    ...new Set([...parsePostLinks(job.postLink), ...extraLinks]),
+  ]);
 
   const jobType = job.jobTypeId
     ? (await db.select().from(jobTypes).where(eq(jobTypes.id, job.jobTypeId)).limit(1))[0]
@@ -113,7 +126,7 @@ export async function POST(
       }
     }
 
-    if (jobType?.requiresPostLink && !(job.postLink || parsed.data.postLink)?.trim()) {
+    if (jobType?.requiresPostLink && parsePostLinks(mergedPostLink).length === 0) {
       return NextResponse.json(
         { error: "请先填写帖子链接 Please enter the post link first" },
         { status: 400 },
@@ -138,7 +151,7 @@ export async function POST(
       checkOutLon: parsed.data.lon ?? null,
       status: "completed",
       pay,
-      ...(parsed.data.postLink !== undefined ? { postLink: parsed.data.postLink.trim() || null } : {}),
+      postLink: mergedPostLink,
     })
     .where(eq(jobs.id, id));
 

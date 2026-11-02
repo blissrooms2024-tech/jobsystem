@@ -1,9 +1,10 @@
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobTypes, jobs, units, users } from "@/db/schema";
 import { NewJobForm } from "@/components/new-job-form";
+import { mergeProjectSuggestions } from "@/lib/job-projects";
 import { maxSchedulableDate } from "@/lib/job-timing";
 import { Bi } from "@/components/bi";
 
@@ -11,11 +12,12 @@ export default async function NewJobPage() {
   const session = await auth();
   if (!["boss", "admin", "supervisor"].includes(session!.user.role)) notFound();
 
-  const [unitRows, jobTypeRows, employeeRows, titleRows] = await Promise.all([
+  const [unitRows, jobTypeRows, employeeRows, titleRows, projectRows] = await Promise.all([
     db.select().from(units),
     db.select().from(jobTypes).where(eq(jobTypes.active, true)),
     db.select().from(users).where(eq(users.active, true)).orderBy(users.staffId, users.userCode),
     db.selectDistinct({ title: jobs.title }).from(jobs).orderBy(jobs.title),
+    db.selectDistinct({ project: jobs.project }).from(jobs).where(isNotNull(jobs.project)),
   ]);
 
   return (
@@ -35,6 +37,7 @@ export default async function NewJobPage() {
           })
           .map((u) => ({ id: u.id, label: `${u.staffId ?? u.userCode} · ${u.name}` }))}
         titleSuggestions={titleRows.map((t) => t.title)}
+        projectSuggestions={mergeProjectSuggestions(projectRows.map((r) => r.project))}
         maxDate={maxSchedulableDate()}
       />
     </div>

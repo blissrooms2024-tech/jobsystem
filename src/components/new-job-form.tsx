@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
-import { JOB_PROJECT_OPTIONS } from "@/lib/job-projects";
 
 type Option = { id: string; label: string };
 
@@ -12,12 +11,14 @@ export function NewJobForm({
   jobTypes,
   employees,
   titleSuggestions,
+  projectSuggestions,
   maxDate,
 }: {
   units: Option[];
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
   titleSuggestions: string[];
+  projectSuggestions: string[];
   maxDate: string;
 }) {
   const router = useRouter();
@@ -74,14 +75,17 @@ export function NewJobForm({
         <textarea name="description" className="input" rows={3} />
       </Field>
       <Field labelZh="项目" labelEn="Project">
-        <select name="project" className="input">
-          <option value="">-- 选择 select --</option>
-          {JOB_PROJECT_OPTIONS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
+        <input
+          name="project"
+          list="job-project-suggestions"
+          placeholder="选择或输入 Pick or type"
+          className="input"
+        />
+        <datalist id="job-project-suggestions">
+          {projectSuggestions.map((p) => (
+            <option key={p} value={p} />
           ))}
-        </select>
+        </datalist>
       </Field>
       <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" className="input">
@@ -142,8 +146,8 @@ export function NewJobForm({
       <Field labelZh="备注" labelEn="Notes">
         <textarea name="notes" className="input" rows={2} />
       </Field>
-      <Field labelZh="帖子链接（可选）" labelEn="Post link (optional)">
-        <input type="text" name="postLink" placeholder="https://..." className="input" />
+      <Field labelZh="帖子链接（可选，一行一个）" labelEn="Post links (optional, one per line)">
+        <textarea name="postLink" placeholder="https://..." className="input" rows={2} />
       </Field>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

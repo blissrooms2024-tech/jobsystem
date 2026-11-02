@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
-import { JOB_PROJECT_OPTIONS } from "@/lib/job-projects";
 
 type Option = { id: string; label: string };
 
@@ -13,6 +12,7 @@ export function EditJobForm({
   jobTypes,
   employees,
   titleSuggestions,
+  projectSuggestions,
   maxDate,
   initial,
 }: {
@@ -21,6 +21,7 @@ export function EditJobForm({
   jobTypes: (Option & { pay: string })[];
   employees: Option[];
   titleSuggestions: string[];
+  projectSuggestions: string[];
   maxDate: string;
   initial: {
     title: string;
@@ -88,14 +89,17 @@ export function EditJobForm({
         <textarea name="description" defaultValue={initial.description ?? ""} className="input" rows={3} />
       </Field>
       <Field labelZh="项目" labelEn="Project">
-        <select name="project" defaultValue={initial.project ?? ""} className="input">
-          <option value="">-- 选择 select --</option>
-          {JOB_PROJECT_OPTIONS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
+        <input
+          name="project" defaultValue={initial.project ?? ""}
+          list="job-project-suggestions"
+          placeholder="选择或输入 Pick or type"
+          className="input"
+        />
+        <datalist id="job-project-suggestions">
+          {projectSuggestions.map((p) => (
+            <option key={p} value={p} />
           ))}
-        </select>
+        </datalist>
       </Field>
       <Field labelZh="工种" labelEn="Job type">
         <select name="jobTypeId" defaultValue={initial.jobTypeId ?? ""} className="input">
@@ -146,8 +150,8 @@ export function EditJobForm({
       <Field labelZh="备注" labelEn="Notes">
         <textarea name="notes" defaultValue={initial.notes ?? ""} className="input" rows={2} />
       </Field>
-      <Field labelZh="帖子链接（可选）" labelEn="Post link (optional)">
-        <input type="text" name="postLink" defaultValue={initial.postLink ?? ""} placeholder="https://..." className="input" />
+      <Field labelZh="帖子链接（可选，一行一个）" labelEn="Post links (optional, one per line)">
+        <textarea name="postLink" defaultValue={initial.postLink ?? ""} placeholder="https://..." className="input" rows={3} />
       </Field>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

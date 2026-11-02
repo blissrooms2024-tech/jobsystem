@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Bi } from "@/components/bi";
-import { biText } from "@/lib/lang";
 
 function getLocation(): Promise<GeolocationPosition> {
   return new Promise((resolve, reject) => {
@@ -32,7 +31,7 @@ export function JobCheckinActions({
   requiredPhotos,
   trainingIncomplete,
   requiresPostLink,
-  initialPostLink,
+  hasPostLink,
 }: {
   jobId: string;
   needCheckin: boolean;
@@ -41,11 +40,10 @@ export function JobCheckinActions({
   requiredPhotos: number;
   trainingIncomplete?: boolean;
   requiresPostLink?: boolean;
-  initialPostLink?: string | null;
+  hasPostLink?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [postLink, setPostLink] = useState(initialPostLink ?? "");
   const router = useRouter();
 
   const call = (path: string, includeLocation: boolean, extra?: Record<string, string>) => {
@@ -119,19 +117,13 @@ export function JobCheckinActions({
         </div>
       ) : (
         <div className="space-y-2">
-          {requiresPostLink ? (
-            <label className="block space-y-1 text-sm">
-              <span className="font-medium text-neutral-700">
-                <Bi zh="帖子链接" en="Post link" /> *
-              </span>
-              <input
-                type="text"
-                value={postLink}
-                onChange={(e) => setPostLink(e.target.value)}
-                placeholder={biText("粘贴已发布帖子的链接", "Paste the link to the post you published")}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          {requiresPostLink && !hasPostLink ? (
+            <p className="text-xs text-neutral-500">
+              <Bi
+                zh="请先在上面「帖子链接」保存至少一个链接才能提交"
+                en="Save at least one link under “Post links” above before submitting"
               />
-            </label>
+            </p>
           ) : null}
           <button
             type="button"
@@ -139,9 +131,9 @@ export function JobCheckinActions({
               isPending ||
               photoCount < requiredPhotos ||
               trainingIncomplete ||
-              (requiresPostLink && !postLink.trim())
+              (requiresPostLink && !hasPostLink)
             }
-            onClick={() => call("complete", true, requiresPostLink ? { postLink: postLink.trim() } : undefined)}
+            onClick={() => call("complete", true)}
             className="rounded-md bg-purple-700 hover:bg-purple-800 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             <Bi zh="提交" en="Submit" />

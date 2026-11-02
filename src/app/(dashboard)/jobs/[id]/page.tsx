@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { Pencil } from "lucide-react";
 import { auth } from "@/auth";
 import { db } from "@/db";
@@ -11,7 +11,10 @@ import { JOB_STATUS_LABEL } from "@/lib/job-status";
 import { JobCheckinActions } from "@/components/job-checkin-actions";
 import { PhotoUploader } from "@/components/photo-uploader";
 import { PhotoGallery } from "@/components/photo-gallery";
-import { JobPostLinkField } from "@/components/job-post-link-field";
+import { JobPostLinksEditor } from "@/components/job-post-links-editor";
+import { JobProjectField } from "@/components/job-project-field";
+import { mergeProjectSuggestions } from "@/lib/job-projects";
+import { parsePostLinks } from "@/lib/post-links";
 import { JobAdminActions } from "@/components/job-admin-actions";
 import { Bi } from "@/components/bi";
 
@@ -54,6 +57,20 @@ export default async function JobDetailPage({
   // photo-required setting for those.
   const requiredPhotos = jobType?.requiresPostLink ? 0 : requiredPhotoCount(assignee?.donePhotos);
   const completionPhotoCount = photos.filter((p) => p.kind === "photo").length;
+  const postLinks = parsePostLinks(job.postLink);
+  // The agent (or admin) can set the project themselves; suggest every
+  // project already used on a job plus the starting list.
+  const canEditAgentFields = isAdmin || isOwner;
+  const projectSuggestions = canEditAgentFields
+    ? mergeProjectSuggestions(
+        (
+          await db
+            .selectDistinct({ project: jobs.project })
+            .from(jobs)
+            .where(isNotNull(jobs.project))
+        ).map((r) => r.project),
+      )
+    : [];
 
   let missingCourses: { id: string; title: string }[] = [];
   if (isOwner && job.jobTypeId) {
@@ -119,34 +136,34 @@ export default async function JobDetailPage({
           }
         />
         <Field labelZh="工种" labelEn="Job type" value={jobType?.typeName ?? "-"} />
-        {job.project ? <Field labelZh="项目" labelEn="Project" value={job.project} /> : null}
+        {canEditAgentFields ? (
+          <div>
+            <dt className="text-xs text-neutral-400">
+              <Bi zh="项目" en="Project" />
+            </dt>
+            <dd>
+              <JobProjectField
+                jobId={job.id}
+                initialValue={job.project}
+                suggestions={projectSuggestions}
+              />
+            </dd>
+          </div>
+        ) : job.project ? (
+          <Field labelZh="项目" labelEn="Project" value={job.project} />
+        ) : null}
         <Field labelZh="单位" labelEn="Unit" value={unit?.unitName ?? "-"} />
         <Field labelZh="工资" labelEn="Pay" value={formatMoney(job.pay)} />
-        {jobType?.requiresPostLink ? (
+        {jobType?.requiresPostLink || postLinks.length > 0 ? (
           <div className="col-span-2">
             <p className="text-xs text-neutral-400">
-              <Bi zh="帖子链接" en="Post link" />
+              <Bi zh="帖子链接" en="Post links" />
             </p>
-            {isAdmin ? (
-              <JobPostLinkField jobId={job.id} initialValue={job.postLink} />
-            ) : (
-              <p className="font-medium">
-                {job.postLink ? (
-                  <a
-                    href={job.postLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="break-all text-purple-700 hover:underline"
-                  >
-                    {job.postLink}
-                  </a>
-                ) : (
-                  <span className="text-neutral-400">
-                    <Bi zh="尚未填写" en="Not yet submitted" />
-                  </span>
-                )}
-              </p>
-            )}
+            <JobPostLinksEditor
+              jobId={job.id}
+              initialLinks={postLinks}
+              canEdit={canEditAgentFields}
+            />
           </div>
         ) : null}
         {job.notes ? <Field labelZh="备注" labelEn="Notes" value={job.notes} full /> : null}
@@ -204,7 +221,7 @@ export default async function JobDetailPage({
           requiredPhotos={requiredPhotos}
           trainingIncomplete={missingCourses.length > 0}
           requiresPostLink={jobType?.requiresPostLink ?? false}
-          initialPostLink={job.postLink}
+          hasPostLink={postLinks.length > 0}
         />
       ) : null}
 
