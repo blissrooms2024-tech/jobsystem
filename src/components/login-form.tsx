@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { signInWithCredentials } from "@/app/login/actions";
 import { Bi } from "@/components/bi";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  // Only allow same-site paths so ?callbackUrl= can't bounce users elsewhere.
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") && !rawCallback.startsWith("//") ? rawCallback : "/";
   const [error, setError] = useState<{ zh: string; en: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -26,8 +28,12 @@ export function LoginForm() {
             setError(result.error);
             return;
           }
-          router.push(callbackUrl);
-          router.refresh();
+          // Full page load instead of router.push + router.refresh: the new
+          // session cookie is then guaranteed to be sent, and the proxy's
+          // "logged-in users can't see /login" redirect can't race with a
+          // client-side RSC request (which surfaced as "An unexpected
+          // response was received from the server").
+          window.location.assign(callbackUrl);
         });
       }}
     >

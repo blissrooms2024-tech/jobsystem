@@ -13,7 +13,7 @@ import { ChatWidget } from "@/components/chat-widget";
 import { NoticePopup } from "@/components/notice-popup";
 import { MyProfileForm } from "@/components/my-profile-form";
 import { Bi } from "@/components/bi";
-import { signOutAction } from "./actions";
+import { SignOutButton } from "@/components/sign-out-button";
 
 export default async function DashboardLayout({
   children,
@@ -83,14 +83,7 @@ export default async function DashboardLayout({
             <span className="text-sm text-neutral-600 sm:text-purple-100">
               {user.name} · <span className="uppercase">{user.role}</span>
             </span>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-700 hover:bg-neutral-50 sm:border-purple-600 sm:text-white sm:hover:bg-purple-800"
-              >
-                <Bi zh="登出" en="Sign out" />
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         </header>
         {user.mustChangePassword ? (
