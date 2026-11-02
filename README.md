@@ -3,6 +3,8 @@
 任务分派、GPS 打卡、请假审批、工资结算 — 从 Google Sheets + Apps Script 迁移到 Next.js +
 Neon (Postgres) + Vercel。
 
+**线上网址：** https://jobsystem-five.vercel.app/
+
 ## 技术栈
 
 - **Next.js 16** (App Router, TypeScript) — 前端 + API 全部在这一个项目里
