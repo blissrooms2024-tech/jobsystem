@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { jobs, users } from "@/db/schema";
 import { parsePhotos } from "@/lib/photos";
+import { blobTokenForUrl } from "@/lib/blob-tokens";
 
 export const runtime = "nodejs";
 
@@ -58,7 +59,7 @@ export async function GET(
 
   let result: Awaited<ReturnType<typeof get>>;
   try {
-    result = await get(url, { access: "private" });
+    result = await get(url, { access: "private", token: blobTokenForUrl(url) });
   } catch (err) {
     // Surface the real reason (wrong store/token, suspended store, …) both in
     // the Vercel logs and to whoever opens the image URL directly.

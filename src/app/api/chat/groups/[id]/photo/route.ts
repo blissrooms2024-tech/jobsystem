@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { get } from "@vercel/blob";
+import { blobTokenForUrl } from "@/lib/blob-tokens";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { chatGroupMembers, chatMessages } from "@/db/schema";
@@ -43,7 +44,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const result = await get(url, { access: "private" });
+  const result = await get(url, { access: "private", token: blobTokenForUrl(url) });
   if (!result || result.statusCode !== 200) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

@@ -3,6 +3,7 @@ import { del } from "@vercel/blob";
 import { db } from "@/db";
 import { jobs } from "@/db/schema";
 import { parsePhotos } from "@/lib/photos";
+import { groupUrlsByToken } from "@/lib/blob-tokens";
 
 // Old job photos are just storage cost at this point — the job record
 // itself (pay, status, history) stays forever, only the photo files and the
@@ -40,7 +41,11 @@ export async function sweepOldPhotos() {
     if (photos.length === 0) continue;
 
     try {
-      await del(photos.map((p) => p.url));
+      // Old photos may live in a previous Blob store — delete each batch
+      // with the token of the store it belongs to.
+      for (const [token, urls] of groupUrlsByToken(photos.map((p) => p.url))) {
+        await del(urls, { token });
+      }
     } catch (err) {
       // Leave this job's photos array alone if the blob delete failed —
       // otherwise we'd lose the URLs without ever having freed the storage.
