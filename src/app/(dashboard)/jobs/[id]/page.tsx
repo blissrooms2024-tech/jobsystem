@@ -222,6 +222,7 @@ export default async function JobDetailPage({
           trainingIncomplete={missingCourses.length > 0}
           requiresPostLink={jobType?.requiresPostLink ?? false}
           hasPostLink={postLinks.length > 0}
+          hasProject={!!job.project?.trim()}
         />
       ) : null}
 

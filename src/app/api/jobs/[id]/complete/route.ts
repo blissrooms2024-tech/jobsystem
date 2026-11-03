@@ -126,6 +126,13 @@ export async function POST(
       }
     }
 
+    if (!job.project?.trim()) {
+      return NextResponse.json(
+        { error: "请先选择项目 Please choose the project first" },
+        { status: 400 },
+      );
+    }
+
     if (jobType?.requiresPostLink && parsePostLinks(mergedPostLink).length === 0) {
       return NextResponse.json(
         { error: "请先填写帖子链接 Please enter the post link first" },

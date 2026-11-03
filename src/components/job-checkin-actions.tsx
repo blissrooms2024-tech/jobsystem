@@ -32,6 +32,7 @@ export function JobCheckinActions({
   trainingIncomplete,
   requiresPostLink,
   hasPostLink,
+  hasProject,
 }: {
   jobId: string;
   needCheckin: boolean;
@@ -41,6 +42,7 @@ export function JobCheckinActions({
   trainingIncomplete?: boolean;
   requiresPostLink?: boolean;
   hasPostLink?: boolean;
+  hasProject?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +119,14 @@ export function JobCheckinActions({
         </div>
       ) : (
         <div className="space-y-2">
+          {!hasProject ? (
+            <p className="text-xs text-neutral-500">
+              <Bi
+                zh="请先在上面「项目」选择项目才能提交"
+                en="Choose the project under “Project” above before submitting"
+              />
+            </p>
+          ) : null}
           {requiresPostLink && !hasPostLink ? (
             <p className="text-xs text-neutral-500">
               <Bi
@@ -131,6 +141,7 @@ export function JobCheckinActions({
               isPending ||
               photoCount < requiredPhotos ||
               trainingIncomplete ||
+              !hasProject ||
               (requiresPostLink && !hasPostLink)
             }
             onClick={() => call("complete", true)}
