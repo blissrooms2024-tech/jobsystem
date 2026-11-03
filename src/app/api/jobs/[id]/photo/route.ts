@@ -48,9 +48,30 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const result = await get(url, { access: "private" });
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error("[photo] BLOB_READ_WRITE_TOKEN is not set");
+    return NextResponse.json(
+      { error: "BLOB_READ_WRITE_TOKEN is not set on this deployment" },
+      { status: 500 },
+    );
+  }
+
+  let result: Awaited<ReturnType<typeof get>>;
+  try {
+    result = await get(url, { access: "private" });
+  } catch (err) {
+    // Surface the real reason (wrong store/token, suspended store, …) both in
+    // the Vercel logs and to whoever opens the image URL directly.
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[photo] blob get failed", { jobId: id, url, message });
+    return NextResponse.json({ error: `Blob get failed: ${message}` }, { status: 502 });
+  }
   if (!result || result.statusCode !== 200) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    console.error("[photo] blob not found", { jobId: id, url, status: result?.statusCode });
+    return NextResponse.json(
+      { error: `Blob not found (status ${result?.statusCode ?? "none"})` },
+      { status: 404 },
+    );
   }
 
   return new NextResponse(result.stream, {
